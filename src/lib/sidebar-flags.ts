@@ -4,8 +4,9 @@ const ONBOARDING_WINDOW_DAYS = 30;
 
 /**
  * 入社手続きリンク表示:
- * - employees.created_at から30日以内
- * - かつ onboarding_tasks に未完了が1件でもある（タスク0件は「未完了あり」とみなす）
+ * - 入社（employees.created_at）から30日以内、または
+ * - onboarding_tasks に completed 以外のタスクが1件でもある
+ * 上記いずれかを満たすときのみ表示。それ以外は非表示。
  */
 export async function shouldShowOnboardingLink(
   supabase: SupabaseClient,
@@ -28,9 +29,7 @@ export async function shouldShowOnboardingLink(
 
   const elapsedDays =
     (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
-  if (elapsedDays > ONBOARDING_WINDOW_DAYS) {
-    return false;
-  }
+  const within30 = elapsedDays <= ONBOARDING_WINDOW_DAYS;
 
   const employeeId = (emp as { id: string }).id;
 
@@ -40,15 +39,12 @@ export async function shouldShowOnboardingLink(
     .eq("employee_id", employeeId);
 
   if (tasksErr) {
-    return true;
+    return within30;
   }
 
-  if (!tasks?.length) {
-    return true;
-  }
+  const hasIncomplete =
+    tasks?.some((t: { completed?: boolean | null }) => t.completed !== true) ??
+    false;
 
-  const allCompleted = tasks.every(
-    (t: { completed?: boolean | null }) => t.completed === true,
-  );
-  return !allCompleted;
+  return within30 || hasIncomplete;
 }
