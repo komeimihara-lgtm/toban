@@ -2,12 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clock, Coins, Home } from "lucide-react";
-import type { ComponentType } from "react";
+import {
+  Banknote,
+  Bot,
+  Clock,
+  Coins,
+  Home,
+  ListChecks,
+  Receipt,
+  Umbrella,
+  UserPlus,
+} from "lucide-react";
+import type { ComponentType, ReactNode } from "react";
 
-type AppSidebarProps = {
-  incentiveHref: "/my/incentive" | "/incentives";
+export type AppSidebarProps = {
   userLabel: string;
+  /** マイページのインセンティブ（/my/incentive）。営業またはサービス対象のみ */
+  showIncentiveLink: boolean;
+  showOnboardingLink: boolean;
+  showAdminSection: boolean;
 };
 
 function NavLink({
@@ -19,7 +32,6 @@ function NavLink({
   href: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
-  /** 指定時はこれらのパス配下でもアクティブ（例: 勤怠と打刻修正） */
   pathPrefixes?: string[];
 }) {
   const pathname = usePathname();
@@ -44,7 +56,20 @@ function NavLink({
   );
 }
 
-export function AppSidebar({ incentiveHref, userLabel }: AppSidebarProps) {
+function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <p className="mb-1 mt-4 px-3 text-xs font-semibold tracking-wide text-zinc-400 first:mt-0 dark:text-zinc-500">
+      {children}
+    </p>
+  );
+}
+
+export function AppSidebar({
+  userLabel,
+  showIncentiveLink,
+  showOnboardingLink,
+  showAdminSection,
+}: AppSidebarProps) {
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-950/40">
       <div className="border-b border-zinc-200 px-4 py-4 dark:border-zinc-800">
@@ -56,14 +81,41 @@ export function AppSidebar({ incentiveHref, userLabel }: AppSidebarProps) {
         </p>
       </div>
       <nav className="flex flex-col gap-0.5 p-3" aria-label="メインメニュー">
-        <NavLink href="/" label="ホーム" icon={Home} />
+        <SectionLabel>マイページ</SectionLabel>
+        <NavLink href="/my" label="ホーム" icon={Home} />
         <NavLink
           href="/my/attendance"
           label="勤怠"
           icon={Clock}
           pathPrefixes={["/my/attendance", "/attendance"]}
         />
-        <NavLink href={incentiveHref} label="インセンティブ" icon={Coins} />
+        <NavLink href="/my/expenses" label="経費申請" icon={Receipt} />
+        <NavLink href="/my/expenses" label="申請状況" icon={ListChecks} />
+        {showIncentiveLink && (
+          <NavLink href="/my/incentive" label="インセンティブ" icon={Coins} />
+        )}
+        <NavLink href="/my/payslip" label="給与明細" icon={Banknote} />
+        <NavLink href="/my/leave" label="有給・休暇" icon={Umbrella} />
+        <NavLink href="/hr-ai" label="AI相談窓口" icon={Bot} />
+        {showOnboardingLink && (
+          <NavLink
+            href="/onboarding"
+            label="入社手続き"
+            icon={UserPlus}
+          />
+        )}
+
+        {showAdminSection && (
+          <>
+            <SectionLabel>管理</SectionLabel>
+            <NavLink
+              href="/incentives"
+              label="インセンティブ"
+              icon={Coins}
+              pathPrefixes={["/incentives"]}
+            />
+          </>
+        )}
       </nav>
     </aside>
   );
