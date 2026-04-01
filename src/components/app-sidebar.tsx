@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Coins, Home } from "lucide-react";
+import { Clock, Coins, Home } from "lucide-react";
 import type { ComponentType } from "react";
 
 type AppSidebarProps = {
@@ -14,13 +14,20 @@ function NavLink({
   href,
   label,
   icon: Icon,
+  pathPrefixes,
 }: {
   href: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
+  /** 指定時はこれらのパス配下でもアクティブ（例: 勤怠と打刻修正） */
+  pathPrefixes?: string[];
 }) {
   const pathname = usePathname();
-  const active = pathname === href || pathname.startsWith(`${href}/`);
+  const active = pathPrefixes?.length
+    ? pathPrefixes.some(
+        (p) => pathname === p || pathname.startsWith(`${p}/`),
+      )
+    : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <Link
@@ -50,6 +57,12 @@ export function AppSidebar({ incentiveHref, userLabel }: AppSidebarProps) {
       </div>
       <nav className="flex flex-col gap-0.5 p-3" aria-label="メインメニュー">
         <NavLink href="/" label="ホーム" icon={Home} />
+        <NavLink
+          href="/my/attendance"
+          label="勤怠"
+          icon={Clock}
+          pathPrefixes={["/my/attendance", "/attendance"]}
+        />
         <NavLink href={incentiveHref} label="インセンティブ" icon={Coins} />
       </nav>
     </aside>
