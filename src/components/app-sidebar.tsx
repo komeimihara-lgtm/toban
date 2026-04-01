@@ -17,8 +17,9 @@ import type { ComponentType, ReactNode } from "react";
 
 export type AppSidebarProps = {
   userLabel: string;
-  /** マイページのインセンティブ（/my/incentive）。営業またはサービス対象のみ */
+  /** /my/incentive。is_sales_target / is_service_target の対象者のみ */
   showIncentiveLink: boolean;
+  /** 入社30日以内または onboarding_tasks 未完了のときのみ（layout 側で判定） */
   showOnboardingLink: boolean;
   showAdminSection: boolean;
 };
@@ -82,6 +83,10 @@ export function AppSidebar({
       </div>
       <nav className="flex flex-col gap-0.5 p-3" aria-label="メインメニュー">
         <SectionLabel>マイページ</SectionLabel>
+        {
+          /* 順: 1ホーム 2勤怠 3経費申請 4申請状況(旧:自分の申請) 5インセ対象のみ 6給与 7有給休暇 8AI相談窓口(旧:AI人事)。
+           打刻修正申請はサイドバーに置かない（勤怠ページ内）。 */
+        }
         <NavLink href="/my" label="ホーム" icon={Home} />
         <NavLink
           href="/my/attendance"
