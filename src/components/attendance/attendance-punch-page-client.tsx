@@ -193,10 +193,10 @@ export function AttendancePunchPageClient({
 
         <p className="mt-4 text-xs text-zinc-500">
           <Link
-            href="/attendance/correction"
+            href="/my/attendance/correction"
             className="font-medium text-emerald-700 underline dark:text-emerald-400"
           >
-            打刻修正の申請
+            打刻修正申請
           </Link>
           ・
           <Link href="/my/attendance/calendar" className="underline">

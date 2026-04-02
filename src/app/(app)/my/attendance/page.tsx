@@ -76,15 +76,24 @@ export default async function MyAttendancePage({
             勤怠
           </h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            打刻・月次カレンダー・打刻修正の申請
+            打刻・月次カレンダー・打刻修正申請（このページから利用できます）
           </p>
         </div>
-        <Link
-          href={`/my/attendance/calendar?y=${y}&m=${m}`}
-          className="text-sm font-medium text-blue-600 underline dark:text-blue-400"
-        >
-          月次カレンダー →
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/my/attendance/correction"
+            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+          >
+            <FileEdit className="size-4 shrink-0" aria-hidden />
+            修正申請
+          </Link>
+          <Link
+            href={`/my/attendance/calendar?y=${y}&m=${m}`}
+            className="inline-flex rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+          >
+            月次カレンダー
+          </Link>
+        </div>
       </header>
 
       {flashOk && (
@@ -115,23 +124,6 @@ export default async function MyAttendancePage({
         </div>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-          打刻修正申請
-        </h2>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          打刻漏れ・誤打刻がある場合はフォームから申請してください。
-        </p>
-        <div className="mt-5">
-          <Link
-            href="/attendance/correction"
-            className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
-            <FileEdit className="size-4" aria-hidden />
-            打刻修正申請へ
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }
