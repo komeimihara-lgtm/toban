@@ -1,6 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { countExpenseApprovalBadges } from "@/lib/overview-stats";
-import { shouldShowOnboardingNav } from "@/lib/sidebar-onboarding";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import {
@@ -23,7 +22,6 @@ export default async function AppGroupLayout({
   let approvalBadgeCount = 0;
   let incentiveDraftBadgeCount = 0;
   let showMyIncentiveNav = false;
-  let showOnboardingNav = false;
   let tenantName: string | null = null;
 
   if (isSupabaseConfigured()) {
@@ -63,12 +61,6 @@ export default async function AppGroupLayout({
 
         const p = profile as ProfileRow | null;
         showMyIncentiveNav = Boolean(p && isIncentiveEligible(p));
-
-        try {
-          showOnboardingNav = await shouldShowOnboardingNav(supabase, user.id);
-        } catch {
-          showOnboardingNav = false;
-        }
 
         if (showAdminSection) {
           try {
@@ -122,7 +114,6 @@ export default async function AppGroupLayout({
         userLabel={userLabel}
         tenantName={tenantName}
         showMyIncentiveNav={showMyIncentiveNav}
-        showOnboardingNav={showOnboardingNav}
         showAdminSection={showAdminSection}
         approvalBadgeCount={approvalBadgeCount}
         incentiveDraftBadgeCount={incentiveDraftBadgeCount}

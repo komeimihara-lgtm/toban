@@ -24,7 +24,6 @@ export type AppSidebarProps = {
   userLabel: string;
   tenantName?: string | null;
   showMyIncentiveNav: boolean;
-  showOnboardingNav: boolean;
   showAdminSection: boolean;
   approvalBadgeCount?: number;
   incentiveDraftBadgeCount?: number;
@@ -95,7 +94,6 @@ export function AppSidebar({
   userLabel,
   tenantName,
   showMyIncentiveNav,
-  showOnboardingNav,
   showAdminSection,
   approvalBadgeCount = 0,
   incentiveDraftBadgeCount = 0,
@@ -144,15 +142,6 @@ export function AppSidebar({
         ) : null}
         <NavLink href="/my/payslip" label="給与明細" icon={Banknote} exact />
         <NavLink href="/my/leave" label="有給・休暇" icon={Umbrella} pathPrefixes={["/my/leave"]} />
-        {showOnboardingNav ? (
-          <NavLink
-            href="/onboarding"
-            label="入社手続き"
-            icon={UserPlus}
-            pathPrefixes={["/onboarding"]}
-            exact
-          />
-        ) : null}
         <NavLink
           href="/hr-ai"
           label="AI相談窓口"
