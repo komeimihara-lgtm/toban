@@ -75,8 +75,8 @@ export default async function SettingsHrPage() {
                 <th className="py-2 pr-2">部門</th>
                 <th className="py-2 pr-2">営業対象</th>
                 <th className="py-2 pr-2">ｻｰﾋﾞｽ対象</th>
-                <th className="py-2 pr-2">業務委託</th>
-                <th className="py-2 pr-2">パート</th>
+                <th className="py-2 pr-2">契約</th>
+                <th className="py-2 pr-2">短時間</th>
               </tr>
             </thead>
             <tbody>

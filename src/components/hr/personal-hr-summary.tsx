@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const EMP_LABEL: Record<string, string> = {
   full_time: "正社員",
-  part_time: "パート・アルバイト",
+  part_time: "短時間勤務",
   contract: "契約社員",
   dispatch: "派遣",
 };

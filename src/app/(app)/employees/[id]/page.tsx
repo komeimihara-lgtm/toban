@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 const EMP_OPTIONS = [
   ["full_time", "正社員"],
-  ["part_time", "パート・アルバイト"],
+  ["part_time", "短時間勤務"],
   ["contract", "契約社員"],
   ["dispatch", "派遣"],
 ] as const;
