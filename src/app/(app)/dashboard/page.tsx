@@ -190,6 +190,15 @@ export default async function DashboardPage() {
     punchesByUser.set(uid, list);
   }
 
+  const { data: recentExpenses } = await supabase
+    .from("expenses")
+    .select(
+      "id, category, amount, status, submitter_name, created_at, updated_at",
+    )
+    .not("status", "eq", "draft")
+    .order("updated_at", { ascending: false })
+    .limit(5);
+
   const staffAttendance = (team ?? [])
     .map((m) => {
       const row = m as { id: string; full_name: string | null; role: string };
@@ -308,6 +317,47 @@ export default async function DashboardPage() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
+        <h2 className="font-medium text-zinc-900 dark:text-zinc-100">最近の申請（5件）</h2>
+        <p className="mt-1 text-xs text-zinc-500">経費（下書き除く・更新日の新しい順）</p>
+        <ul className="mt-3 space-y-2 text-sm">
+          {(recentExpenses ?? []).length === 0 && (
+            <li className="text-zinc-500">該当がありません</li>
+          )}
+          {(recentExpenses ?? []).map((raw) => {
+            const r = raw as {
+              id: string;
+              category: string;
+              amount: number;
+              status: string;
+              submitter_name: string | null;
+              updated_at: string;
+            };
+            return (
+              <li
+                key={r.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-100 px-3 py-2 dark:border-zinc-800"
+              >
+                <div>
+                  <span className="font-medium">{r.category}</span>
+                  <span className="ml-2 text-xs text-zinc-500">{r.submitter_name ?? "—"}</span>
+                  <span className="ml-2 text-xs tabular-nums text-zinc-500">{r.status}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="tabular-nums">{fmt(r.amount)}</span>
+                  <Link
+                    href={`/expenses/audit`}
+                    className="text-xs text-blue-600 underline dark:text-blue-400"
+                  >
+                    審査
+                  </Link>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
