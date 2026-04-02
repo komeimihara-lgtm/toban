@@ -317,6 +317,7 @@ create index if not exists incentive_configs_company_id_idx
 
 -- ---------- hr_employees（CLAUDE.md 17名・auth 非連携の人事マスタ行）
 -- 依頼仕様の「employees テーブル」に相当。入社オンボ用 public.employees は 002 で定義。
+-- 氏名・部署名に「（業務委託）」「（パート）」「（アルバイト）」等の括弧付き表記は入れない（フラグ列で表現）。
 -- ----------
 create table if not exists public.hr_employees (
   id uuid primary key default gen_random_uuid(),

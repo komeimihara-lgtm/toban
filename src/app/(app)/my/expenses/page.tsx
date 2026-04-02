@@ -35,10 +35,10 @@ export default async function MyExpensesPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            経費申請
+            申請状況
           </h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            自分の申請の一覧と新規作成
+            自分の経費の一覧。新規は「新規申請」から
           </p>
         </div>
         <Link

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function AppRootPage() {
+export default async function RootPage() {
   if (!isSupabaseConfigured()) {
     return <p className="p-6 text-sm text-zinc-500">Supabase を設定してください。</p>;
   }

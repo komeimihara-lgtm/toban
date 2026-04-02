@@ -157,6 +157,12 @@ export function AppSidebar({
         ) : null}
         <NavLink href="/my/payslip" label="給与明細" icon={Banknote} exact />
         <NavLink href="/my/leave" label="有給・休暇" icon={Umbrella} pathPrefixes={["/my/leave"]} />
+        <NavLink
+          href="/hr-ai"
+          label="AI相談窓口"
+          icon={Bot}
+          pathPrefixes={["/hr-ai", "/my/hr-ai"]}
+        />
         {showEmployeeOnboardingNav ? (
           <NavLink
             href="/onboarding"
@@ -166,12 +172,6 @@ export function AppSidebar({
             excludePrefixes={["/onboarding/admin"]}
           />
         ) : null}
-        <NavLink
-          href="/hr-ai"
-          label="AI相談窓口"
-          icon={Bot}
-          pathPrefixes={["/hr-ai", "/my/hr-ai"]}
-        />
 
         {showAdminSection ? (
           <>
