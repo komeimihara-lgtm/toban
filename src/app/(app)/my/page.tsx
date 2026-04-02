@@ -2,6 +2,7 @@ import { InterviewInviteBanner } from "@/components/my/interview-invite-banner";
 import { PunchButtons } from "@/components/attendance/punch-buttons";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
+import { summarizePunchesInRange } from "@/lib/attendance-summary";
 import { isIncentiveEligible as elig } from "@/types/incentive";
 import type { ProfileRow } from "@/types/incentive";
 import { startOfDay } from "date-fns";
@@ -202,6 +203,28 @@ export default async function MyHomePage() {
     .in("submit_status", ["approved", "rejected"])
     .order("updated_at", { ascending: false })
     .limit(20);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+  const { data: grantNews } = await supabase
+    .from("paid_leave_grants")
+    .select("grant_date, days_granted, grant_reason, created_at")
+    .eq("employee_id", user.id)
+    .gte("created_at", thirtyDaysAgo)
+    .order("created_at", { ascending: false })
+    .limit(15);
+  for (const raw of grantNews ?? []) {
+    const gr = raw as {
+      grant_date: string;
+      days_granted: number;
+      grant_reason: string;
+      created_at: string;
+    };
+    noticeRows.push({
+      at: gr.created_at,
+      text: `有給が ${Number(gr.days_granted)} 日付与されました（付与日 ${gr.grant_date}・${gr.grant_reason}）`,
+      href: "/my/leave",
+    });
+  }
+
   for (const raw of dealNews ?? []) {
     const dr = raw as {
       submit_status: string;
@@ -225,7 +248,28 @@ export default async function MyHomePage() {
     }
   }
   noticeRows.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
-  const notices = noticeRows.slice(0, 12);
+  const notices = noticeRows.slice(0, 15);
+
+  function pad2(n: number) {
+    return String(n).padStart(2, "0");
+  }
+  const monthPunchStart = `${yMonth}-${pad2(mMonth)}-01T00:00:00+09:00`;
+  const nextM = mMonth === 12 ? 1 : mMonth + 1;
+  const nextY = mMonth === 12 ? yMonth + 1 : yMonth;
+  const monthPunchEnd = `${nextY}-${pad2(nextM)}-01T00:00:00+09:00`;
+  const { data: monthPunchRows } = await supabase
+    .from("attendance_punches")
+    .select("punch_type, punched_at")
+    .eq("user_id", user.id)
+    .gte("punched_at", monthPunchStart)
+    .lt("punched_at", monthPunchEnd)
+    .order("punched_at", { ascending: true });
+  const monthSummary = summarizePunchesInRange(monthPunchRows ?? [], { now: nowYm });
+  const fmtHM = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h}時間${m}分`;
+  };
 
   const yen = (n: number) =>
     new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY" }).format(n);
@@ -268,13 +312,13 @@ export default async function MyHomePage() {
 
       <section className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <h2 className="text-sm font-medium text-zinc-500">有給残日数</h2>
+          <h2 className="text-sm font-medium text-zinc-500">有給残日数・次回付与日</h2>
           <p className="mt-2 text-2xl font-semibold tabular-nums">
             {(leaveBal as { days_remaining?: number } | null)?.days_remaining ?? "—"}
             <span className="ml-1 text-base font-normal text-zinc-500">日</span>
           </p>
           <p className="mt-2 text-xs text-zinc-500">
-            次回付与:{" "}
+            次回付与日:{" "}
             {(leaveBal as { next_accrual_date?: string } | null)?.next_accrual_date ?? "—"}
             {((leaveBal as { next_accrual_days?: number } | null)?.next_accrual_days != null) &&
               `（${(leaveBal as { next_accrual_days: number }).next_accrual_days}日）`}
@@ -347,7 +391,9 @@ export default async function MyHomePage() {
       <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="text-sm font-medium text-zinc-500">お知らせ</h2>
         {notices.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-500">直近の承認・差戻しはありません。</p>
+          <p className="mt-2 text-sm text-zinc-500">
+            直近の承認・差戻し・有給付与の通知はありません。
+          </p>
         ) : (
           <ul className="mt-3 space-y-2 text-sm text-zinc-800 dark:text-zinc-200">
             {notices.map((n, i) => (
@@ -368,6 +414,34 @@ export default async function MyHomePage() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+        <h2 className="text-sm font-medium text-zinc-500">今月の勤務時間サマリー</h2>
+        <p className="mt-2 text-xs text-zinc-500">
+          {yMonth}年{mMonth}月 · 出勤のあった日数と打刻から算出した労働時間（休憩控除後）
+        </p>
+        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+          <div>
+            <dt className="text-xs text-zinc-500">出勤日数</dt>
+            <dd className="text-lg font-semibold tabular-nums">{monthSummary.workDays} 日</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-zinc-500">総労働時間</dt>
+            <dd className="text-lg font-semibold tabular-nums">
+              {fmtHM(monthSummary.totalWorkMinutes)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-zinc-500">超過（8h/日基準）</dt>
+            <dd className="text-lg font-semibold tabular-nums text-amber-800 dark:text-amber-300">
+              {fmtHM(monthSummary.overtimeMinutes)}
+            </dd>
+          </div>
+        </dl>
+        <Link href="/my/attendance" className="mt-3 inline-block text-sm text-blue-600 underline">
+          勤怠の詳細へ
+        </Link>
       </section>
 
       <div>
