@@ -1,4 +1,4 @@
-import { IncentiveDeptWorkbench } from "@/components/incentive/incentive-dept-workbench";
+import { DealsAdminClient } from "@/components/incentive/deals-admin-client";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { isAdminRole } from "@/types/incentive";
@@ -23,11 +23,7 @@ export default async function IncentivesAdminPage() {
 
   if (!user) redirect("/login");
 
-  const { data: selfProfile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const { data: selfProfile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
 
   const role = (selfProfile as { role?: string } | null)?.role ?? "staff";
   if (!isAdminRole(role)) {
@@ -39,23 +35,22 @@ export default async function IncentivesAdminPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            インセンティブ（計算・提出）
+            インセンティブ（案件・集計）
           </h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            営業部・サービス部タブで売上を入力し、率は設定画面の月次{" "}
-            <code className="rounded bg-zinc-100 px-1 text-xs dark:bg-zinc-800">incentive_rates</code>{" "}
-            を参照します。
+            1件ごとに純利益（販売税込÷1.1 − 実質原価）を算出し、機種別レートでアポ・クローザー・ヒト幹のインセンティブを計算します。エイトキューブはデフォルトでアポ・クローザー
+            5%、その他機種は 4%（ヒト幹は 8%）です。
           </p>
         </div>
         <Link
           href="/incentives/history"
           className="text-sm font-medium text-zinc-600 underline dark:text-zinc-400"
         >
-          支給履歴 →
+          旧・支給履歴 →
         </Link>
       </header>
 
-      <IncentiveDeptWorkbench />
+      <DealsAdminClient />
     </div>
   );
 }

@@ -1,19 +1,68 @@
-import { IncentiveSelfForm } from "@/components/incentive/incentive-self-form";
+import { MyIncentiveDealsClient, type MyDealRow } from "@/components/incentive/my-incentive-deals-client";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import {
-  isIncentiveEligible,
-  type IncentiveRateRow,
-  type ProfileRow,
-} from "@/types/incentive";
+import { isIncentiveEligible, type ProfileRow } from "@/types/incentive";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-function currentYearMonth(d = new Date()) {
-  const y = d.getFullYear();
-  const m = d.getMonth() + 1;
-  return `${y}-${String(m).padStart(2, "0")}`;
+function lastNMonths(n: number) {
+  const out: { year: number; month: number }[] = [];
+  const d = new Date();
+  for (let i = 0; i < n; i++) {
+    const t = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    out.push({ year: t.getFullYear(), month: t.getMonth() + 1 });
+  }
+  return out;
+}
+
+function inMonthWindow(
+  y: number,
+  m: number,
+  months: { year: number; month: number }[],
+) {
+  return months.some((w) => w.year === y && w.month === m);
+}
+
+function expandDealRows(
+  d: Record<string, unknown>,
+  userId: string,
+): MyDealRow[] {
+  const rows: MyDealRow[] = [];
+  const base = {
+    id: String(d.id),
+    year: Number(d.year),
+    month: Number(d.month),
+    salon_name: String(d.salon_name ?? ""),
+    machine_type: String(d.machine_type ?? ""),
+    payment_status: String(d.payment_status ?? ""),
+    payment_date: (d.payment_date as string | null) ?? null,
+  };
+  if (d.appo_employee_id === userId) {
+    rows.push({
+      ...base,
+      role: "appo",
+      role_label: "アポ",
+      amount: Number(d.appo_incentive ?? 0),
+    });
+  }
+  if (d.closer_employee_id === userId) {
+    rows.push({
+      ...base,
+      role: "closer",
+      role_label: "クローザー",
+      amount: Number(d.closer_incentive ?? 0),
+    });
+  }
+  if (d.hito_employee_id === userId) {
+    rows.push({
+      ...base,
+      role: "hito",
+      role_label: "ヒト幹",
+      amount: Number(d.hito_incentive ?? 0),
+    });
+  }
+  return rows;
 }
 
 export default async function MyIncentivePage() {
@@ -61,73 +110,47 @@ export default async function MyIncentivePage() {
     );
   }
 
-  const ym = currentYearMonth();
+  const months = lastNMonths(4);
 
-  const { data: rateRow } = await supabase
-    .from("incentive_rates")
-    .select("id, rate, formula_type, year_month")
-    .eq("user_id", user.id)
-    .eq("year_month", ym)
-    .maybeSingle();
+  const { data: dealRows, error: dealsErr } = await supabase
+    .from("deals")
+    .select(
+      "id, year, month, salon_name, machine_type, payment_status, payment_date, appo_employee_id, closer_employee_id, hito_employee_id, appo_incentive, closer_incentive, hito_incentive",
+    )
+    .or(`appo_employee_id.eq.${user.id},closer_employee_id.eq.${user.id},hito_employee_id.eq.${user.id}`)
+    .order("year", { ascending: false })
+    .order("month", { ascending: false })
+    .limit(300);
 
-  const rate = rateRow as IncentiveRateRow | null;
-
-  const { data: submission } = await supabase
-    .from("incentive_submissions")
-    .select("id, sales_amount, status, submitted_at, rate_snapshot")
-    .eq("user_id", user.id)
-    .eq("year_month", ym)
-    .maybeSingle();
-
-  const { data: historyRows } = await supabase
-    .from("incentive_submissions")
-    .select("year_month, sales_amount, rate_snapshot, status")
-    .eq("user_id", user.id)
-    .eq("status", "approved")
-    .order("year_month", { ascending: false })
-    .limit(3);
-
-  const history =
-    (historyRows as {
-      year_month: string;
-      sales_amount: number | null;
-      rate_snapshot: number | null;
-      status: string;
-    }[]) ?? [];
-
-  if (!rate) {
+  if (dealsErr) {
     return (
-      <div className="mx-auto max-w-xl space-y-6">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          マイインセンティブ
-        </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          自分の今月分の売上入力と支給履歴のみ表示します。
-        </p>
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
-          {ym} 分のインセンティブ率が未設定です。管理者が rate を登録するまでお待ちください。
-        </p>
-      </div>
+      <p className="text-sm text-red-600 dark:text-red-400">
+        案件の取得に失敗しました: {dealsErr.message}
+      </p>
     );
   }
 
+  const flat: MyDealRow[] = [];
+  for (const d of dealRows ?? []) {
+    if (!inMonthWindow(Number((d as { year: number }).year), Number((d as { month: number }).month), months)) {
+      continue;
+    }
+    flat.push(...expandDealRows(d as Record<string, unknown>, user.id));
+  }
+
   return (
-    <IncentiveSelfForm
-      yearMonth={ym}
-      rate={Number(rate.rate)}
-      formulaType={rate.formula_type ?? "fixed_rate"}
-      submission={
-        submission as
-          | {
-              id: string;
-              sales_amount: number | null;
-              status: string;
-              submitted_at: string | null;
-              rate_snapshot: number | null;
-            }
-          | null
-      }
-      history={history}
-    />
+    <div className="mx-auto max-w-4xl space-y-6">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          マイインセンティブ（案件ベース）
+        </h1>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          {p.full_name ?? "—"} さんの担当案件に基づくインセンティブです。計算は販売価格（税込）÷1.1 −
+          実質原価による純利益に、機種別レートを掛けて算出されています。
+        </p>
+      </header>
+
+      <MyIncentiveDealsClient initialDeals={flat} months={months} />
+    </div>
   );
 }
