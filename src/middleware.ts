@@ -57,6 +57,7 @@ export async function middleware(request: NextRequest) {
 
   const isLogin = pathname === "/login";
 
+  /** 未ログインは常に /login へ。ログイン後は src/app/page.tsx が / を /dashboard または /my に振り分ける。 */
   if (!user && !isLogin) {
     const u = request.nextUrl.clone();
     u.pathname = "/login";
