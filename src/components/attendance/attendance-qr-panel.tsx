@@ -58,8 +58,8 @@ export function AttendanceQrPanel() {
         QR 打刻（約5分で更新）
       </h2>
       <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
-        本端末でログインした状態で QR
-        を読み取ると打刻できます。職場に掲示する場合は画面を共有してください。
+        本端末でログインした状態で QR を読み取ると打刻できます。QR
+        の署名トークンには従業員ID（eid）・発行時刻（ts）・有効期限が含まれ、タブレット設置型の将来拡張に利用できます。
       </p>
       {err && (
         <p className="mt-3 text-sm text-red-600 dark:text-red-400">{err}</p>

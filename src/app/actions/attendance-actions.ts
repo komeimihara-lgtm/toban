@@ -30,6 +30,8 @@ export async function generateAttendanceQrToken(
     const exp = Math.floor(Date.now() / 1000) + QR_TTL_SEC;
     const token = signAttendanceQrToken({
       uid: user.id,
+      eid: user.id,
+      ts: Date.now(),
       exp,
       pt: punchType,
     });

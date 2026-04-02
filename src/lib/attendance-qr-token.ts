@@ -2,6 +2,10 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 export type AttendanceQrPayload = {
   uid: string;
+  /** 従業員ID（= profiles.id）。タブレット設置型打刻との互換用 */
+  eid: string;
+  /** トークン発行時刻（Unix ms） */
+  ts: number;
   exp: number;
   pt: "clock_in" | "clock_out";
 };
@@ -32,7 +36,10 @@ export function verifyAttendanceQrToken(token: string): AttendanceQrPayload | nu
     const a = Buffer.from(sig, "utf8");
     const b = Buffer.from(expected, "utf8");
     if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
-    const payload = JSON.parse(body) as AttendanceQrPayload;
+    const payload = JSON.parse(body) as AttendanceQrPayload & {
+      eid?: string;
+      ts?: number;
+    };
     if (
       !payload.uid ||
       typeof payload.exp !== "number" ||
@@ -40,8 +47,10 @@ export function verifyAttendanceQrToken(token: string): AttendanceQrPayload | nu
     ) {
       return null;
     }
+    if (!payload.eid) payload.eid = payload.uid;
+    if (typeof payload.ts !== "number") payload.ts = Date.now();
     if (payload.exp * 1000 < Date.now()) return null;
-    return payload;
+    return payload as AttendanceQrPayload;
   } catch {
     return null;
   }
