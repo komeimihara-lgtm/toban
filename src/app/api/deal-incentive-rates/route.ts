@@ -54,8 +54,8 @@ export async function PUT(req: Request) {
       if (!r.machine_type || !r.role) {
         return NextResponse.json({ error: "各 rate に machine_type と role が必要です" }, { status: 400 });
       }
-      if (!["appo", "closer", "hito"].includes(r.role)) {
-        return NextResponse.json({ error: "role は appo / closer / hito のみです" }, { status: 400 });
+      if (!["appo", "closer"].includes(r.role)) {
+        return NextResponse.json({ error: "role は appo / closer のみです" }, { status: 400 });
       }
       const rt = Number(r.rate);
       if (!Number.isFinite(rt) || rt < 0 || rt > 1) {
