@@ -82,6 +82,31 @@ export default async function ApprovalPage({
     .eq("status", "step1_pending")
     .order("created_at", { ascending: true });
 
+  const leaveUids = [
+    ...new Set(
+      (pendingLeave ?? []).map((x) => (x as { user_id: string }).user_id),
+    ),
+  ];
+  const { data: leaveProfiles } =
+    leaveUids.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", leaveUids)
+      : { data: [] as { id: string; full_name: string | null }[] };
+  const leaveNameBy = new Map(
+    (leaveProfiles ?? []).map((p) => {
+      const r = p as { id: string; full_name: string | null };
+      return [r.id, r.full_name?.trim() || "（無名）"] as const;
+    }),
+  );
+
+  const kindLabel: Record<string, string> = {
+    full: "全日",
+    half: "半日",
+    hour: "時間単位",
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">承認</h1>
@@ -130,20 +155,26 @@ export default async function ApprovalPage({
           {(pendingLeave ?? []).map((e) => {
             const row = e as {
               id: string;
+              user_id: string;
               start_date: string;
               end_date: string;
               kind: string;
               reason: string | null;
             };
+            const who = leaveNameBy.get(row.user_id) ?? "—";
+            const k = kindLabel[row.kind] ?? row.kind;
             return (
               <li
                 key={row.id}
                 className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
               >
-                <p className="text-sm">
-                  {row.start_date} 〜 {row.end_date}（{row.kind}）
+                <p className="text-sm font-medium">{who}</p>
+                <p className="mt-1 text-sm">
+                  {row.start_date} 〜 {row.end_date}（{k}）
                 </p>
-                <p className="text-zinc-600 dark:text-zinc-400">{row.reason}</p>
+                <p className="text-zinc-600 dark:text-zinc-400">
+                  {row.reason?.trim() ? row.reason : "（事由なし）"}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <form action={approveLeaveFormAction}>
                     <input type="hidden" name="id" value={row.id} />
