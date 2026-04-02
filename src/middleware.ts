@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { isAdminRole } from "@/types/incentive";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
@@ -56,16 +57,23 @@ export async function middleware(request: NextRequest) {
 
   const isLogin = pathname === "/login";
 
-  if (!user && !isLogin && pathname !== "/") {
+  if (!user && !isLogin) {
     const u = request.nextUrl.clone();
     u.pathname = "/login";
-    u.searchParams.set("next", pathname);
+    if (pathname !== "/login") u.searchParams.set("next", pathname);
     return NextResponse.redirect(u);
   }
 
   if (user && isLogin) {
+    const { data: pr } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    const role = (pr as { role?: string } | null)?.role ?? "staff";
+    const dest = isAdminRole(role) ? "/dashboard" : "/my";
     const u = request.nextUrl.clone();
-    u.pathname = "/";
+    u.pathname = dest;
     u.search = "";
     return NextResponse.redirect(u);
   }

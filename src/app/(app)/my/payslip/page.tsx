@@ -1,14 +1,14 @@
+import { PayslipPortal } from "@/components/payslip/payslip-portal";
+
 export const dynamic = "force-dynamic";
 
 export default function MyPayslipPage() {
   return (
-    <div className="space-y-2">
-      <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-        給与明細
-      </h1>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        給与明細の表示（今後 freee 人事労務と連携）
+    <div className="mx-auto max-w-5xl">
+      <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
+        月を切り替えて給与・控除・みなし残業を確認できます。PDFが必要な場合は「印刷・PDF保存」からブラウザのPDF出力を利用してください。
       </p>
+      <PayslipPortal />
     </div>
   );
 }

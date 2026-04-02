@@ -1,11 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_COMPANY_ID } from "@/lib/company";
 import { isAdminRole } from "@/types/incentive";
 import { NextResponse } from "next/server";
-
-function parseCompanyId(url: URL) {
-  return url.searchParams.get("company_id") ?? DEFAULT_COMPANY_ID;
-}
 
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -16,7 +11,21 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const companyId = parseCompanyId(new URL(req.url));
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("company_id")
+    .eq("id", user.id)
+    .single();
+  const companyId = (profile as { company_id?: string } | null)?.company_id;
+  if (!companyId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const q = new URL(req.url).searchParams.get("company_id");
+  if (q && q !== companyId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const { data, error } = await supabase
     .from("products")
     .select("id, company_id, name, cost_price, is_active, notes, created_at, updated_at")
@@ -41,11 +50,12 @@ export async function POST(req: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, company_id")
     .eq("id", user.id)
     .single();
 
-  if (!isAdminRole((profile as { role?: string })?.role ?? "")) {
+  const pr = profile as { role?: string; company_id?: string } | null;
+  if (!isAdminRole(pr?.role ?? "") || !pr?.company_id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -60,10 +70,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "name required" }, { status: 400 });
   }
 
+  if (body.company_id && body.company_id !== pr.company_id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const { data, error } = await supabase
     .from("products")
     .insert({
-      company_id: body.company_id ?? DEFAULT_COMPANY_ID,
+      company_id: pr.company_id,
       name: body.name.trim(),
       cost_price: Number(body.cost_price ?? 0),
       notes: body.notes ?? null,
@@ -89,11 +103,12 @@ export async function PATCH(req: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, company_id")
     .eq("id", user.id)
     .single();
 
-  if (!isAdminRole((profile as { role?: string })?.role ?? "")) {
+  const pr = profile as { role?: string; company_id?: string } | null;
+  if (!isAdminRole(pr?.role ?? "") || !pr?.company_id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -119,6 +134,7 @@ export async function PATCH(req: Request) {
     .from("products")
     .update(patch)
     .eq("id", body.id)
+    .eq("company_id", pr.company_id)
     .select()
     .single();
 

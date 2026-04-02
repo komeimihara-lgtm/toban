@@ -1,4 +1,3 @@
-import { DEFAULT_COMPANY_ID } from "@/lib/company";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { differenceInCalendarDays } from "date-fns";
 
@@ -24,7 +23,7 @@ export async function runRetentionAnalysis(): Promise<{
 
   const { data: staff, error: staffErr } = await admin
     .from("profiles")
-    .select("id, full_name")
+    .select("id, full_name, company_id")
     .eq("role", "staff");
 
   if (staffErr || !staff?.length) {
@@ -40,6 +39,8 @@ export async function runRetentionAnalysis(): Promise<{
 
   for (const row of staff) {
     const id = row.id as string;
+    const companyId = row.company_id as string | null;
+    if (!companyId) continue;
     const name = (row.full_name as string | null)?.trim() ?? "（氏名未設定）";
 
     const { data: lastPunch } = await admin
@@ -79,7 +80,7 @@ export async function runRetentionAnalysis(): Promise<{
         : `${name} さん: 最終打刻から ${daysGap} 日経過しています。`;
 
     const { error: insErr } = await admin.from("retention_alerts").insert({
-      company_id: DEFAULT_COMPANY_ID,
+      company_id: companyId,
       employee_id: id,
       alert_type: ALERT_TYPE,
       severity,

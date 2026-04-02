@@ -1,7 +1,7 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import { countExpenseApprovalBadges } from "@/lib/overview-stats";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import { shouldShowOnboardingLink } from "@/lib/sidebar-flags";
 import {
   isAdminRole,
   isIncentiveEligible,
@@ -18,9 +18,11 @@ export default async function AppGroupLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   let userLabel = "未ログイン";
-  let showIncentiveLink = false;
-  let showOnboardingLink = false;
   let showAdminSection = false;
+  let approvalBadgeCount = 0;
+  let incentiveDraftBadgeCount = 0;
+  let showMyIncentiveNav = false;
+  let tenantName: string | null = null;
 
   if (isSupabaseConfigured()) {
     try {
@@ -33,10 +35,20 @@ export default async function AppGroupLayout({
         const { data: profile } = await supabase
           .from("profiles")
           .select(
-            "full_name, role, is_sales_target, is_service_target",
+            "full_name, role, company_id, is_sales_target, is_service_target",
           )
           .eq("id", user.id)
           .maybeSingle();
+
+        const cid = (profile as { company_id?: string } | null)?.company_id;
+        if (cid) {
+          const { data: co } = await supabase
+            .from("companies")
+            .select("name")
+            .eq("id", cid)
+            .maybeSingle();
+          tenantName = (co as { name?: string } | null)?.name ?? null;
+        }
 
         const name =
           (profile as { full_name?: string | null } | null)?.full_name?.trim() ||
@@ -48,11 +60,48 @@ export default async function AppGroupLayout({
         showAdminSection = isAdminRole(role);
 
         const p = profile as ProfileRow | null;
-        if (p && isIncentiveEligible(p)) {
-          showIncentiveLink = true;
+        showMyIncentiveNav = Boolean(p && isIncentiveEligible(p));
+
+        if (showAdminSection) {
+          try {
+            approvalBadgeCount = await countExpenseApprovalBadges(supabase, role);
+          } catch {
+            approvalBadgeCount = 0;
+          }
         }
 
-        showOnboardingLink = await shouldShowOnboardingLink(supabase, user.id);
+        if (p && isIncentiveEligible(p)) {
+          try {
+            const now = new Date();
+            const { count } = await supabase
+              .from("incentive_configs")
+              .select("*", { count: "exact", head: true })
+              .eq("employee_id", user.id)
+              .eq("status", "draft")
+              .eq("year", now.getFullYear())
+              .eq("month", now.getMonth() + 1);
+            incentiveDraftBadgeCount = count ?? 0;
+          } catch {
+            incentiveDraftBadgeCount = 0;
+          }
+        }
+
+        if (showAdminSection) {
+          try {
+            const now = new Date();
+            const { count } = await supabase
+              .from("incentive_configs")
+              .select("*", { count: "exact", head: true })
+              .eq("status", "draft")
+              .eq("year", now.getFullYear())
+              .eq("month", now.getMonth() + 1);
+            if ((count ?? 0) > incentiveDraftBadgeCount) {
+              incentiveDraftBadgeCount = count ?? 0;
+            }
+          } catch {
+            /* ignore */
+          }
+        }
       }
     } catch {
       userLabel = "接続エラー";
@@ -63,11 +112,13 @@ export default async function AppGroupLayout({
     <div className="flex min-h-0 min-h-screen flex-1">
       <AppSidebar
         userLabel={userLabel}
-        showIncentiveLink={showIncentiveLink}
-        showOnboardingLink={showOnboardingLink}
+        tenantName={tenantName}
+        showMyIncentiveNav={showMyIncentiveNav}
         showAdminSection={showAdminSection}
+        approvalBadgeCount={approvalBadgeCount}
+        incentiveDraftBadgeCount={incentiveDraftBadgeCount}
       />
-      <main className="min-h-0 min-w-0 flex-1 overflow-auto p-6 md:p-10">
+      <main className="print-full min-h-0 min-w-0 flex-1 overflow-auto p-6 md:p-10">
         {children}
       </main>
     </div>

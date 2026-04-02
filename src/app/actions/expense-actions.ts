@@ -4,11 +4,45 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+function buildExpenseDescription(formData: FormData): string {
+  const kind = String(formData.get("claim_kind") ?? "expense").trim();
+  const payDate = String(formData.get("pay_date") ?? "").trim();
+  const payee = String(formData.get("payee") ?? "").trim();
+  const purpose = String(formData.get("purpose") ?? "").trim();
+  const participants = String(formData.get("participants") ?? "").trim();
+  const routeFrom = String(formData.get("route_from") ?? "").trim();
+  const routeTo = String(formData.get("route_to") ?? "").trim();
+  const legacyDesc = String(formData.get("description") ?? "").trim();
+
+  const kindLabels: Record<string, string> = {
+    expense: "経費精算",
+    travel: "出張精算",
+    advance: "仮払申請",
+    advance_settle: "仮払精算",
+  };
+  const head = `【${kindLabels[kind] ?? kind}】`;
+
+  const lines: string[] = [head];
+  if (payDate) lines.push(`支払日: ${payDate}`);
+  if (payee) lines.push(`支払先: ${payee}`);
+  if (routeFrom || routeTo) {
+    lines.push(`区間: ${routeFrom || "—"} → ${routeTo || "—"}`);
+  }
+  if (participants) lines.push(`参加者: ${participants}`);
+  if (purpose) lines.push(`用途・目的: ${purpose}`);
+  else if (legacyDesc) lines.push(legacyDesc);
+
+  return lines.filter(Boolean).join("\n");
+}
+
 export async function createExpenseClaim(formData: FormData): Promise<void> {
   const amount = Number(formData.get("amount"));
   const category = String(formData.get("category") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
+  const description = buildExpenseDescription(formData);
   if (!category || !Number.isFinite(amount) || amount <= 0) {
+    redirect("/my/expenses?expense=e_input");
+  }
+  if (!description || description.length < 3) {
     redirect("/my/expenses?expense=e_input");
   }
   const supabase = await createClient();
@@ -35,8 +69,11 @@ export async function resubmitExpenseClaim(formData: FormData): Promise<void> {
   const prevId = String(formData.get("previous_id") ?? "");
   const amount = Number(formData.get("amount"));
   const category = String(formData.get("category") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
+  const description = buildExpenseDescription(formData);
   if (!prevId || !category || !Number.isFinite(amount) || amount <= 0) {
+    redirect("/my/expenses?expense=e_input");
+  }
+  if (!description || description.length < 3) {
     redirect("/my/expenses?expense=e_input");
   }
   const supabase = await createClient();

@@ -6,6 +6,57 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+function jstTodayBounds() {
+  const ymd = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tokyo" });
+  return {
+    start: `${ymd}T00:00:00+09:00`,
+    end: `${ymd}T23:59:59.999+09:00`,
+  };
+}
+
+function todayPunchStatus(
+  rows: { punch_type: string; punched_at: string }[],
+): { label: string; detail: string } {
+  const sorted = [...rows].sort(
+    (a, b) => new Date(a.punched_at).getTime() - new Date(b.punched_at).getTime(),
+  );
+  let lastIn: string | null = null;
+  let lastOut: string | null = null;
+  for (const r of sorted) {
+    if (r.punch_type === "clock_in") lastIn = r.punched_at;
+    if (r.punch_type === "clock_out") lastOut = r.punched_at;
+  }
+  if (!lastIn) {
+    return { label: "未出勤", detail: "—" };
+  }
+  const inTime = new Date(lastIn).toLocaleTimeString("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  if (!lastOut || new Date(lastOut) < new Date(lastIn)) {
+    return {
+      label: "勤務中",
+      detail: `出勤 ${inTime} · 未退勤`,
+    };
+  }
+  const outTime = new Date(lastOut).toLocaleTimeString("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return {
+    label: "退勤済",
+    detail: `出勤 ${inTime} · 退勤 ${outTime}`,
+  };
+}
+
+const roleLabel: Record<string, string> = {
+  owner: "オーナー",
+  approver: "承認者",
+  staff: "スタッフ",
+};
+
 export default async function DashboardPage() {
   if (!isSupabaseConfigured()) {
     return <p>Supabase 未設定</p>;
@@ -22,24 +73,84 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
   const role = (me as { role?: string })?.role ?? "staff";
-  if (!isAdminRole(role)) redirect("/my");
+  if (!isAdminRole(role)) {
+    redirect("/my");
+  }
 
-  const startMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const nowD = new Date();
+  const yDash = nowD.getFullYear();
+  const moDash = nowD.getMonth();
+  const monthStartIso = new Date(yDash, moDash, 1).toISOString();
+  const monthEndIso = new Date(yDash, moDash + 1, 1).toISOString();
 
-  const { data: expRows } = await supabase
-    .from("expense_claims")
-    .select("amount, status")
-    .gte("created_at", startMonth);
+  const { data: monthApprovedRows } = await supabase
+    .from("expenses")
+    .select("amount, auto_approved, step2_approved_at")
+    .eq("status", "approved")
+    .gte("step2_approved_at", monthStartIso)
+    .lt("step2_approved_at", monthEndIso);
+
+  let autoCount = 0;
+  let autoSum = 0;
+  let manualCount = 0;
+  let manualSum = 0;
+  for (const raw of monthApprovedRows ?? []) {
+    const r = raw as { amount: number; auto_approved?: boolean | null };
+    const amt = Number(r.amount);
+    if (r.auto_approved) {
+      autoCount += 1;
+      autoSum += amt;
+    } else {
+      manualCount += 1;
+      manualSum += amt;
+    }
+  }
+  const approvedTotalCount = autoCount + manualCount;
+  const autoApprovalRatePct =
+    approvedTotalCount > 0 ? (autoCount / approvedTotalCount) * 100 : 0;
+
+  const { count: pendingStep1 } = await supabase
+    .from("expenses")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "step1_pending");
+  const { count: pendingStep2 } = await supabase
+    .from("expenses")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "step2_pending");
+  const pendingApproval = (pendingStep1 ?? 0) + (pendingStep2 ?? 0);
+
+  const { data: expApprovedMonth } = await supabase
+    .from("expenses")
+    .select("amount")
+    .eq("status", "approved")
+    .gte("paid_date", monthStartIso.slice(0, 10))
+    .lt("paid_date", monthEndIso.slice(0, 10));
 
   const expenseTotal =
-    expRows
-      ?.filter((e) => (e as { status: string }).status === "approved")
-      .reduce((a, e) => a + Number((e as { amount: number }).amount), 0) ?? 0;
+    expApprovedMonth?.reduce(
+      (a, e) => a + Number((e as { amount: number }).amount),
+      0,
+    ) ?? 0;
 
-  const pendingApproval =
-    expRows?.filter(
-      (e) => (e as { status: string }).status === "step1_pending",
-    ).length ?? 0;
+  const { data: settlementRows } = await supabase
+    .from("expenses")
+    .select("amount, status")
+    .gte("created_at", monthStartIso)
+    .lt("created_at", monthEndIso)
+    .not("status", "eq", "draft")
+    .not("status", "eq", "rejected");
+
+  let settlementDenom = 0;
+  let settlementApproved = 0;
+  for (const raw of settlementRows ?? []) {
+    const r = raw as { amount: number; status: string };
+    const amt = Number(r.amount);
+    if (!Number.isFinite(amt)) continue;
+    settlementDenom += amt;
+    if (r.status === "approved") settlementApproved += amt;
+  }
+  const settlementRatePct =
+    settlementDenom > 0 ? (settlementApproved / settlementDenom) * 100 : 0;
 
   const y = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
   const { data: subs } = await supabase
@@ -57,117 +168,198 @@ export default async function DashboardPage() {
     }
   });
 
-  const autoRules = await supabase
-    .from("auto_approval_rules")
-    .select("id")
-    .eq("is_active", true);
+  const { count: incentiveDraftCount } = await supabase
+    .from("incentive_submissions")
+    .select("*", { count: "exact", head: true })
+    .eq("year_month", y)
+    .eq("status", "draft");
 
-  const autoRate = autoRules.data?.length
-    ? Math.min(100, (pendingApproval / Math.max(expRows?.length ?? 1, 1)) * 100)
-    : 0;
+  const { data: receiptRows } = await supabase
+    .from("expenses")
+    .select("id, receipt_url")
+    .in("status", ["step1_pending", "step2_pending", "approved"])
+    .limit(2000);
+  const receiptMissing =
+    (receiptRows ?? []).filter(
+      (r) => !String((r as { receipt_url: string | null }).receipt_url ?? "").trim(),
+    ).length;
 
-  const { data: alerts } = await supabase
-    .from("retention_alerts")
-    .select("id, employee_id, severity, message, detected_at, is_resolved")
-    .eq("is_resolved", false)
-    .order("detected_at", { ascending: false })
-    .limit(20);
+  const { data: team } = await supabase
+    .from("profiles")
+    .select("id, full_name, role")
+    .order("full_name", { ascending: true });
 
-  const { data: empProfiles } = await supabase.from("profiles").select("id, full_name");
+  const { start: dayStart, end: dayEnd } = jstTodayBounds();
+  const memberIds = (team ?? []).map((m) => (m as { id: string }).id);
+  const { data: punchesToday } =
+    memberIds.length > 0
+      ? await supabase
+          .from("attendance_punches")
+          .select("user_id, punch_type, punched_at")
+          .in("user_id", memberIds)
+          .gte("punched_at", dayStart)
+          .lte("punched_at", dayEnd)
+      : { data: [] as { user_id: string; punch_type: string; punched_at: string }[] };
 
-  const nameById = new Map(
-    (empProfiles as { id: string; full_name: string | null }[] | null)?.map((e) => [
-      e.id,
-      e.full_name ?? "（無名）",
-    ]) ?? [],
-  );
+  const punchesByUser = new Map<string, { punch_type: string; punched_at: string }[]>();
+  for (const row of punchesToday ?? []) {
+    const uid = (row as { user_id: string }).user_id;
+    const punch = row as { punch_type: string; punched_at: string };
+    const list = punchesByUser.get(uid) ?? [];
+    list.push(punch);
+    punchesByUser.set(uid, list);
+  }
 
-  const { data: recentExp } = await supabase
-    .from("expense_claims")
-    .select("id, amount, category, status, created_at, user_id")
-    .order("created_at", { ascending: false })
-    .limit(5);
-
-  const { data: todayAtt } = await supabase
-    .from("attendance_punches")
-    .select("user_id, punch_type, punched_at")
-    .gte("punched_at", new Date(new Date().toDateString()).toISOString());
-
-  const uniqueAtt = new Set((todayAtt ?? []).map((r) => (r as { user_id: string }).user_id));
+  const staffAttendance = (team ?? [])
+    .map((m) => {
+      const row = m as { id: string; full_name: string | null; role: string };
+      const st = todayPunchStatus(punchesByUser.get(row.id) ?? []);
+      return {
+        id: row.id,
+        name: row.full_name?.trim() || "（無名）",
+        roleKey: row.role,
+        ...st,
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, "ja"));
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">管理ダッシュボード</h1>
+      <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+        管理ダッシュボード
+      </h1>
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        owner / approver 向けの全社サマリーです。
+      </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi title="今月経費（承認済）" value={fmt(expenseTotal)} />
+        <Kpi title="今月の経費合計（承認済・支払月）" value={fmt(expenseTotal)} />
         <Kpi title="承認待ち件数" value={`${pendingApproval} 件`} />
-        <Kpi title="インセンティブ試算（今月）" value={fmt(incEst)} />
-        <Kpi title="自動承認率（参考）" value={`${autoRate.toFixed(0)}%`} />
+        <Kpi title="インセンティブ試算（提出・承認分・今月）" value={fmt(incEst)} />
+        <Kpi
+          title="精算率（今月申請・ドラフト・差戻し除く）"
+          value={`${settlementRatePct.toFixed(1)}%`}
+        />
       </div>
 
-      <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="font-medium">要対応</h2>
-        <ul className="mt-2 list-inside list-disc text-sm text-zinc-600">
-          <li>承認待ち経費: {pendingApproval} 件 → <Link href="/approval" className="text-blue-600 underline">承認へ</Link></li>
-          <li>未提出インセンティブ: CRMで確認</li>
+      <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
+        <h2 className="font-medium text-zinc-900 dark:text-zinc-100">要対応</h2>
+        <ul className="mt-3 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
+          <li className="flex flex-wrap items-center gap-2">
+            <span>
+              承認待ち経費: {pendingStep1 ?? 0} 件（第1） / {pendingStep2 ?? 0}{" "}
+              件（最終）
+            </span>
+            <Link href="/approval" className="text-blue-600 underline dark:text-blue-400">
+              承認へ
+            </Link>
+          </li>
+          <li>
+            未提出インセンティブ（ドラフト）: {incentiveDraftCount ?? 0} 件 →{" "}
+            <Link href="/incentives" className="text-blue-600 underline dark:text-blue-400">
+              インセンティブ管理
+            </Link>
+          </li>
+          <li>
+            領収書未添付（承認待ち・承認済）: {receiptMissing} 件 →{" "}
+            <Link href="/expenses/audit" className="text-blue-600 underline dark:text-blue-400">
+              経費審査
+            </Link>
+          </li>
         </ul>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="font-medium">本日の出勤（ユニーク打刻者）</h2>
-        <p className="mt-2 text-2xl font-semibold">{uniqueAtt.size} 名</p>
+      <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
+        <h2 className="font-medium text-zinc-900 dark:text-zinc-100">全スタッフの出勤状況（本日）</h2>
+        <p className="mt-1 text-xs text-zinc-500">
+          Asia/Tokyo · {staffAttendance.length} 名 · 出勤打刻から状態を表示しています
+        </p>
+        <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-100 dark:border-zinc-800">
+          <table className="w-full min-w-[480px] text-left text-sm">
+            <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900/50">
+              <tr>
+                <th className="px-3 py-2">氏名</th>
+                <th className="px-3 py-2">権限</th>
+                <th className="px-3 py-2">状態</th>
+                <th className="px-3 py-2">打刻</th>
+                <th className="px-3 py-2 w-24" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {staffAttendance.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-3 py-6 text-center text-zinc-500">
+                    メンバーがいません
+                  </td>
+                </tr>
+              )}
+              {staffAttendance.map((a) => (
+                <tr key={a.id} className="text-zinc-800 dark:text-zinc-200">
+                  <td className="px-3 py-2 font-medium">{a.name}</td>
+                  <td className="px-3 py-2 text-xs text-zinc-500">
+                    {roleLabel[a.roleKey] ?? a.roleKey}
+                  </td>
+                  <td className="px-3 py-2">
+                    <span
+                      className={
+                        a.label === "未出勤"
+                          ? "text-zinc-500"
+                          : a.label === "勤務中"
+                            ? "font-medium text-emerald-700 dark:text-emerald-400"
+                            : "text-zinc-700 dark:text-zinc-300"
+                      }
+                    >
+                      {a.label}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 tabular-nums text-zinc-600 dark:text-zinc-400">
+                    {a.detail}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    <Link
+                      href={`/employees/${a.id}`}
+                      className="text-xs text-blue-600 underline dark:text-blue-400"
+                    >
+                      詳細
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
-      <section className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-900/40">
-        <h2 className="font-medium text-amber-900 dark:text-amber-200">退職リスクアラート</h2>
-        <ul className="mt-3 space-y-3">
-          {(alerts ?? []).length === 0 && (
-            <li className="text-sm text-zinc-600">未処理のアラートはありません</li>
-          )}
-          {(alerts ?? []).map((a) => {
-            const sev = (a as { severity: string }).severity;
-            const badge =
-              sev === "high"
-                ? "bg-red-600 text-white"
-                : sev === "medium"
-                  ? "bg-amber-500 text-white"
-                  : "bg-blue-600 text-white";
-            return (
-              <li
-                key={(a as { id: string }).id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              >
-                <div>
-                  <span className={`rounded px-2 py-0.5 text-xs ${badge}`}>{sev}</span>
-                  <span className="ml-2 font-medium">
-                    {nameById.get((a as { employee_id: string }).employee_id) ?? "—"}
-                  </span>
-                  <p className="text-zinc-600">{(a as { message: string }).message}</p>
-                </div>
-                <Link
-                  href={`/employees/${(a as { employee_id: string }).employee_id}`}
-                  className="text-blue-600 underline"
-                >
-                  従業員詳細
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="font-medium">最近の経費申請</h2>
-        <ul className="mt-2 divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-          {(recentExp ?? []).map((e) => (
-            <li key={(e as { id: string }).id} className="flex justify-between py-2">
-              <span>{(e as { category: string }).category}</span>
-              <span>{fmt(Number((e as { amount: number }).amount))}</span>
-              <span className="text-zinc-500">{(e as { status: string }).status}</span>
-            </li>
-          ))}
-        </ul>
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+          自動承認の統計（今月・最終承認日ベース）
+        </h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="text-xs text-zinc-500">自動承認・件数</p>
+            <p className="mt-1 text-lg font-semibold tabular-nums">{autoCount} 件</p>
+            <p className="text-xs text-zinc-600">{fmt(autoSum)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-zinc-500">手動承認・件数</p>
+            <p className="mt-1 text-lg font-semibold tabular-nums">{manualCount} 件</p>
+            <p className="text-xs text-zinc-600">{fmt(manualSum)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-zinc-500">自動承認率（承認済のうち）</p>
+            <p className="mt-1 text-lg font-semibold tabular-nums">
+              {approvedTotalCount > 0 ? `${autoApprovalRatePct.toFixed(1)}%` : "—"}
+            </p>
+          </div>
+          <div className="flex items-end">
+            <Link
+              href="/settings/auto-approval"
+              className="inline-flex rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            >
+              自動承認ルール
+            </Link>
+          </div>
+        </div>
       </section>
     </div>
   );

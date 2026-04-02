@@ -35,7 +35,7 @@ export async function shouldShowOnboardingLink(
 
   const { data: tasks, error: tasksErr } = await supabase
     .from("onboarding_tasks")
-    .select("completed")
+    .select("completed, status")
     .eq("employee_id", employeeId);
 
   if (tasksErr) {
@@ -43,8 +43,10 @@ export async function shouldShowOnboardingLink(
   }
 
   const hasIncomplete =
-    tasks?.some((t: { completed?: boolean | null }) => t.completed !== true) ??
-    false;
+    tasks?.some((t: { completed?: boolean | null; status?: string | null }) => {
+      if (t.status && t.status !== "completed") return true;
+      return t.completed !== true;
+    }) ?? false;
 
   return within30 || hasIncomplete;
 }

@@ -2,9 +2,16 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { signAttendanceQrToken } from "@/lib/attendance-qr-token";
+import type { AttendancePunchType } from "@/types";
 import { revalidatePath } from "next/cache";
 
 const QR_TTL_SEC = 300;
+
+export type PunchGeo = {
+  latitude: number;
+  longitude: number;
+  accuracyMeters: number | null;
+};
 
 export async function generateAttendanceQrToken(
   punchType: "clock_in" | "clock_out",
@@ -38,7 +45,8 @@ export async function generateAttendanceQrToken(
 }
 
 export async function punchAttendance(
-  punchType: "clock_in" | "clock_out",
+  punchType: AttendancePunchType,
+  geo?: PunchGeo | null,
 ): Promise<{ ok: boolean; message?: string }> {
   const supabase = await createClient();
   const {
@@ -47,40 +55,24 @@ export async function punchAttendance(
   if (!user) {
     return { ok: false, message: "ログインが必要です" };
   }
-  const { error } = await supabase.from("attendance_punches").insert({
+  const row: Record<string, unknown> = {
     user_id: user.id,
     punch_type: punchType,
     source: "web",
-  });
+  };
+  if (geo) {
+    row.latitude = geo.latitude;
+    row.longitude = geo.longitude;
+    row.location_accuracy_m = geo.accuracyMeters;
+  }
+  const { error } = await supabase.from("attendance_punches").insert(row);
   if (error) {
     return { ok: false, message: "打刻に失敗しました" };
   }
   revalidatePath("/my");
   revalidatePath("/my/attendance");
+  revalidatePath("/attendance");
+  revalidatePath("/attendance/calendar");
   revalidatePath("/dashboard");
   return { ok: true };
-}
-
-export type CorrectionFormState =
-  | { ok: true; message: string }
-  | { ok: false; message: string };
-
-/** 打刻修正申請の保存は今後 Supabase 等と接続 */
-export async function submitPunchCorrectionRequest(
-  _prev: CorrectionFormState | undefined,
-  formData: FormData,
-): Promise<CorrectionFormState> {
-  const targetDate = String(formData.get("target_date") ?? "").trim();
-  const reason = String(formData.get("reason") ?? "").trim();
-
-  if (!targetDate) {
-    return { ok: false, message: "対象日を入力してください。" };
-  }
-  if (!reason) {
-    return { ok: false, message: "理由を入力してください。" };
-  }
-
-  revalidatePath("/my/attendance");
-  revalidatePath("/attendance/correction");
-  return { ok: true, message: "申請を受け付けました。（保存処理は今後接続されます）" };
 }

@@ -1,6 +1,7 @@
 /** DB: public.profiles（auth.users.id と同一の id） */
 export type ProfileRow = {
   id: string;
+  company_id: string;
   full_name: string | null;
   role: "owner" | "approver" | "staff";
   is_sales_target: boolean;
@@ -10,6 +11,7 @@ export type ProfileRow = {
 /** DB: public.incentive_rates */
 export type IncentiveRateRow = {
   id: string;
+  company_id: string;
   user_id: string;
   year_month: string;
   rate: number;
@@ -27,6 +29,7 @@ export const INCENTIVE_DEAL_ROLE_LABEL: Record<IncentiveDealRole, string> = {
 /** DB: public.incentive_submissions */
 export type IncentiveSubmissionRow = {
   id: string;
+  company_id: string;
   user_id: string;
   year_month: string;
   sales_amount: number | null;

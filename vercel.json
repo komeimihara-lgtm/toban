@@ -1,8 +1,24 @@
 {
   "crons": [
     {
+      "path": "/api/cron/grant-paid-leave",
+      "schedule": "0 0 * * *"
+    },
+    {
       "path": "/api/cron/analyze-retention",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/sync-ot",
+      "schedule": "0 9 28 * *"
+    },
+    {
+      "path": "/api/cron/process-notifications",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/deactivate-scheduled-accounts",
+      "schedule": "0 1 * * *"
     }
   ]
 }

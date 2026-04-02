@@ -4,8 +4,10 @@ import {
   acceptAiInterviewRequest,
   completeAiInterview,
 } from "@/app/actions/ai-interview-actions";
+import type { HrChatTurn } from "@/lib/hr-ai-messages";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { HrAssistantChat } from "./hr-assistant-chat";
 
 type ChatLine = { role: "user" | "assistant"; text: string };
 
@@ -20,7 +22,15 @@ function interviewReply(userText: string): string {
   return "ありがとうございます。ほかに話しておきたいことはありますか。よければ、仕事の希望や不安を一文で教えてください。";
 }
 
-export function HrAiClient() {
+export type HrAiClientProps = {
+  hrInitialConversationId?: string | null;
+  hrInitialMessages?: HrChatTurn[];
+};
+
+export function HrAiClient({
+  hrInitialConversationId = null,
+  hrInitialMessages = [],
+}: HrAiClientProps) {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode");
   const requestId = searchParams.get("request");
@@ -170,17 +180,9 @@ export function HrAiClient() {
   }
 
   return (
-    <div className="space-y-3">
-      <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-        AI 相談窓口
-      </h1>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        人事・労務に関する質問は、今後チャットボットと組み合わせて拡張予定です。いまは面談モード（招待された方）は
-        <code className="mx-1 rounded bg-zinc-100 px-1 text-xs dark:bg-zinc-800">
-          ?mode=interview&request=…
-        </code>
-        からご利用ください。
-      </p>
-    </div>
+    <HrAssistantChat
+      initialConversationId={hrInitialConversationId}
+      initialMessages={hrInitialMessages}
+    />
   );
 }

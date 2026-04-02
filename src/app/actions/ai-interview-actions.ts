@@ -52,7 +52,7 @@ export async function acceptAiInterviewRequest(requestId: string) {
   }
 
   revalidatePath("/my");
-  revalidatePath("/hr-ai");
+  revalidatePath("/my/hr-ai");
   return { ok: true as const };
 }
 
@@ -114,6 +114,6 @@ export async function completeAiInterview(requestId: string, summary: string) {
   );
 
   revalidatePath("/my");
-  revalidatePath("/hr-ai");
+  revalidatePath("/my/hr-ai");
   return { ok: true as const };
 }

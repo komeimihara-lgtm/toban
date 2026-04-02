@@ -2,8 +2,8 @@ import {
   createProductAction,
   setProductActiveAction,
 } from "@/app/actions/product-settings-actions";
+import { IncentiveRatesSettings } from "@/components/settings/incentive-rates-settings";
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_COMPANY_ID } from "@/lib/company";
 import { isAdminRole } from "@/types/incentive";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -19,16 +19,18 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, company_id")
     .eq("id", user.id)
     .single();
-  const role = (profile as { role?: string } | null)?.role ?? "staff";
-  if (!isAdminRole(role)) redirect("/my");
+  const pr = profile as { role?: string; company_id?: string } | null;
+  const role = pr?.role ?? "staff";
+  const companyId = pr?.company_id;
+  if (!isAdminRole(role) || !companyId) redirect("/my");
 
   const { data: products } = await supabase
     .from("products")
     .select("id, name, cost_price, is_active, notes")
-    .eq("company_id", DEFAULT_COMPANY_ID)
+    .eq("company_id", companyId)
     .order("name");
 
   const rows = (products ?? []) as {
@@ -47,20 +49,58 @@ export default async function SettingsPage() {
             設定
           </h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            商品マスタ（インセンティブ案件の選択肢）
+            インセンティブ率・商品マスタ
           </p>
         </div>
-        <Link
-          href="/settings/auto-approval"
-          className="text-sm font-medium text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-        >
-          自動承認ルール →
-        </Link>
+        <div className="flex flex-wrap gap-4">
+          <Link
+            href="/settings/auto-approval"
+            className="text-sm font-medium text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            自動承認ルール →
+          </Link>
+          <Link
+            href="/settings/hr"
+            className="text-sm font-medium text-emerald-700 underline hover:text-emerald-900 dark:text-emerald-400"
+          >
+            HR（従業員一覧）→
+          </Link>
+        </div>
       </div>
+
+      <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
+        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+          承認フロー（確認）
+        </h2>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          経費・インセンティブを含む全申請は次の順序です。差戻し時は理由が必須となり、申請者に通知されます。
+        </p>
+        <p className="mt-3 text-sm font-medium text-zinc-800 dark:text-zinc-200">
+          申請者 → <span className="text-emerald-800 dark:text-emerald-300">千葉</span>
+          （第1承認）→ <span className="text-emerald-800 dark:text-emerald-300">三原孔明</span>
+          （最終承認）→ 完了
+        </p>
+      </section>
+
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
+          インセンティブ率（月次）
+        </h2>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          営業部・サービス部の対象メンバーごとにパーセント数値を保存します（
+          <code className="text-xs">POST /api/settings/incentive-rates</code>）。
+        </p>
+        <div className="mt-6">
+          <IncentiveRatesSettings />
+        </div>
+      </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="text-sm font-medium text-zinc-500">商品を追加</h2>
-        <form action={createProductAction} className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <form
+          action={createProductAction}
+          className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap"
+        >
           <input
             name="name"
             required
@@ -89,9 +129,9 @@ export default async function SettingsPage() {
         </form>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="border-b border-zinc-100 px-6 py-4 text-sm font-medium text-zinc-500 dark:border-zinc-800">
-          登録済み
+          登録済み商品
         </h2>
         <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
           {rows.length === 0 && (

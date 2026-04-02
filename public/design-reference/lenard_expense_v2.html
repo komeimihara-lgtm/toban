@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>LENARD HR — 経費精算 & インセンティブ v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f3f1ec;--surf:#fff;--s2:#edeae3;--s3:#e2ddd5;
+  --bd:#dad5cb;--bd2:#c5bfb0;
+  --tx:#1a1814;--tx2:#68625a;--tx3:#9a9488;
+  --g:#1a5838;--gl:#e3f0e9;--gm:#9ec8b0;
+  --gold:#a87208;--goldl:#fdf4dc;--goldm:#e0c060;
+  --red:#982020;--redl:#fdf0f0;--redm:#e8a8a8;
+  --blue:#1a4888;--bl:#eaf0fc;--bm:#9ab8e8;
+  --warn:#8a4e00;--warnl:#fff7ec;--warnm:#e8c080;
+  --purple:#5828a0;--pl:#f3eeff;--pm:#b898e8;
+  --mono:'DM Mono',monospace;
+  --r:10px;--rsm:6px;--rlg:14px;
+}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;min-height:100vh}
+
+/* ── SHELL ── */
+.shell{display:flex;min-height:100vh}
+.side{width:204px;background:var(--tx);flex-shrink:0;position:fixed;height:100vh;display:flex;flex-direction:column;z-index:200}
+.side-logo{padding:1.125rem;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:9px}
+.lmark{width:30px;height:30px;border-radius:7px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0}
+.lname{font-size:12px;font-weight:700;color:#fff;letter-spacing:.8px}
+.lsub{font-size:9px;color:rgba(255,255,255,.28);margin-top:1px}
+.snav{flex:1;padding:.375rem 0;overflow-y:auto}
+.ng{padding:.5rem .875rem .15rem;font-size:9px;color:rgba(255,255,255,.22);letter-spacing:1.5px;font-weight:500}
+.ni{display:flex;align-items:center;gap:8px;padding:8px .875rem;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;transition:all .15s;position:relative;user-select:none}
+.ni:hover{color:#fff;background:rgba(255,255,255,.06)}
+.ni.on{color:#fff;background:rgba(255,255,255,.1)}
+.ni.on::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--gold);border-radius:0 2px 2px 0}
+.ni-ic{width:15px;text-align:center;font-size:13px;flex-shrink:0;opacity:.7}
+.ni.on .ni-ic{opacity:1}
+.nbadge{margin-left:auto;background:var(--red);color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;font-weight:700;min-width:16px;text-align:center}
+.nbadge.gold{background:var(--gold)}
+.suser{padding:.875rem;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:8px}
+.sav{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0}
+.sun{font-size:11px;font-weight:500;color:#fff}
+.sur{font-size:9px;color:rgba(255,255,255,.32);margin-top:1px}
+
+.main{margin-left:204px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surf);border-bottom:1px solid var(--bd);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.tb-t{font-size:15px;font-weight:500}
+.tb-s{font-size:10px;color:var(--tx3);margin-top:1px}
+.content{padding:1.375rem 1.5rem;flex:1}
+.sec{display:none}.sec.on{display:block}
+
+/* ── COMPONENTS ── */
+.panel{background:var(--surf);border:1px solid var(--bd);border-radius:var(--rlg);margin-bottom:1.125rem;overflow:hidden}
+.ph{padding:.625rem 1.125rem;border-bottom:1px solid var(--bd);background:var(--s2);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ph-t{font-size:12px;font-weight:500;flex:1}
+.ph-s{font-size:10px;color:var(--tx3)}
+.pb{padding:1.125rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1.125rem}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.125rem}
+.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.125rem}
+.kc{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:.875rem 1rem}
+.kl{font-size:10px;color:var(--tx3);margin-bottom:5px;font-weight:500}
+.kv{font-size:22px;font-weight:300;font-family:var(--mono);line-height:1}
+.kv.g{color:var(--g)}.kv.go{color:var(--gold)}.kv.r{color:var(--red)}.kv.p{color:var(--purple)}.kv.b{color:var(--blue)}
+.kf{font-size:10px;color:var(--tx3);margin-top:4px}
+.prog{height:5px;background:var(--s2);border-radius:3px;overflow:hidden;margin-top:6px}
+.pf{height:100%;border-radius:3px;transition:width .5s}
+.pf-g{background:var(--g)}.pf-go{background:var(--gold)}.pf-r{background:var(--red)}.pf-p{background:var(--purple)}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--rsm);font-size:12px;cursor:pointer;border:1px solid var(--bd);background:var(--surf);color:var(--tx);font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--s2)}
+.btn.p{background:var(--g);color:#fff;border-color:var(--g)}.btn.p:hover{background:#154d30}
+.btn.go{background:var(--gold);color:#fff;border-color:var(--gold)}.btn.go:hover{background:#806000}
+.btn.pur{background:var(--purple);color:#fff;border-color:var(--purple)}.btn.pur:hover{background:#401888}
+.btn.danger{background:var(--redl);color:var(--red);border-color:var(--redm)}
+.btn.sm{padding:4px 10px;font-size:11px}
+.btn.lg{padding:10px 20px;font-size:13px}
+.bd{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;white-space:nowrap}
+.bd-g{background:var(--gl);color:var(--g)}
+.bd-go{background:var(--goldl);color:var(--gold)}
+.bd-r{background:var(--redl);color:var(--red)}
+.bd-b{background:var(--bl);color:var(--blue)}
+.bd-p{background:var(--pl);color:var(--purple)}
+.bd-gr{background:var(--s2);color:var(--tx2)}
+.bd-warn{background:var(--warnl);color:var(--warn)}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:10px;font-weight:500;color:var(--tx3);letter-spacing:.3px}
+.field input,.field select,.field textarea{padding:8px 10px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--surf);color:var(--tx);font-size:13px;font-family:inherit;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--g)}
+.field textarea{resize:vertical;min-height:72px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+
+/* ── 承認フロー ステッパー ── */
+.flow-steps{display:flex;align-items:center;gap:0;margin-bottom:1rem}
+.fs{display:flex;align-items:center;flex:1}
+.fs-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--bd);background:var(--surf);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--tx3);flex-shrink:0;transition:all .3s}
+.fs-dot.done{background:var(--g);border-color:var(--g);color:#fff}
+.fs-dot.active{border-color:var(--gold);color:var(--gold)}
+.fs-dot.rejected{background:var(--red);border-color:var(--red);color:#fff}
+.fs-line{flex:1;height:2px;background:var(--bd)}
+.fs-line.done{background:var(--g)}
+.fs-info{text-align:center;min-width:60px}
+.fs-name{font-size:10px;color:var(--tx2);font-weight:500}
+.fs-role{font-size:9px;color:var(--tx3);margin-top:1px}
+.fs-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+
+/* ── 申請カード ── */
+.appr-card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:.875rem;overflow:hidden;transition:box-shadow .2s}
+.appr-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.ac-head{padding:.875rem 1rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)}
+.ac-av{width:36px;height:36px;border-radius:50%;background:var(--s2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--tx2);flex-shrink:0}
+.ac-info{flex:1}
+.ac-name{font-size:13px;font-weight:500}
+.ac-meta{font-size:10px;color:var(--tx3);margin-top:1px}
+.ac-amt{font-family:var(--mono);font-size:16px;font-weight:500;flex-shrink:0}
+.ac-body{padding:.875rem 1rem}
+.ac-items{background:var(--s2);border-radius:var(--rsm);padding:.625rem .875rem;margin-bottom:.875rem}
+.aci-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(0,0,0,.04)}
+.aci-row:last-child{border-bottom:none}
+.aci-label{color:var(--tx2)}
+.aci-val{font-weight:500}
+.ac-flow{display:flex;align-items:center;gap:8px;margin-bottom:.875rem}
+.acf-step{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;border:1px solid var(--bd);background:var(--surf)}
+.acf-step.done{background:var(--gl);border-color:var(--gm);color:var(--g)}
+.acf-step.pending{background:var(--goldl);border-color:var(--goldm);color:var(--gold)}
+.acf-step.waiting{background:var(--s2);color:var(--tx3)}
+.acf-arrow{color:var(--tx3);font-size:12px}
+.ac-actions{display:flex;gap:8px}
+.ac-btn{flex:1;padding:9px;border-radius:var(--rsm);font-size:13px;font-weight:500;cursor:pointer;border:1px solid;font-family:inherit;transition:all .2s;text-align:center}
+.ac-btn.ok{background:var(--g);color:#fff;border-color:var(--g)}.ac-btn.ok:hover{background:#154d30}
+.ac-btn.ng{background:var(--redl);color:var(--red);border-color:var(--redm)}.ac-btn.ng:hover{background:#fce8e8}
+
+/* ── カメラゾーン ── */
+.cam-zone{background:var(--tx);border-radius:var(--rlg);padding:1.75rem;text-align:center;cursor:pointer;position:relative;overflow:hidden;margin-bottom:1rem;transition:all .2s}
+.cam-zone:hover{transform:translateY(-1px)}
+.cz-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(26,88,56,.85),rgba(10,10,8,.92));pointer-events:none}
+.cz-inner{position:relative;z-index:1}
+.cz-scan{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(158,200,176,.8),transparent);animation:scan 1.5s ease-in-out infinite;display:none;z-index:2}
+@keyframes scan{0%{top:8%}100%{top:92%}}
+.cz-icon{font-size:32px;display:block;margin-bottom:8px}
+.cz-title{font-size:14px;font-weight:500;color:#fff;margin-bottom:4px}
+.cz-sub{font-size:11px;color:rgba(255,255,255,.42);line-height:1.5}
+.cz-btns{display:flex;gap:8px;justify-content:center;margin-top:1rem}
+.czb{padding:7px 18px;border-radius:var(--rsm);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff}
+.czb:hover{background:rgba(255,255,255,.15)}
+.czb.primary{background:var(--gold);border-color:var(--gold);color:#fff}.czb.primary:hover{background:#806000}
+.ai-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(158,200,176,.18);color:rgba(158,200,176,.9);border:1px solid rgba(158,200,176,.25);margin-bottom:10px}
+
+/* AI結果 */
+.ai-res{background:var(--gl);border:1px solid var(--gm);border-radius:var(--r);padding:.875rem 1rem;margin-bottom:1rem;display:none;animation:fadeUp .3s ease}
+.ai-res.show{display:block}
+.air-head{font-size:11px;font-weight:700;color:var(--g);letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.air-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+.air-row{font-size:12px;color:var(--g)}.air-val{font-weight:500}
+@keyframes fadeUp{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+/* 申請リスト行 */
+.erow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd)}
+.erow:last-child{border-bottom:none}
+.eicon{width:32px;height:32px;border-radius:var(--rsm);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.einfo{flex:1;min-width:0}
+.ename{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emeta{font-size:10px;color:var(--tx3);margin-top:1px}
+.eamt{font-family:var(--mono);font-size:13px;font-weight:500;flex-shrink:0}
+
+/* インセンティブ */
+.inc-hero{border-radius:var(--rlg);padding:1.5rem;margin-bottom:1.125rem;background:var(--tx);position:relative;overflow:hidden}
+.ih-glow{position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(176,114,8,.2),transparent 70%);pointer-events:none}
+.ih-inner{position:relative;z-index:1}
+.ih-tag{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:1.5px;font-weight:500;margin-bottom:6px}
+.ih-title{font-size:17px;font-weight:300;color:#fff;margin-bottom:1rem}
+.ih-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.ih-item{text-align:center}
+.ih-val{font-family:var(--mono);font-size:26px;font-weight:400;color:#fff;line-height:1}
+.ih-val.gold{color:#f0d090}.ih-val.green{color:#9ec8b0}
+.ih-unit{font-size:11px;opacity:.5;margin-left:2px}
+.ih-label{font-size:10px;color:rgba(255,255,255,.35);margin-top:5px}
+
+/* bar */
+.brow{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.blabel{font-size:11px;color:var(--tx2);width:80px;text-align:right;flex-shrink:0}
+.btrack{flex:1;height:7px;background:var(--s2);border-radius:4px;overflow:hidden}
+.bfill{height:100%;border-radius:4px;transition:width .6s}
+.bval{font-size:11px;font-family:var(--mono);width:65px;flex-shrink:0;text-align:right}
+
+/* submit banner */
+.sub-banner{background:linear-gradient(135deg,var(--purple),#401888);border-radius:var(--rlg);padding:1.125rem 1.375rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s;margin-top:.5rem}
+.sub-banner:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(88,40,160,.3)}
+.sb-text{color:#fff}
+.sb-tag{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1px;margin-bottom:4px}
+.sb-title{font-size:14px;font-weight:500}
+.sb-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px}
+
+/* inc table */
+.itable{width:100%;border-collapse:collapse}
+.itable th{font-size:10px;color:var(--tx3);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--bd);background:var(--s2)}
+.itable td{font-size:12px;padding:8px 8px;border-bottom:1px solid var(--bd)}
+.itable tr:last-child td{border-bottom:none}
+.itable tr:hover td{background:var(--s2)}
+.itable td.r{text-align:right;font-family:var(--mono)}
+.itable td.bold{font-weight:500}
+.itable .total-row td{font-weight:700;background:var(--s2)}
+
+/* rate editor */
+.rate-row{display:flex;align-items:center;gap:10px;padding:10px;background:var(--s2);border-radius:var(--rsm);margin-bottom:6px}
+.rate-name{font-size:13px;font-weight:500;flex:1}
+.rate-input{width:70px;padding:5px 8px;border-radius:var(--rsm);border:1px solid var(--bd);background:var(--surf);font-size:13px;font-family:var(--mono);text-align:right}
+.rate-unit{font-size:12px;color:var(--tx3)}
+.rate-preview{font-size:12px;color:var(--g);font-family:var(--mono);min-width:80px;text-align:right}
+
+/* 差戻しモーダル */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surf);border-radius:var(--rlg);padding:1.5rem;width:480px;max-width:90vw;animation:fadeUp .2s ease}
+.modal-title{font-size:15px;font-weight:500;margin-bottom:1rem}
+.modal-actions{display:flex;gap:8px;margin-top:1rem;justify-content:flex-end}
+</style>
+</head>
+<body>
+
+<!-- 差戻しモーダル -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="modal">
+    <div class="modal-title">⚠️ 差戻し理由を入力</div>
+    <div class="field">
+      <label>差戻し理由（申請者に通知されます）</label>
+      <textarea id="reject-reason" placeholder="例：領収書が未添付です。添付の上、再申請してください。" style="min-height:100px"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeRejectModal()">キャンセル</button>
+      <button class="btn danger" onclick="confirmReject()">差戻しを確定</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+<!-- SIDEBAR -->
+<aside class="side">
+  <div class="side-logo">
+    <div class="lmark">L</div>
+    <div><div class="lname">LENARD HR</div><div class="lsub">経費 & インセンティブ</div></div>
+  </div>
+  <nav class="snav">
+    <div class="ng">経費精算</div>
+    <div class="ni on" onclick="go('dash','ダッシュボード')"><span class="ni-ic">⊞</span>ダッシュボード</div>
+    <div class="ni" onclick="go('new','新規申請')"><span class="ni-ic">＋</span>新規申請</div>
+    <div class="ni" onclick="go('list','申請一覧')"><span class="ni-ic">≡</span>申請一覧</div>
+    <div class="ni" onclick="go('approval','承認ワークフロー')"><span class="ni-ic">✓</span>承認<span class="nbadge" id="n-appr">3</span></div>
+    <div class="ng">インセンティブ</div>
+    <div class="ni" onclick="go('inc','インセンティブ計算')"><span class="ni-ic">✦</span>計算・提出<span class="nbadge gold" id="n-inc">未</span></div>
+    <div class="ni" onclick="go('settings','インセンティブ設定')"><span class="ni-ic">⚙</span>計算式設定</div>
+    <div class="ni" onclick="go('history','支給履歴')"><span class="ni-ic">📊</span>支給履歴</div>
+    <div class="ng">レポート</div>
+    <div class="ni" onclick="go('report','月次レポート')"><span class="ni-ic">📈</span>月次レポート</div>
+  </nav>
+  <div class="suser">
+    <div class="sav">孔明</div>
+    <div><div class="sun">三原 孔明</div><div class="sur">代表取締役</div></div>
+  </div>
+</aside>
+
+<main class="main">
+<div class="topbar">
+  <div>
+    <div class="tb-t" id="tb-t">ダッシュボード</div>
+    <div class="tb-s" id="tb-s">レナード株式会社 — 2025年3月</div>
+  </div>
+  <div style="display:flex;gap:7px">
+    <button class="btn sm p" onclick="go('new','新規申請')">＋ 経費申請</button>
+    <button class="btn sm go" onclick="go('inc','インセンティブ計算')">✦ インセンティブ</button>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ══ DASHBOARD ══ -->
+<div class="sec on" id="sec-dash">
+  <div class="krow">
+    <div class="kc"><div class="kl">今月の経費合計</div><div class="kv go">¥128,600</div><div class="kf">承認済 ¥96,200</div><div class="prog"><div class="pf pf-go" style="width:75%"></div></div></div>
+    <div class="kc"><div class="kl">承認待ち</div><div class="kv r">3件</div><div class="kf">第1承認待ち 2件 / 最終承認待ち 1件</div></div>
+    <div class="kc"><div class="kl">今月インセンティブ（試算）</div><div class="kv p">¥247,000</div><div class="kf">5名合計 — 未提出</div><div class="prog"><div class="pf pf-p" style="width:82%"></div></div></div>
+    <div class="kc"><div class="kl">楽楽精算 → 移行状況</div><div class="kv g">100%</div><div class="kf">全機能をLENARD HRに移行済み</div></div>
+  </div>
+  <div class="two">
+    <div class="panel">
+      <div class="ph"><div class="ph-t">⚡ 今日の要対応</div></div>
+      <div class="pb" style="display:flex;flex-direction:column;gap:7px">
+        <div onclick="go('approval','承認ワークフロー')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--redl);border-radius:var(--rsm);cursor:pointer;border:1px solid var(--redm)">
+          <div><div style="font-size:12px;font-weight:500;color:var(--red)">【最終承認待ち】出張費 ¥12,580</div><div style="font-size:10px;color:var(--tx3);margin-top:1px">鈴木 美咲 / 3/10申請 → 部門長承認済み</div></div>
+          <span class="bd bd-r">承認する →</span>
+        </div>
+        <div onclick="go('approval','承認ワークフロー')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--goldl);border-radius:var(--rsm);cursor:pointer;border:1px solid var(--goldm)">
+          <div><div style="font-size:12px;font-weight:500;color:var(--gold)">【第1承認】2件 — 部門長に承認依頼中</div><div style="font-size:10px;color:var(--tx3);margin-top:1px">後藤 / 通信費・消耗品</div></div>
+          <span class="bd bd-go">確認する →</span>
+        </div>
+        <div onclick="go('inc','インセンティブ計算')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--pl);border-radius:var(--rsm);cursor:pointer;border:1px solid var(--pm)">
+          <div><div style="font-size:12px;font-weight:500;color:var(--purple)">3月インセンティブ 未提出 — 締切 4/5</div><div style="font-size:10px;color:var(--tx3);margin-top:1px">試算 ¥247,000 / freee連携で自動反映</div></div>
+          <span class="bd bd-p">提出する →</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="ph-t">経費カテゴリ別（今月）</div></div>
+      <div class="pb" id="dash-bar"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><div class="ph-t">最近の申請</div><button class="btn sm" onclick="go('list','申請一覧')">すべて見る →</button></div>
+    <div class="pb" id="dash-list"></div>
+  </div>
+</div>
+
+<!-- ══ NEW EXPENSE ══ -->
+<div class="sec" id="sec-new">
+  <div class="two">
+    <div>
+      <!-- カメラ / アップロード -->
+      <div class="cam-zone" onclick="startScan(event)" id="czn">
+        <div class="cz-overlay"></div>
+        <div class="cz-scan" id="cz-scan"></div>
+        <div class="cz-inner">
+          <div class="ai-tag">✦ AI 領収書読取</div>
+          <span class="cz-icon" id="cz-icon">📷</span>
+          <div class="cz-title" id="cz-title">領収書を読み取る</div>
+          <div class="cz-sub" id="cz-sub">スマホカメラ・画像ファイル対応<br>AI が金額・日付・店名・種別を自動抽出</div>
+          <div class="cz-btns">
+            <button class="czb primary" onclick="startScan(event)">📷 カメラ撮影</button>
+            <button class="czb" onclick="startScan(event)">🖼 画像を選択</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-res" id="ai-res">
+        <div class="air-head"><span style="font-size:14px">✓</span> AI 読取完了 — 内容を確認・修正してください</div>
+        <div class="air-grid">
+          <div class="air-row">店名: <span class="air-val" id="r-store">—</span></div>
+          <div class="air-row">金額: <span class="air-val" id="r-amount">—</span></div>
+          <div class="air-row">日付: <span class="air-val" id="r-date">—</span></div>
+          <div class="air-row">種別: <span class="air-val" id="r-cat">—</span></div>
+        </div>
+      </div>
+
+      <!-- 申請種別 -->
+      <div class="panel">
+        <div class="ph"><div class="ph-t">申請種別</div></div>
+        <div class="pb">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="type-grid">
+            <div class="ttype on" data-type="expense" onclick="pickType(this)" style="padding:10px;border:1.5px solid var(--g);border-radius:var(--rsm);text-align:center;cursor:pointer;background:var(--gl)">
+              <div style="font-size:20px">🧾</div><div style="font-size:11px;font-weight:500;color:var(--g);margin-top:3px">経費精算</div>
+            </div>
+            <div class="ttype" data-type="travel" onclick="pickType(this)" style="padding:10px;border:1.5px solid var(--bd);border-radius:var(--rsm);text-align:center;cursor:pointer">
+              <div style="font-size:20px">🚄</div><div style="font-size:11px;font-weight:500;color:var(--tx2);margin-top:3px">出張精算</div>
+            </div>
+            <div class="ttype" data-type="advance" onclick="pickType(this)" style="padding:10px;border:1.5px solid var(--bd);border-radius:var(--rsm);text-align:center;cursor:pointer">
+              <div style="font-size:20px">💴</div><div style="font-size:11px;font-weight:500;color:var(--tx2);margin-top:3px">仮払申請</div>
+            </div>
+            <div class="ttype" data-type="settle" onclick="pickType(this)" style="padding:10px;border:1.5px solid var(--bd);border-radius:var(--rsm);text-align:center;cursor:pointer">
+              <div style="font-size:20px">📋</div><div style="font-size:11px;font-weight:500;color:var(--tx2);margin-top:3px">仮払精算</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- フォーム -->
+    <div class="panel">
+      <div class="ph"><div class="ph-t">申請内容</div><div class="ph-s">* 必須</div></div>
+      <div class="pb">
+        <div class="fgrid">
+          <div class="field"><label>経費種別 *</label>
+            <select id="f-cat" onchange="onCatChange()">
+              <option>交通費</option><option>接待交際費</option><option>通信費</option>
+              <option>消耗品費</option><option>書籍・研修費</option><option>広告宣伝費</option>
+              <option>出張費（交通）</option><option>出張費（宿泊）</option><option>その他</option>
+            </select>
+          </div>
+          <div class="field"><label>金額（税込）*</label>
+            <input type="number" id="f-amount" placeholder="0" oninput="calcTax()">
+          </div>
+          <div class="field"><label>支払日 *</label><input type="date" id="f-date"></div>
+          <div class="field"><label>支払先 *</label><input type="text" id="f-store" placeholder="店名・会社名"></div>
+          <div class="field" id="f-from-wrap" style="display:none"><label>出発地</label><input type="text" id="f-from" placeholder="渋谷駅"></div>
+          <div class="field" id="f-to-wrap" style="display:none"><label>到着地</label><input type="text" id="f-to" placeholder="新宿駅"></div>
+          <div class="field full"><label>用途・目的 *（税理士確認用 — 詳しく記入）</label>
+            <textarea id="f-memo" placeholder="例：〇〇サロン様（千葉）との商談 / BYMACH PRO デモ訪問 / チーム会議費 など"></textarea>
+          </div>
+          <div class="field" id="f-members-wrap"><label>参加者（接待・会議の場合）</label>
+            <input type="text" id="f-members" placeholder="田中（自社）、山田様（○○社 営業部長）">
+          </div>
+        </div>
+
+        <!-- 消費税表示 -->
+        <div id="tax-preview" style="display:none;background:var(--s2);border-radius:var(--rsm);padding:8px 10px;margin-top:8px;font-size:11px">
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">税抜金額</span><span id="pre-ex" style="font-family:var(--mono)">—</span></div>
+          <div style="display:flex;justify-content:space-between;margin-top:3px"><span style="color:var(--tx2)">消費税（10%）</span><span id="pre-tax" style="font-family:var(--mono)">—</span></div>
+        </div>
+
+        <!-- 承認フロー表示 -->
+        <div style="background:var(--s2);border-radius:var(--rsm);padding:10px 12px;margin-top:10px">
+          <div style="font-size:10px;color:var(--tx3);font-weight:500;letter-spacing:.3px;margin-bottom:8px">承認フロー（2段階）</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+            <span style="padding:3px 8px;border-radius:4px;background:var(--surf);border:1px solid var(--bd)">申請者</span>
+            <span style="color:var(--tx3)">→</span>
+            <span style="padding:3px 8px;border-radius:4px;background:var(--goldl);border:1px solid var(--goldm);color:var(--gold);font-weight:500">部門長（後藤 / 第1承認）</span>
+            <span style="color:var(--tx3)">→</span>
+            <span style="padding:3px 8px;border-radius:4px;background:var(--gl);border:1px solid var(--gm);color:var(--g);font-weight:500">三原 孔明（最終承認）</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn p lg" style="flex:1" onclick="submitNew()">申請を提出する</button>
+          <button class="btn lg" onclick="saveDraft()">一時保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LIST ══ -->
+<div class="sec" id="sec-list">
+  <div style="display:flex;gap:5px;margin-bottom:1rem;flex-wrap:wrap">
+    <button class="btn sm p" onclick="filterExp('all',this)">すべて (8)</button>
+    <button class="btn sm" onclick="filterExp('pending',this)">申請中 (3)</button>
+    <button class="btn sm" onclick="filterExp('step1',this)">第1承認待ち (2)</button>
+    <button class="btn sm" onclick="filterExp('step2',this)">最終承認待ち (1)</button>
+    <button class="btn sm" onclick="filterExp('approved',this)">承認済み (3)</button>
+    <button class="btn sm" onclick="filterExp('draft',this)">一時保存 (1)</button>
+    <button class="btn sm" onclick="filterExp('rejected',this)">差戻し (1)</button>
+  </div>
+  <div class="panel">
+    <div class="ph">
+      <div class="ph-t">申請一覧</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;color:var(--tx3)">合計</span>
+        <span style="font-family:var(--mono);font-size:13px;font-weight:500">¥128,600</span>
+        <button class="btn sm">CSV出力</button>
+      </div>
+    </div>
+    <div class="pb" id="exp-list-body"></div>
+  </div>
+</div>
+
+<!-- ══ APPROVAL ══ -->
+<div class="sec" id="sec-approval">
+  <!-- 自分の役割説明 -->
+  <div style="display:flex;gap:10px;margin-bottom:1rem">
+    <div style="flex:1;background:var(--redl);border:1px solid var(--redm);border-radius:var(--r);padding:.875rem 1rem">
+      <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">最終承認待ち（三原 孔明）</div>
+      <div style="font-size:12px;color:var(--tx2)">部門長が承認済みの申請です。最終承認をお願いします。</div>
+    </div>
+    <div style="flex:1;background:var(--goldl);border:1px solid var(--goldm);border-radius:var(--r);padding:.875rem 1rem">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px">第1承認待ち（部門長 / 後藤）</div>
+      <div style="font-size:12px;color:var(--tx2)">部門長が承認後、代表へ自動転送されます。</div>
+    </div>
+  </div>
+  <div id="approval-body"></div>
+</div>
+
+<!-- ══ INCENTIVE ══ -->
+<div class="sec" id="sec-inc">
+  <div class="inc-hero">
+    <div class="ih-glow"></div>
+    <div class="ih-inner">
+      <div class="ih-tag">2025年3月 インセンティブ試算</div>
+      <div class="ih-title">営業売上連動インセンティブ</div>
+      <div class="ih-grid">
+        <div class="ih-item"><div class="ih-val gold" id="ihv-total">¥247,000</div><div class="ih-label">5名合計</div></div>
+        <div class="ih-item"><div class="ih-val green" id="ihv-avg">¥49,400</div><div class="ih-label">1人平均</div></div>
+        <div class="ih-item"><div class="ih-val" id="ihv-top">¥120,000</div><div class="ih-label">最高額（三原）</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two">
+    <div>
+      <div class="panel">
+        <div class="ph"><div class="ph-t">スタッフ別 売上 × インセンティブ</div></div>
+        <div class="pb" id="inc-bars"></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div class="ph-t">内訳テーブル</div></div>
+        <div class="pb" style="padding:0">
+          <table class="itable" id="inc-table"></table>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="ph"><div class="ph-t">計算式の確認</div><button class="btn sm" onclick="go('settings','インセンティブ設定')">設定変更 →</button></div>
+        <div class="pb" id="inc-formula"></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div class="ph-t">承認フロー</div></div>
+        <div class="pb">
+          <div class="flow-steps" id="inc-flow"></div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:.5rem;line-height:1.6">提出後 → 後藤（部門長）承認 → 三原孔明（最終承認）→ freee人事労務に自動連携 → 翌月給与（4/25）に反映</div>
+        </div>
+      </div>
+      <div class="sub-banner" onclick="submitIncentive()">
+        <div class="sb-text">
+          <div class="sb-tag">アクション</div>
+          <div class="sb-title">✦ インセンティブを提出する</div>
+          <div class="sb-sub">¥247,000 → 承認フロー → freee 連携 → 4/25 給与反映</div>
+        </div>
+        <div style="font-size:28px;opacity:.8">🚀</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS ══ -->
+<div class="sec" id="sec-settings">
+  <div class="panel">
+    <div class="ph"><div class="ph-t">インセンティブ計算式の設定</div><div class="ph-s">売上連動型（固定率）</div></div>
+    <div class="pb">
+      <div style="background:var(--warnl);border:1px solid var(--warnm);border-radius:var(--rsm);padding:.75rem 1rem;font-size:12px;color:var(--warn);margin-bottom:1rem;line-height:1.6">
+        📌 <strong>計算式：</strong>月間売上実績 × 設定率 = インセンティブ金額。売上はfreee会計またはkintoneから自動取得します。率は後から段階式に変更可能です。
+      </div>
+      <div id="rate-list"></div>
+      <button class="btn p" style="margin-top:10px" onclick="saveRates()">設定を保存</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><div class="ph-t">承認フロー設定</div></div>
+    <div class="pb">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field"><label>第1承認者（部門長）</label>
+          <select>
+            <option>後藤 — 営業部長</option>
+            <option>大岩 — CS部長</option>
+            <option>小笠原</option>
+          </select>
+        </div>
+        <div class="field"><label>最終承認者</label>
+          <select><option>三原 孔明（代表取締役）</option></select>
+        </div>
+        <div class="field"><label>金額しきい値（以上は代表承認必須）</label>
+          <input type="number" value="0" placeholder="0 = 全件">
+        </div>
+        <div class="field"><label>承認期限（日数）</label>
+          <select><option>3営業日以内</option><option>5営業日以内</option><option>7日以内</option></select>
+        </div>
+      </div>
+      <button class="btn p" style="margin-top:10px" onclick="alert('✅ 設定を保存しました')">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HISTORY ══ -->
+<div class="sec" id="sec-history">
+  <div class="krow">
+    <div class="kc"><div class="kl">年間支給合計</div><div class="kv p">¥2.3M</div><div class="kf">2024年4月〜</div></div>
+    <div class="kc"><div class="kl">月平均</div><div class="kv">¥209K</div><div class="kf">5名換算</div></div>
+    <div class="kc"><div class="kl">最高月</div><div class="kv go">¥380K</div><div class="kf">2024年12月</div></div>
+    <div class="kc"><div class="kl">支給済み回数</div><div class="kv g">11回</div></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><div class="ph-t">月別インセンティブ推移</div></div>
+    <div class="pb" id="hist-bars"></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><div class="ph-t">支給履歴</div></div>
+    <div class="pb" style="padding:0">
+      <table class="itable" id="hist-table"></table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REPORT ══ -->
+<div class="sec" id="sec-report">
+  <div class="krow">
+    <div class="kc"><div class="kl">今月の経費合計</div><div class="kv">¥128,600</div></div>
+    <div class="kc"><div class="kl">前月比</div><div class="kv r">+12%</div></div>
+    <div class="kc"><div class="kl">経費精算率</div><div class="kv g">75%</div></div>
+    <div class="kc"><div class="kl">未精算件数</div><div class="kv go">3件</div></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><div class="ph-t">カテゴリ別経費（今月）</div><button class="btn sm">CSV出力</button></div>
+    <div class="pb" id="rep-cats"></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</main>
+</div><!-- /shell -->
+
+<script>
+// ─── State ───
+const STAFF = [
+  { id:1, name:'三原 孔明', role:'代表取締役', rate:5 },
+  { id:2, name:'後藤',       role:'営業部長（部門長）', rate:3 },
+  { id:3, name:'大岩',       role:'スタッフ', rate:3 },
+  { id:4, name:'小笠原',     role:'スタッフ', rate:3 },
+  { id:5, name:'飯田',       role:'スタッフ', rate:2.5 },
+]
+const SALES = { 1:2400000, 2:1850000, 3:1200000, 4:960000, 5:880000 }
+
+const EXPENSES = [
+  { id:1, icon:'🍽', name:'接待交際費 — 立川氏との会食', cat:'接待交際費', date:'3/25', amount:42800, status:'approved', step:2, submitter:'三原 孔明', sid:1, purpose:'BEAUTOROID提携打合せ', receipt:true },
+  { id:2, icon:'🚇', name:'交通費 — 東京メトロ 渋谷→新宿', cat:'交通費', date:'3/28', amount:320, status:'approved', step:2, submitter:'田中 愛美', sid:3, purpose:'商談訪問', receipt:true },
+  { id:3, icon:'📱', name:'通信費 — ドコモ 業務用', cat:'通信費', date:'3/20', amount:8900, status:'step1', step:0, submitter:'佐藤 健太', sid:4, purpose:'業務用通信費', receipt:true },
+  { id:4, icon:'🚄', name:'出張費（交通）— 新幹線 東京→大阪', cat:'出張費（交通）', date:'3/10', amount:12580, status:'step2', step:1, submitter:'鈴木 美咲', sid:5, purpose:'大阪サロン商談ツアー', receipt:true },
+  { id:5, icon:'📚', name:'書籍 — AI マーケティング実践', cat:'書籍・研修費', date:'3/15', amount:3800, status:'approved', step:2, submitter:'三原 孔明', sid:1, purpose:'マーケティング研究', receipt:true },
+  { id:6, icon:'📦', name:'消耗品費 — 事務用品', cat:'消耗品費', date:'3/28', amount:3200, status:'step1', step:0, submitter:'山田 遼', sid:4, purpose:'オフィス消耗品', receipt:false },
+  { id:7, icon:'🏨', name:'出張費（宿泊）— ホテル 大阪', cat:'出張費（宿泊）', date:'3/11', amount:18500, status:'draft', step:0, submitter:'鈴木 美咲', sid:5, purpose:'', receipt:false },
+  { id:8, icon:'🍽', name:'会議費 — 社内ランチMTG', cat:'接待交際費', date:'3/18', amount:4500, status:'rejected', step:0, submitter:'田中 愛美', sid:3, purpose:'社内会議', receipt:false },
+]
+
+const STATUS_LABEL = { approved:'承認済み', step1:'第1承認待ち', step2:'最終承認待ち', draft:'一時保存', rejected:'差戻し', pending:'申請中' }
+const STATUS_BD = { approved:'bd-g', step1:'bd-go', step2:'bd-r', draft:'bd-gr', rejected:'bd-warn', pending:'bd-b' }
+
+let rejectingId = null
+
+// ─── Nav ───
+function go(id, title) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'))
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'))
+  document.getElementById('sec-' + id).classList.add('on')
+  document.querySelectorAll('.ni').forEach(n => {
+    if ((n.getAttribute('onclick') || '').includes("'" + id + "'")) n.classList.add('on')
+  })
+  document.getElementById('tb-t').textContent = title
+}
+
+function yen(n) { return '¥' + Math.round(n).toLocaleString() }
+
+// ─── Dashboard ───
+const CATS_DATA = [
+  { l:'接待交際費', v:47300, max:80000, c:'var(--g)' },
+  { l:'出張費', v:31080, max:60000, c:'var(--purple)' },
+  { l:'通信費', v:8900,  max:20000, c:'var(--blue)' },
+  { l:'書籍・研修', v:3800, max:15000, c:'var(--gold)' },
+  { l:'消耗品費', v:3200, max:15000, c:'var(--warn)' },
+  { l:'交通費', v:320,   max:10000, c:'var(--tx3)' },
+]
+document.getElementById('dash-bar').innerHTML =
+  CATS_DATA.map(c => `<div class="brow"><div class="blabel">${c.l}</div><div class="btrack"><div class="bfill" style="width:${Math.round(c.v/c.max*100)}%;background:${c.c}"></div></div><div class="bval">${yen(c.v)}</div></div>`).join('')
+
+document.getElementById('dash-list').innerHTML =
+  EXPENSES.slice(0,5).map(renderRow).join('')
+
+// ─── Expense list ───
+function renderRow(e) {
+  return `<div class="erow">
+    <div class="eicon">${e.icon}</div>
+    <div class="einfo"><div class="ename">${e.name}</div><div class="emeta">${e.date} ｜ ${e.submitter}${e.purpose ? ' ｜ '+e.purpose.slice(0,18) : ''}</div></div>
+    <div class="eamt">${yen(e.amount)}</div>
+    <span class="bd ${STATUS_BD[e.status]}">${STATUS_LABEL[e.status]}</span>
+  </div>`
+}
+document.getElementById('exp-list-body').innerHTML = EXPENSES.map(renderRow).join('')
+
+function filterExp(f, btn) {
+  const filtered = f === 'all' ? EXPENSES : EXPENSES.filter(e => e.status === f)
+  document.getElementById('exp-list-body').innerHTML =
+    filtered.length ? filtered.map(renderRow).join('') :
+    `<div style="text-align:center;padding:2rem;color:var(--tx3);font-size:13px">該当する申請はありません</div>`
+}
+
+// ─── Approval ───
+function renderApproval() {
+  const step2 = EXPENSES.filter(e => e.status === 'step2')
+  const step1 = EXPENSES.filter(e => e.status === 'step1')
+  const approved = EXPENSES.filter(e => e.status === 'approved')
+
+  const makeCard = (e, isStep2) => {
+    const flowSteps = [
+      { label:'申請者', name:e.submitter, done:true, active:false },
+      { label:'第1承認', name:'後藤（部門長）', done:e.step >= 1, active:!isStep2 && e.step === 0 },
+      { label:'最終承認', name:'三原 孔明', done:e.step >= 2, active:isStep2 },
+    ]
+    const flowHtml = flowSteps.map((s,i) => `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:64px">
+        <div style="width:26px;height:26px;border-radius:50%;border:2px solid ${s.done ? 'var(--g)' : s.active ? 'var(--gold)' : 'var(--bd)'};background:${s.done ? 'var(--g)' : 'var(--surf)'};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${s.done ? '#fff' : s.active ? 'var(--gold)' : 'var(--tx3)'}">
+          ${s.done ? '✓' : i+1}
+        </div>
+        <div style="font-size:9px;color:var(--tx2);text-align:center;font-weight:500">${s.label}</div>
+        <div style="font-size:8px;color:var(--tx3);text-align:center">${s.name}</div>
+      </div>
+      ${i < flowSteps.length-1 ? `<div style="flex:1;height:2px;background:${s.done ? 'var(--g)' : 'var(--bd)'};margin-top:13px;align-self:flex-start;margin-top:12px"></div>` : ''}
+    `).join('')
+
+    return `<div class="appr-card" id="acard-${e.id}">
+      <div class="ac-head">
+        <div class="ac-av">${e.submitter[0]}</div>
+        <div class="ac-info">
+          <div class="ac-name">${e.name}</div>
+          <div class="ac-meta">${e.date} 申請 ｜ ${e.submitter} ｜ ${isStep2 ? '部門長承認済み → 最終承認待ち' : '第1承認待ち'}</div>
+        </div>
+        <div class="ac-amt">${yen(e.amount)}</div>
+      </div>
+      <div class="ac-body">
+        <div class="ac-items">
+          <div class="aci-row"><span class="aci-label">種別</span><span class="aci-val">${e.icon} ${e.cat}</span></div>
+          <div class="aci-row"><span class="aci-label">用途</span><span class="aci-val">${e.purpose || '（未記入）'}</span></div>
+          <div class="aci-row"><span class="aci-label">領収書</span><span class="aci-val" style="color:${e.receipt ? 'var(--g)' : 'var(--red)'}">${e.receipt ? '✓ 添付済み' : '⚠ 未添付'}</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;margin-bottom:.875rem;padding:0 .5rem">
+          ${flowHtml}
+        </div>
+        <div class="ac-actions">
+          <button class="ac-btn ok" onclick="doApprove(${e.id})">✓ ${isStep2 ? '最終承認' : '第1承認'}</button>
+          <button class="ac-btn ng" onclick="openReject(${e.id})">差戻し</button>
+        </div>
+      </div>
+    </div>`
+  }
+
+  let html = ''
+  if (step2.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--red);letter-spacing:.5px;margin-bottom:8px">● 最終承認待ち（${step2.length}件）</div>`
+    html += step2.map(e => makeCard(e, true)).join('')
+  }
+  if (step1.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.5px;margin:${step2.length ? '1rem' : '0'} 0 8px">● 第1承認待ち（${step1.length}件）— 後藤（部門長）が承認後、代表へ転送</div>`
+    html += step1.map(e => makeCard(e, false)).join('')
+  }
+  if (!step2.length && !step1.length) {
+    html = `<div style="text-align:center;padding:2.5rem;color:var(--tx3);font-size:13px">承認待ちの申請はありません ✓</div>`
+  }
+  if (approved.length) {
+    html += `<div class="panel" style="margin-top:1.125rem"><div class="ph"><div class="ph-t">承認済み（今月）</div></div><div class="pb">${approved.map(renderRow).join('')}</div></div>`
+  }
+  document.getElementById('approval-body').innerHTML = html
+  document.getElementById('n-appr').textContent = step2.length + step1.length || ''
+  if (!step2.length && !step1.length) document.getElementById('n-appr').style.display = 'none'
+}
+renderApproval()
+
+function doApprove(id) {
+  const e = EXPENSES.find(x => x.id === id)
+  if (!e) return
+  if (e.status === 'step1') { e.status = 'step2'; e.step = 1 }
+  else if (e.status === 'step2') { e.status = 'approved'; e.step = 2 }
+  renderApproval()
+  document.getElementById('exp-list-body').innerHTML = EXPENSES.map(renderRow).join('')
+}
+
+function openReject(id) {
+  rejectingId = id
+  document.getElementById('reject-modal').classList.add('show')
+}
+function closeRejectModal() {
+  document.getElementById('reject-modal').classList.remove('show')
+  rejectingId = null
+}
+function confirmReject() {
+  const reason = document.getElementById('reject-reason').value.trim()
+  if (!reason) { alert('差戻し理由を入力してください'); return }
+  const e = EXPENSES.find(x => x.id === rejectingId)
+  if (e) { e.status = 'rejected'; e.step = 0 }
+  closeRejectModal()
+  renderApproval()
+  document.getElementById('reject-reason').value = ''
+  alert(`✅ 差戻しました。\n理由「${reason}」を申請者に通知しました。`)
+}
+
+// ─── Scan ───
+const SCAN_SAMPLES = [
+  { store:'スターバックス 渋谷ヒカリエ', amount:'1,240', date:'2025-03-30', cat:'接待交際費' },
+  { store:'東京メトロ（ICカード）', amount:'290', date:'2025-03-30', cat:'交通費' },
+  { store:'丸善書店 丸の内', amount:'3,520', date:'2025-03-29', cat:'書籍・研修費' },
+  { store:'ヤマト運輸', amount:'1,870', date:'2025-03-28', cat:'消耗品費' },
+  { store:'JR東海 新幹線', amount:'14,380', date:'2025-03-27', cat:'出張費（交通）' },
+]
+let scanning = false
+function startScan(e) {
+  if (e) e.stopPropagation()
+  if (scanning) return
+  scanning = true
+  const scan = document.getElementById('cz-scan')
+  document.getElementById('cz-icon').textContent = '🔍'
+  document.getElementById('cz-title').textContent = 'AI 解析中...'
+  document.getElementById('cz-sub').textContent = '領収書のデータを読み取っています'
+  scan.style.display = 'block'
+  setTimeout(() => {
+    const s = SCAN_SAMPLES[Math.floor(Math.random() * SCAN_SAMPLES.length)]
+    scan.style.display = 'none'
+    document.getElementById('cz-icon').textContent = '✅'
+    document.getElementById('cz-title').textContent = '読取完了 — 内容を確認・修正してください'
+    document.getElementById('cz-sub').textContent = '別の領収書はもう一度クリック'
+    document.getElementById('r-store').textContent = s.store
+    document.getElementById('r-amount').textContent = '¥' + s.amount
+    document.getElementById('r-date').textContent = s.date
+    document.getElementById('r-cat').textContent = s.cat
+    document.getElementById('ai-res').classList.add('show')
+    document.getElementById('f-store').value = s.store
+    document.getElementById('f-amount').value = s.amount.replace(',','')
+    document.getElementById('f-date').value = s.date
+    scanning = false
+    calcTax()
+  }, 2000)
+}
+
+function pickType(el) {
+  document.querySelectorAll('.ttype').forEach(t => {
+    t.style.borderColor = 'var(--bd)'
+    t.style.background = 'var(--surf)'
+    t.querySelector('div:last-child').style.color = 'var(--tx2)'
+  })
+  el.style.borderColor = 'var(--g)'
+  el.style.background = 'var(--gl)'
+  el.querySelector('div:last-child').style.color = 'var(--g)'
+  const t = el.dataset.type
+  document.getElementById('f-from-wrap').style.display = (t === 'travel') ? '' : 'none'
+  document.getElementById('f-to-wrap').style.display = (t === 'travel') ? '' : 'none'
+}
+
+function calcTax() {
+  const amt = parseInt(document.getElementById('f-amount').value) || 0
+  if (amt > 0) {
+    const ex = Math.round(amt / 1.1)
+    document.getElementById('pre-ex').textContent = yen(ex)
+    document.getElementById('pre-tax').textContent = yen(amt - ex)
+    document.getElementById('tax-preview').style.display = 'block'
+  } else {
+    document.getElementById('tax-preview').style.display = 'none'
+  }
+}
+
+function onCatChange() {}
+
+function submitNew() {
+  const amt = parseInt(document.getElementById('f-amount').value) || 0
+  if (!amt) { alert('金額を入力してください'); return }
+  if (!document.getElementById('f-memo').value.trim()) { alert('用途・目的を入力してください'); return }
+  alert('✅ 申請を提出しました。\n部門長（後藤）に第1承認依頼を送信しました。\n承認後、代表（三原孔明）に転送されます。')
+  go('list', '申請一覧')
+}
+function saveDraft() { alert('📝 一時保存しました。') }
+
+// ─── Incentive ───
+function calcInc(staff) {
+  const sales = SALES[staff.id] || 0
+  return Math.round(sales * staff.rate / 100)
+}
+
+const TOTAL_INC = STAFF.reduce((a, s) => a + calcInc(s), 0)
+document.getElementById('ihv-total').textContent = yen(TOTAL_INC)
+document.getElementById('ihv-avg').textContent = yen(TOTAL_INC / STAFF.length)
+document.getElementById('ihv-top').textContent = yen(Math.max(...STAFF.map(calcInc)))
+
+const maxInc = Math.max(...STAFF.map(calcInc))
+document.getElementById('inc-bars').innerHTML =
+  STAFF.map(s => {
+    const inc = calcInc(s)
+    const sales = SALES[s.id]
+    return `<div class="brow">
+      <div class="blabel" style="font-size:10px">${s.name}</div>
+      <div class="btrack"><div class="bfill" style="width:${inc/maxInc*100}%;background:var(--purple)"></div></div>
+      <div style="font-size:10px;font-family:var(--mono);min-width:110px;flex-shrink:0;text-align:right;color:var(--tx2)">${yen(sales)} × ${s.rate}%</div>
+    </div>`
+  }).join('')
+
+document.getElementById('inc-table').innerHTML = `
+  <tr><th>氏名</th><th>役割</th><th>月間売上</th><th>率</th><th>インセンティブ</th></tr>
+  ${STAFF.map(s => {
+    const inc = calcInc(s)
+    const sales = SALES[s.id]
+    return `<tr>
+      <td class="bold">${s.name}</td>
+      <td style="color:var(--tx2)">${s.role}</td>
+      <td class="r">${yen(sales)}</td>
+      <td class="r">${s.rate}%</td>
+      <td class="r bold" style="color:var(--purple)">${yen(inc)}</td>
+    </tr>`
+  }).join('')}
+  <tr class="total-row">
+    <td colspan="4">合計</td>
+    <td class="r" style="color:var(--purple)">${yen(TOTAL_INC)}</td>
+  </tr>
+`
+
+document.getElementById('inc-formula').innerHTML = `
+  <div style="font-size:12px;color:var(--tx2);line-height:2;display:flex;flex-direction:column;gap:4px">
+    ${STAFF.map(s => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bd)">
+      <span>${s.name}</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--tx3)">${yen(SALES[s.id])} × ${s.rate}% = <strong style="color:var(--purple)">${yen(calcInc(s))}</strong></span>
+    </div>`).join('')}
+  </div>
+`
+
+document.getElementById('inc-flow').innerHTML = [
+  { label:'試算', done:true },
+  { label:'提出', done:false, active:true },
+  { label:'部門長承認', done:false },
+  { label:'代表承認', done:false },
+  { label:'freee連携', done:false },
+  { label:'給与反映', done:false },
+].map((s, i, arr) => `
+  <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+    <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${s.done ? 'var(--g)' : s.active ? 'var(--gold)' : 'var(--bd)'};background:${s.done ? 'var(--g)' : 'var(--surf)'};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${s.done ? '#fff' : s.active ? 'var(--gold)' : 'var(--tx3)'}">
+      ${s.done ? '✓' : i+1}
+    </div>
+    <div style="font-size:8px;color:var(--tx3);text-align:center">${s.label}</div>
+  </div>
+  ${i < arr.length-1 ? '<div style="flex:0 0 12px;height:2px;background:var(--bd);margin-top:11px"></div>' : ''}
+`).join('')
+
+function submitIncentive() {
+  alert(`✅ インセンティブ ${yen(TOTAL_INC)} を提出しました。\n後藤（部門長）に承認依頼を送信しました。\n承認後、freee人事労務に連携し、4/25 給与に反映されます。`)
+  document.getElementById('n-inc').style.display = 'none'
+}
+
+// ─── Settings rate editor ───
+document.getElementById('rate-list').innerHTML =
+  STAFF.map(s => `<div class="rate-row">
+    <div class="rate-name">${s.name} <span style="font-size:10px;color:var(--tx3)">${s.role}</span></div>
+    <input type="number" class="rate-input" id="rate-${s.id}" value="${s.rate}" step="0.5" min="0" max="20" oninput="previewRate(${s.id})">
+    <div class="rate-unit">%</div>
+    <div class="rate-preview" id="rp-${s.id}">${yen(calcInc(s))}</div>
+  </div>`).join('')
+
+function previewRate(id) {
+  const rate = parseFloat(document.getElementById('rate-' + id).value) || 0
+  const sales = SALES[id] || 0
+  document.getElementById('rp-' + id).textContent = yen(sales * rate / 100)
+}
+function saveRates() {
+  STAFF.forEach(s => {
+    s.rate = parseFloat(document.getElementById('rate-' + s.id).value) || s.rate
+  })
+  alert('✅ 計算式を保存しました。次回の試算から反映されます。')
+}
+
+// ─── History ───
+const HIST = [
+  { m:'2025年2月', total:218000, status:'支給済み' },
+  { m:'2025年1月', total:196000, status:'支給済み' },
+  { m:'2024年12月', total:380000, status:'支給済み' },
+  { m:'2024年11月', total:243000, status:'支給済み' },
+  { m:'2024年10月', total:189000, status:'支給済み' },
+  { m:'2024年9月', total:221000, status:'支給済み' },
+]
+const maxH = Math.max(...HIST.map(h => h.total))
+document.getElementById('hist-bars').innerHTML =
+  HIST.map(h => `<div class="brow"><div class="blabel">${h.m.slice(5)}</div><div class="btrack"><div class="bfill" style="width:${h.total/maxH*100}%;background:var(--purple)"></div></div><div class="bval" style="color:var(--purple)">${yen(h.total)}</div></div>`).join('')
+
+document.getElementById('hist-table').innerHTML = `
+  <tr><th>月</th><th>合計インセンティブ</th><th>対象人数</th><th>状態</th></tr>
+  ${HIST.map(h => `<tr>
+    <td>${h.m}</td>
+    <td class="r bold" style="color:var(--purple)">${yen(h.total)}</td>
+    <td class="r">5名</td>
+    <td><span class="bd bd-g">${h.status}</span></td>
+  </tr>`).join('')}
+`
+
+// ─── Report ───
+document.getElementById('rep-cats').innerHTML =
+  CATS_DATA.map(c => `<div class="brow"><div class="blabel">${c.l}</div><div class="btrack"><div class="bfill" style="width:${Math.round(c.v/47300*100)}%;background:${c.c}"></div></div><div class="bval">${yen(c.v)}</div></div>`).join('')
+</script>
+</body>
+</html>

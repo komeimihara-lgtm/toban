@@ -1,4 +1,4 @@
-import { CorrectionRequestForm } from "@/components/attendance/correction-request-form";
+import { AttendanceCorrectionClient } from "@/components/attendance/attendance-correction-client";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default function AttendanceCorrectionPage() {
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="mx-auto max-w-3xl space-y-8">
       <div>
         <Link
           href="/my/attendance"
@@ -22,11 +22,12 @@ export default function AttendanceCorrectionPage() {
           打刻修正申請
         </h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          内容を入力し、申請してください。承認フローは本番環境で接続します。
+          対象日の元打刻を確認し、修正内容と理由を入力して申請します。承認後に LINE
+          / メールで結果をお知らせします（会社の通知設定に従います）。
         </p>
       </header>
 
-      <CorrectionRequestForm />
+      <AttendanceCorrectionClient />
     </div>
   );
 }

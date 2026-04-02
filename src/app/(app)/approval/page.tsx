@@ -1,9 +1,8 @@
 import {
-  approveExpenseFormAction,
   approveLeaveFormAction,
-  rejectExpenseFormAction,
   rejectLeaveFormAction,
 } from "@/app/actions/approval-actions";
+import { ExpenseV2Approval } from "@/components/expense/expense-v2-approval";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { isAdminRole } from "@/types/incentive";
@@ -35,11 +34,47 @@ export default async function ApprovalPage({
     redirect("/my");
   }
 
-  const { data: pendingExp } = await supabase
-    .from("expense_claims")
-    .select("*")
-    .eq("status", "step1_pending")
-    .order("created_at", { ascending: true });
+  const role = (me as { role?: string })?.role ?? "staff";
+  let v2ExpenseRows: {
+    id: string;
+    status: string;
+    category: string;
+    amount: number;
+    purpose: string;
+    submitter_name: string | null;
+    paid_date: string;
+    audit_score: number | null;
+    audit_result: unknown | null;
+    audit_at: string | null;
+  }[] = [];
+
+  if (role === "approver") {
+    const { data, error } = await supabase
+      .from("expenses")
+      .select(
+        "id, status, category, amount, purpose, submitter_name, paid_date, audit_score, audit_result, audit_at",
+      )
+      .eq("status", "step1_pending")
+      .order("created_at", { ascending: true });
+    if (!error) v2ExpenseRows = (data ?? []) as typeof v2ExpenseRows;
+  } else if (role === "owner") {
+    const { data, error } = await supabase
+      .from("expenses")
+      .select(
+        "id, status, category, amount, purpose, submitter_name, paid_date, audit_score, audit_result, audit_at",
+      )
+      .in("status", ["step1_pending", "step2_pending"])
+      .order("created_at", { ascending: true });
+    if (!error) {
+      v2ExpenseRows = (data ?? []) as typeof v2ExpenseRows;
+      v2ExpenseRows.sort((a, b) => {
+        if (a.status === b.status) return 0;
+        if (a.status === "step2_pending") return -1;
+        if (b.status === "step2_pending") return 1;
+        return 0;
+      });
+    }
+  }
 
   const { data: pendingLeave } = await supabase
     .from("leave_requests")
@@ -53,74 +88,38 @@ export default async function ApprovalPage({
       <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-800">
         <Link
           href="/approval?tab=expense"
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${tab === "expense" ? "border-zinc-900 dark:border-zinc-100" : "border-transparent text-zinc-500"}`}
+          className={`border-b-2 px-3 py-2 text-sm font-medium ${
+            tab === "expense"
+              ? "border-zinc-900 dark:border-zinc-100"
+              : "border-transparent text-zinc-500"
+          }`}
         >
           経費
         </Link>
         <Link
           href="/approval?tab=leave"
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${tab === "leave" ? "border-zinc-900 dark:border-zinc-100" : "border-transparent text-zinc-500"}`}
+          className={`border-b-2 px-3 py-2 text-sm font-medium ${
+            tab === "leave"
+              ? "border-zinc-900 dark:border-zinc-100"
+              : "border-transparent text-zinc-500"
+          }`}
         >
           有給
         </Link>
       </div>
 
       {tab === "expense" && (
-        <ul className="space-y-4">
-          {(pendingExp ?? []).length === 0 && (
-            <li className="text-zinc-500">承認待ちはありません</li>
-          )}
-          {(pendingExp ?? []).map((e) => {
-            const row = e as {
-              id: string;
-              amount: number;
-              category: string;
-              description: string | null;
-              user_id: string;
-            };
-            return (
-              <li
-                key={row.id}
-                className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
-              >
-                <p className="font-medium">
-                  {row.category} —{" "}
-                  {new Intl.NumberFormat("ja-JP", {
-                    style: "currency",
-                    currency: "JPY",
-                  }).format(Number(row.amount))}
-                </p>
-                <p className="text-sm text-zinc-600">{row.description}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <form action={approveExpenseFormAction}>
-                    <input type="hidden" name="id" value={row.id} />
-                    <button
-                      type="submit"
-                      className="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white"
-                    >
-                      承認
-                    </button>
-                  </form>
-                  <form action={rejectExpenseFormAction} className="flex gap-2">
-                    <input type="hidden" name="id" value={row.id} />
-                    <input
-                      name="reason"
-                      required
-                      placeholder="差戻し理由"
-                      className="rounded border px-2 py-1 text-sm"
-                    />
-                    <button
-                      type="submit"
-                      className="rounded bg-red-600 px-3 py-1.5 text-sm text-white"
-                    >
-                      差戻し
-                    </button>
-                  </form>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+            経費（2段階承認）
+          </h2>
+          <p className="text-xs text-zinc-500">
+            {role === "owner"
+              ? "最終承認待ちを上に表示しています。第1承認待ちも閲覧できます。"
+              : "第1承認待ちの申請のみ表示されます。"}
+          </p>
+          <ExpenseV2Approval rows={v2ExpenseRows} role={role} />
+        </section>
       )}
 
       {tab === "leave" && (
@@ -144,7 +143,7 @@ export default async function ApprovalPage({
                 <p className="text-sm">
                   {row.start_date} 〜 {row.end_date}（{row.kind}）
                 </p>
-                <p className="text-zinc-600">{row.reason}</p>
+                <p className="text-zinc-600 dark:text-zinc-400">{row.reason}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <form action={approveLeaveFormAction}>
                     <input type="hidden" name="id" value={row.id} />
@@ -160,7 +159,7 @@ export default async function ApprovalPage({
                     <input
                       name="reason"
                       required
-                      className="rounded border px-2 py-1 text-sm"
+                      className="rounded border px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-900"
                       placeholder="差戻し理由"
                     />
                     <button

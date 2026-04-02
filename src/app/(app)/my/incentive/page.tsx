@@ -4,9 +4,9 @@ import { isSupabaseConfigured } from "@/lib/env";
 import {
   isIncentiveEligible,
   type IncentiveRateRow,
-  type IncentiveSubmissionRow,
   type ProfileRow,
 } from "@/types/incentive";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -31,19 +31,11 @@ export default async function MyIncentivePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return (
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        ログインが必要です。
-      </p>
-    );
-  }
+  if (!user) redirect("/login");
 
   const { data: profile, error: profileErr } = await supabase
     .from("profiles")
-    .select(
-      "id, full_name, role, is_sales_target, is_service_target",
-    )
+    .select("id, full_name, role, is_sales_target, is_service_target")
     .eq("id", user.id)
     .single();
 
@@ -63,7 +55,7 @@ export default async function MyIncentivePage() {
           あなたはインセンティブ対象外です
         </p>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          営業・サービス対象フラグがどちらも無効のため、この画面は利用できません。
+          営業・サービス対象（is_sales_target / is_service_target）のいずれかが有効な社員のみこの画面を利用できます。
         </p>
       </div>
     );
@@ -82,29 +74,10 @@ export default async function MyIncentivePage() {
 
   const { data: submission } = await supabase
     .from("incentive_submissions")
-    .select(
-      "id, sales_amount, status, submitted_at, rate_snapshot, selling_price_tax_in, actual_cost, service_cost_deduction, deal_role, net_profit_ex_tax, product_id",
-    )
+    .select("id, sales_amount, status, submitted_at, rate_snapshot")
     .eq("user_id", user.id)
     .eq("year_month", ym)
     .maybeSingle();
-
-  const sub = submission as
-    | Pick<
-        IncentiveSubmissionRow,
-        | "id"
-        | "sales_amount"
-        | "status"
-        | "submitted_at"
-        | "rate_snapshot"
-        | "selling_price_tax_in"
-        | "actual_cost"
-        | "service_cost_deduction"
-        | "deal_role"
-        | "net_profit_ex_tax"
-        | "product_id"
-      >
-    | null;
 
   const { data: historyRows } = await supabase
     .from("incentive_submissions")
@@ -128,12 +101,11 @@ export default async function MyIncentivePage() {
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
           マイインセンティブ
         </h1>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          自分の今月分の売上入力と支給履歴のみ表示します。
+        </p>
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
-          {ym} 分のインセンティブ率が未設定です。管理者が
-          <code className="mx-1 rounded bg-amber-100 px-1 dark:bg-amber-900/60">
-            incentive_rates
-          </code>
-          に登録するまでお待ちください。
+          {ym} 分のインセンティブ率が未設定です。管理者が rate を登録するまでお待ちください。
         </p>
       </div>
     );
@@ -144,7 +116,17 @@ export default async function MyIncentivePage() {
       yearMonth={ym}
       rate={Number(rate.rate)}
       formulaType={rate.formula_type ?? "fixed_rate"}
-      submission={sub}
+      submission={
+        submission as
+          | {
+              id: string;
+              sales_amount: number | null;
+              status: string;
+              submitted_at: string | null;
+              rate_snapshot: number | null;
+            }
+          | null
+      }
       history={history}
     />
   );

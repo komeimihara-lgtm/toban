@@ -1,29 +1,28 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
+import { isAdminRole } from "@/types/incentive";
 import { redirect } from "next/navigation";
 
-export default async function Home() {
-  if (!isSupabaseConfigured()) {
-    redirect("/login");
-  }
+export const dynamic = "force-dynamic";
 
+export default async function AppRootPage() {
+  if (!isSupabaseConfigured()) {
+    return <p className="p-6 text-sm text-zinc-500">Supabase を設定してください。</p>;
+  }
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: profile } = await supabase
+  const { data: me } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
+  const role = (me as { role?: string } | null)?.role ?? "staff";
 
-  const role = (profile as { role?: string } | null)?.role ?? "staff";
-  if (role === "owner" || role === "approver") {
+  if (isAdminRole(role)) {
     redirect("/dashboard");
   }
   redirect("/my");

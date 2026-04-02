@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_COMPANY_ID } from "@/lib/company";
 import { isAdminRole } from "@/types/incentive";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -14,13 +13,14 @@ async function adminSupabase() {
   if (!user) redirect("/login");
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, company_id")
     .eq("id", user.id)
     .single();
-  if (!isAdminRole((profile as { role?: string })?.role ?? "")) {
+  const pr = profile as { role?: string; company_id?: string } | null;
+  if (!isAdminRole(pr?.role ?? "") || !pr?.company_id) {
     redirect("/my");
   }
-  return supabase;
+  return { supabase, companyId: pr.company_id };
 }
 
 export async function createProductAction(formData: FormData) {
@@ -30,9 +30,9 @@ export async function createProductAction(formData: FormData) {
   const cost_price = Number(costRaw) || 0;
   if (!name) return;
 
-  const supabase = await adminSupabase();
+  const { supabase, companyId } = await adminSupabase();
   await supabase.from("products").insert({
-    company_id: DEFAULT_COMPANY_ID,
+    company_id: companyId,
     name,
     cost_price,
     notes: notes || null,
@@ -46,13 +46,14 @@ export async function setProductActiveAction(formData: FormData) {
   const is_active = formData.get("is_active") === "true";
   if (!id) return;
 
-  const supabase = await adminSupabase();
+  const { supabase, companyId } = await adminSupabase();
   await supabase
     .from("products")
     .update({
       is_active,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("company_id", companyId);
   revalidatePath("/settings");
 }

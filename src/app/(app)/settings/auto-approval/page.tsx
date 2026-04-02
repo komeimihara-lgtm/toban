@@ -1,12 +1,16 @@
+import { AutoApprovalRulesForm } from "@/components/settings/auto-approval-rules-form";
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_COMPANY_ID } from "@/lib/company";
-import { isAdminRole } from "@/types/incentive";
+import { isSupabaseConfigured } from "@/lib/env";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function AutoApprovalSettingsPage() {
+  if (!isSupabaseConfigured()) {
+    return <p className="text-sm text-zinc-500">Supabase を設定してください。</p>;
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -15,30 +19,32 @@ export default async function AutoApprovalSettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, company_id")
     .eq("id", user.id)
     .single();
-  const role = (profile as { role?: string } | null)?.role ?? "staff";
-  if (!isAdminRole(role)) redirect("/my");
-
-  const isOwner = role === "owner";
+  const pr = profile as { role?: string; company_id?: string } | null;
+  const role = pr?.role ?? "staff";
+  const companyId = pr?.company_id;
+  if (role !== "owner" || !companyId) {
+    redirect("/my");
+  }
 
   const { data: rules } = await supabase
     .from("auto_approval_rules")
-    .select("id, rule_name, max_amount, is_active, created_at")
-    .eq("company_id", DEFAULT_COMPANY_ID)
-    .order("created_at", { ascending: false });
+    .select("id, category, max_amount, per_person, is_enabled")
+    .eq("company_id", companyId)
+    .order("category", { ascending: true });
 
   const list = (rules ?? []) as {
     id: string;
-    rule_name: string;
+    category: string;
     max_amount: number | null;
-    is_active: boolean;
-    created_at: string;
+    per_person: boolean;
+    is_enabled: boolean;
   }[];
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="mx-auto max-w-4xl space-y-8">
       <div>
         <Link
           href="/settings"
@@ -50,42 +56,18 @@ export default async function AutoApprovalSettingsPage() {
           自動承認ルール
         </h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          経費の金額別ルール（登録・更新は owner のみ DB ポリシー上可能です）。
+          カテゴリごとの上限と「1人あたり」判定を設定します。編集できるのは
+          <span className="font-medium"> owner</span> のみです。
         </p>
-        {!isOwner && (
-          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-            第1承認者として一覧のみ参照できます。変更が必要な場合は owner に依頼してください。
-          </p>
-        )}
       </div>
 
-      <section className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-        <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
-          {list.length === 0 && (
-            <li className="px-6 py-8 text-sm text-zinc-500">
-              ルールがまだありません。必要に応じて owner が Supabase または今後の画面から登録します。
-            </li>
-          )}
-          {list.map((r) => (
-            <li key={r.id} className="px-6 py-4">
-              <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                {r.rule_name}
-                {!r.is_active && (
-                  <span className="ml-2 text-xs font-normal text-zinc-500">
-                    停止中
-                  </span>
-                )}
-              </p>
-              <p className="text-xs text-zinc-500">
-                上限額:{" "}
-                {r.max_amount != null
-                  ? `${Number(r.max_amount).toLocaleString("ja-JP")} 円`
-                  : "—"}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {list.length === 0 ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
+          ルールがまだありません。最新の DB マイグレーション（014_auto_approval_rules.sql）を適用すると、デフォルト行が作成されます。
+        </p>
+      ) : (
+        <AutoApprovalRulesForm initialRules={list} />
+      )}
     </div>
   );
 }
