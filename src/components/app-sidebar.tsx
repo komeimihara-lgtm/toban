@@ -13,6 +13,7 @@ import {
   Home,
   Receipt,
   Settings,
+  SlidersHorizontal,
   Timer,
   Umbrella,
   UserPlus,
@@ -25,6 +26,7 @@ export type AppSidebarProps = {
   tenantName?: string | null;
   showMyIncentiveNav: boolean;
   showAdminSection: boolean;
+  showEmployeeOnboardingNav?: boolean;
   approvalBadgeCount?: number;
   incentiveDraftBadgeCount?: number;
 };
@@ -34,6 +36,7 @@ function NavLink({
   label,
   icon: Icon,
   pathPrefixes,
+  excludePrefixes,
   badgeCount,
   exact = false,
 }: {
@@ -41,15 +44,25 @@ function NavLink({
   label: string;
   icon: ComponentType<{ className?: string }>;
   pathPrefixes?: string[];
+  excludePrefixes?: string[];
   badgeCount?: number;
   exact?: boolean;
 }) {
   const pathname = usePathname();
-  const active = exact
-    ? pathname === href
-    : pathPrefixes?.length
-      ? pathPrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`))
-      : pathname === href || pathname.startsWith(`${href}/`);
+  const excludedByPrefix = excludePrefixes?.some(
+    (e) => pathname === e || pathname.startsWith(`${e}/`),
+  );
+
+  let active = false;
+  if (!excludedByPrefix) {
+    if (exact) {
+      active = pathname === href;
+    } else if (pathPrefixes?.length) {
+      active = pathPrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+    } else {
+      active = pathname === href || pathname.startsWith(`${href}/`);
+    }
+  }
 
   return (
     <Link
@@ -95,6 +108,7 @@ export function AppSidebar({
   tenantName,
   showMyIncentiveNav,
   showAdminSection,
+  showEmployeeOnboardingNav = false,
   approvalBadgeCount = 0,
   incentiveDraftBadgeCount = 0,
 }: AppSidebarProps) {
@@ -120,16 +134,17 @@ export function AppSidebar({
           pathPrefixes={["/my/attendance"]}
         />
         <NavLink
-          href="/my/expenses"
+          href="/my/expenses/new"
           label="経費申請"
           icon={Receipt}
-          pathPrefixes={["/my/expenses"]}
+          pathPrefixes={["/my/expenses/new"]}
         />
         <NavLink
           href="/my/expenses"
           label="申請状況"
           icon={ClipboardList}
           pathPrefixes={["/my/expenses"]}
+          excludePrefixes={["/my/expenses/new"]}
         />
         {showMyIncentiveNav ? (
           <NavLink
@@ -142,6 +157,15 @@ export function AppSidebar({
         ) : null}
         <NavLink href="/my/payslip" label="給与明細" icon={Banknote} exact />
         <NavLink href="/my/leave" label="有給・休暇" icon={Umbrella} pathPrefixes={["/my/leave"]} />
+        {showEmployeeOnboardingNav ? (
+          <NavLink
+            href="/onboarding"
+            label="入社手続き"
+            icon={UserPlus}
+            pathPrefixes={["/onboarding"]}
+            excludePrefixes={["/onboarding/admin"]}
+          />
+        ) : null}
         <NavLink
           href="/hr-ai"
           label="AI相談窓口"
@@ -185,7 +209,19 @@ export function AppSidebar({
               icon={UserPlus}
               pathPrefixes={["/onboarding/admin"]}
             />
-            <NavLink href="/settings" label="設定" icon={Settings} pathPrefixes={["/settings"]} />
+            <NavLink
+              href="/settings/auto-approval"
+              label="自動承認ルール"
+              icon={SlidersHorizontal}
+              pathPrefixes={["/settings/auto-approval"]}
+            />
+            <NavLink
+              href="/settings"
+              label="設定"
+              icon={Settings}
+              pathPrefixes={["/settings"]}
+              excludePrefixes={["/settings/auto-approval"]}
+            />
           </>
         ) : (
           <p className="px-3 pt-6 text-[10px] leading-tight text-zinc-400 dark:text-zinc-500">

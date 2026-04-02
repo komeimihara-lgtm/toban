@@ -10,11 +10,6 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-function ym() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
 function todayPunchStatus(
   rows: { punch_type: string; punched_at: string }[],
 ): { label: string; detail: string } {
@@ -85,12 +80,16 @@ export default async function MyHomePage() {
   const nowYm = new Date();
   const yMonth = nowYm.getFullYear();
   const mMonth = nowYm.getMonth() + 1;
+  const monthStartIso = new Date(yMonth, mMonth - 1, 1).toISOString();
+  const nextMonthStartIso = new Date(yMonth, mMonth, 1).toISOString();
 
   const { data: pendingExpRows } = await supabase
     .from("expenses")
     .select("amount, status")
     .eq("submitter_id", user.id)
-    .in("status", ["step1_pending", "step2_pending"]);
+    .in("status", ["step1_pending", "step2_pending"])
+    .gte("created_at", monthStartIso)
+    .lt("created_at", nextMonthStartIso);
 
   const pendingList = pendingExpRows ?? [];
   const pendingCount = pendingList.length;
@@ -137,32 +136,96 @@ export default async function MyHomePage() {
 
   let incentivePreview: string | null = null;
   if (p && elig(p)) {
-    const y = ym();
-    const { data: rateR } = await supabase
-      .from("incentive_rates")
-      .select("rate")
-      .eq("user_id", user.id)
-      .eq("year_month", y)
-      .maybeSingle();
-    const { data: sub } = await supabase
-      .from("incentive_submissions")
-      .select("sales_amount, rate_snapshot, status")
-      .eq("user_id", user.id)
-      .eq("year_month", y)
-      .maybeSingle();
-    const r = rateR ? Number(rateR.rate) : 0;
-    const base = sub?.sales_amount != null ? Number(sub.sales_amount) : null;
-    const rs = sub?.rate_snapshot != null ? Number(sub.rate_snapshot) : r;
-    if (base != null && rs) {
-      incentivePreview = new Intl.NumberFormat("ja-JP", {
-        style: "currency",
-        currency: "JPY",
-        maximumFractionDigits: 0,
-      }).format(Math.floor(base * rs));
-    } else if (rs) {
-      incentivePreview = `率 ${(rs * 100).toFixed(2)}%（実績入力後に試算）`;
+    const { data: dealRows } = await supabase
+      .from("deals")
+      .select(
+        "appo_incentive, closer_incentive, submit_status, appo_employee_id, closer_employee_id",
+      )
+      .eq("year", yMonth)
+      .eq("month", mMonth)
+      .or(`appo_employee_id.eq.${user.id},closer_employee_id.eq.${user.id}`);
+    let sum = 0;
+    for (const raw of dealRows ?? []) {
+      const d = raw as {
+        appo_incentive: number;
+        closer_incentive: number;
+        submit_status: string;
+        appo_employee_id: string | null;
+        closer_employee_id: string | null;
+      };
+      if (d.submit_status === "rejected") continue;
+      if (d.appo_employee_id === user.id) sum += Number(d.appo_incentive) || 0;
+      if (d.closer_employee_id === user.id) sum += Number(d.closer_incentive) || 0;
+    }
+    incentivePreview = new Intl.NumberFormat("ja-JP", {
+      style: "currency",
+      currency: "JPY",
+      maximumFractionDigits: 0,
+    }).format(Math.floor(sum));
+  }
+
+  type NoticeRow = { at: string; text: string; href: string };
+  const noticeRows: NoticeRow[] = [];
+  const { data: expNews } = await supabase
+    .from("expenses")
+    .select("id, status, updated_at, purpose, category")
+    .eq("submitter_id", user.id)
+    .in("status", ["approved", "rejected"])
+    .order("updated_at", { ascending: false })
+    .limit(20);
+  for (const raw of expNews ?? []) {
+    const er = raw as {
+      status: string;
+      updated_at: string;
+      purpose: string;
+      category: string;
+    };
+    const title = [er.category, er.purpose].filter(Boolean).join(" · ").slice(0, 40);
+    if (er.status === "approved") {
+      noticeRows.push({
+        at: er.updated_at,
+        text: `経費が承認されました（${title || "詳細は一覧へ"}）`,
+        href: "/my/expenses",
+      });
+    } else {
+      noticeRows.push({
+        at: er.updated_at,
+        text: `経費が差戻しされました（${title || "詳細は一覧へ"}）`,
+        href: "/my/expenses",
+      });
     }
   }
+  const { data: dealNews } = await supabase
+    .from("deals")
+    .select("id, submit_status, updated_at, salon_name, machine_type")
+    .or(`appo_employee_id.eq.${user.id},closer_employee_id.eq.${user.id}`)
+    .in("submit_status", ["approved", "rejected"])
+    .order("updated_at", { ascending: false })
+    .limit(20);
+  for (const raw of dealNews ?? []) {
+    const dr = raw as {
+      submit_status: string;
+      updated_at: string;
+      salon_name: string;
+      machine_type: string;
+    };
+    const label = [dr.salon_name, dr.machine_type].filter(Boolean).join(" · ").slice(0, 36);
+    if (dr.submit_status === "approved") {
+      noticeRows.push({
+        at: dr.updated_at,
+        text: `案件インセンティブが承認されました（${label || "詳細へ"}）`,
+        href: "/my/incentive",
+      });
+    } else {
+      noticeRows.push({
+        at: dr.updated_at,
+        text: `案件が差戻しされました（${label || "詳細へ"}）`,
+        href: "/my/incentive",
+      });
+    }
+  }
+  noticeRows.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  const notices = noticeRows.slice(0, 12);
 
   const yen = (n: number) =>
     new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY" }).format(n);
@@ -221,12 +284,12 @@ export default async function MyHomePage() {
           </Link>
         </div>
         <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <h2 className="text-sm font-medium text-zinc-500">承認待ちの経費</h2>
+          <h2 className="text-sm font-medium text-zinc-500">今月の承認待ち経費</h2>
           <p className="mt-2 text-lg font-semibold tabular-nums">
             {pendingCount} 件 · {yen(pendingSum)}
           </p>
           <p className="mt-1 text-xs text-zinc-500">
-            第1・最終承認待ち（下書きは含みません）
+            第1・最終承認待ち・今月申請分（下書きは含みません）
           </p>
           <Link href="/my/expenses" className="mt-3 inline-block text-sm text-blue-600 underline">
             経費一覧へ
@@ -266,17 +329,46 @@ export default async function MyHomePage() {
         </Link>
       </section>
 
-      {incentivePreview && p && elig(p) && (
+      {incentivePreview != null && p && elig(p) && (
         <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <h2 className="text-sm font-medium text-zinc-500">今月のインセンティブ試算</h2>
+          <h2 className="text-sm font-medium text-zinc-500">今月のインセンティブ試算（案件）</h2>
           <p className="mt-2 text-lg font-semibold text-emerald-700 dark:text-emerald-400">
             {incentivePreview}
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">
+            差戻し案件を除き、あなたのアポ・クローズ分の合計です。
           </p>
           <Link href="/my/incentive" className="mt-2 inline-block text-sm text-blue-600 underline">
             入力・履歴へ
           </Link>
         </section>
       )}
+
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+        <h2 className="text-sm font-medium text-zinc-500">お知らせ</h2>
+        {notices.length === 0 ? (
+          <p className="mt-2 text-sm text-zinc-500">直近の承認・差戻しはありません。</p>
+        ) : (
+          <ul className="mt-3 space-y-2 text-sm text-zinc-800 dark:text-zinc-200">
+            {notices.map((n, i) => (
+              <li key={`${n.at}-${i}`}>
+                <Link href={n.href} className="text-blue-600 underline hover:no-underline dark:text-blue-400">
+                  {n.text}
+                </Link>
+                <span className="ml-2 tabular-nums text-xs text-zinc-500">
+                  {new Date(n.at).toLocaleString("ja-JP", {
+                    timeZone: "Asia/Tokyo",
+                    month: "numeric",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <div>
         <Link

@@ -64,13 +64,23 @@ export function LoginForm() {
     const role = (pr as { role?: string } | null)?.role ?? "staff";
 
     let dest = isAdminRole(role) ? "/dashboard" : "/my";
-    if (nextPath && nextPath.startsWith("/") && nextPath !== "/login") {
+    if (nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//")) {
       const admin = isAdminRole(role);
-      if (
-        (admin && (nextPath.startsWith("/dashboard") || nextPath.startsWith("/approval"))) ||
-        (!admin && nextPath.startsWith("/my"))
-      ) {
+      if (nextPath === "/login") {
+        /* keep default dest */
+      } else if (admin) {
         dest = nextPath;
+      } else {
+        const staffOk =
+          nextPath === "/my" ||
+          nextPath.startsWith("/my/") ||
+          nextPath === "/onboarding" ||
+          (nextPath.startsWith("/onboarding/") && !nextPath.startsWith("/onboarding/admin")) ||
+          nextPath === "/hr-ai" ||
+          nextPath.startsWith("/hr-ai/") ||
+          nextPath === "/my/hr-ai" ||
+          nextPath.startsWith("/my/hr-ai/");
+        if (staffOk) dest = nextPath;
       }
     }
 

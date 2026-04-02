@@ -132,47 +132,27 @@ export default async function DashboardPage() {
       0,
     ) ?? 0;
 
-  const { data: settlementRows } = await supabase
-    .from("expenses")
-    .select("amount, status")
-    .gte("created_at", monthStartIso)
-    .lt("created_at", monthEndIso)
-    .not("status", "eq", "draft")
-    .not("status", "eq", "rejected");
-
-  let settlementDenom = 0;
-  let settlementApproved = 0;
-  for (const raw of settlementRows ?? []) {
-    const r = raw as { amount: number; status: string };
-    const amt = Number(r.amount);
-    if (!Number.isFinite(amt)) continue;
-    settlementDenom += amt;
-    if (r.status === "approved") settlementApproved += amt;
-  }
-  const settlementRatePct =
-    settlementDenom > 0 ? (settlementApproved / settlementDenom) * 100 : 0;
-
-  const y = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
-  const { data: subs } = await supabase
-    .from("incentive_submissions")
-    .select("sales_amount, rate_snapshot, status")
-    .eq("year_month", y);
+  const dealYmY = yDash;
+  const dealYmM = moDash + 1;
+  const { data: dealRowsEst } = await supabase
+    .from("deals")
+    .select("appo_incentive, closer_incentive, submit_status")
+    .eq("year", dealYmY)
+    .eq("month", dealYmM)
+    .in("submit_status", ["submitted", "approved"]);
 
   let incEst = 0;
-  (subs ?? []).forEach((s) => {
-    const st = (s as { status: string }).status;
-    if (st === "submitted" || st === "approved") {
-      const b = Number((s as { sales_amount: number }).sales_amount);
-      const r = Number((s as { rate_snapshot: number }).rate_snapshot);
-      if (Number.isFinite(b) && Number.isFinite(r)) incEst += Math.floor(b * r);
-    }
-  });
+  for (const raw of dealRowsEst ?? []) {
+    const r = raw as { appo_incentive: number; closer_incentive: number };
+    incEst += Math.floor(Number(r.appo_incentive) || 0) + Math.floor(Number(r.closer_incentive) || 0);
+  }
 
   const { count: incentiveDraftCount } = await supabase
-    .from("incentive_submissions")
+    .from("deals")
     .select("*", { count: "exact", head: true })
-    .eq("year_month", y)
-    .eq("status", "draft");
+    .eq("year", dealYmY)
+    .eq("month", dealYmM)
+    .eq("submit_status", "draft");
 
   const { data: receiptRows } = await supabase
     .from("expenses")
@@ -235,10 +215,10 @@ export default async function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi title="今月の経費合計（承認済・支払月）" value={fmt(expenseTotal)} />
         <Kpi title="承認待ち件数" value={`${pendingApproval} 件`} />
-        <Kpi title="インセンティブ試算（提出・承認分・今月）" value={fmt(incEst)} />
+        <Kpi title="インセンティブ試算（案件・提出・承認分・今月）" value={fmt(incEst)} />
         <Kpi
-          title="精算率（今月申請・ドラフト・差戻し除く）"
-          value={`${settlementRatePct.toFixed(1)}%`}
+          title="自動承認率（今月・最終承認済のうち）"
+          value={approvedTotalCount > 0 ? `${autoApprovalRatePct.toFixed(1)}%` : "—"}
         />
       </div>
 

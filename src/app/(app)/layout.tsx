@@ -14,6 +14,64 @@ export const metadata: Metadata = {
   description: "レナード株式会社 人事・勤怠",
 };
 
+async function countDealDraftBadges(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  opts: { userId: string; companyId: string; isAdmin: boolean },
+) {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth() + 1;
+
+  try {
+    if (opts.isAdmin) {
+      const { count } = await supabase
+        .from("deals")
+        .select("*", { count: "exact", head: true })
+        .eq("company_id", opts.companyId)
+        .eq("year", y)
+        .eq("month", m)
+        .eq("submit_status", "draft");
+      return count ?? 0;
+    }
+    const { count } = await supabase
+      .from("deals")
+      .select("*", { count: "exact", head: true })
+      .or(`appo_employee_id.eq.${opts.userId},closer_employee_id.eq.${opts.userId}`)
+      .in("submit_status", ["draft", "rejected"])
+      .eq("year", y)
+      .eq("month", m);
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function shouldShowEmployeeOnboarding(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+) {
+  try {
+    const { data: emp } = await supabase
+      .from("employees")
+      .select("id, created_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!emp) return false;
+    const createdAt = new Date((emp as { created_at: string }).created_at);
+    const daysSince = (Date.now() - createdAt.getTime()) / 86400000;
+    if (daysSince <= 30) return true;
+    const empId = (emp as { id: string }).id;
+    const { count } = await supabase
+      .from("onboarding_tasks")
+      .select("*", { count: "exact", head: true })
+      .eq("employee_id", empId)
+      .eq("completed", false);
+    return (count ?? 0) > 0;
+  } catch {
+    return false;
+  }
+}
+
 export default async function AppGroupLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -22,6 +80,7 @@ export default async function AppGroupLayout({
   let approvalBadgeCount = 0;
   let incentiveDraftBadgeCount = 0;
   let showMyIncentiveNav = false;
+  let showEmployeeOnboardingNav = false;
   let tenantName: string | null = null;
 
   if (isSupabaseConfigured()) {
@@ -62,6 +121,8 @@ export default async function AppGroupLayout({
         const p = profile as ProfileRow | null;
         showMyIncentiveNav = Boolean(p && isIncentiveEligible(p));
 
+        showEmployeeOnboardingNav = await shouldShowEmployeeOnboarding(supabase, user.id);
+
         if (showAdminSection) {
           try {
             approvalBadgeCount = await countExpenseApprovalBadges(supabase, role);
@@ -70,36 +131,16 @@ export default async function AppGroupLayout({
           }
         }
 
-        if (p && isIncentiveEligible(p)) {
+        if (cid) {
           try {
-            const now = new Date();
-            const { count } = await supabase
-              .from("incentive_configs")
-              .select("*", { count: "exact", head: true })
-              .eq("employee_id", user.id)
-              .eq("status", "draft")
-              .eq("year", now.getFullYear())
-              .eq("month", now.getMonth() + 1);
-            incentiveDraftBadgeCount = count ?? 0;
+            const dealDraft = await countDealDraftBadges(supabase, {
+              userId: user.id,
+              companyId: cid,
+              isAdmin: showAdminSection,
+            });
+            incentiveDraftBadgeCount = dealDraft;
           } catch {
             incentiveDraftBadgeCount = 0;
-          }
-        }
-
-        if (showAdminSection) {
-          try {
-            const now = new Date();
-            const { count } = await supabase
-              .from("incentive_configs")
-              .select("*", { count: "exact", head: true })
-              .eq("status", "draft")
-              .eq("year", now.getFullYear())
-              .eq("month", now.getMonth() + 1);
-            if ((count ?? 0) > incentiveDraftBadgeCount) {
-              incentiveDraftBadgeCount = count ?? 0;
-            }
-          } catch {
-            /* ignore */
           }
         }
       }
@@ -115,6 +156,7 @@ export default async function AppGroupLayout({
         tenantName={tenantName}
         showMyIncentiveNav={showMyIncentiveNav}
         showAdminSection={showAdminSection}
+        showEmployeeOnboardingNav={showEmployeeOnboardingNav}
         approvalBadgeCount={approvalBadgeCount}
         incentiveDraftBadgeCount={incentiveDraftBadgeCount}
       />
