@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import { isAdminRole, isIncentiveEligible, type ProfileRow } from "@/types/incentive";
+import {
+  INCENTIVE_DEAL_ROLE_LABEL,
+  isAdminRole,
+  isIncentiveEligible,
+  type IncentiveDealRole,
+  type ProfileRow,
+} from "@/types/incentive";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -73,14 +79,19 @@ export default async function IncentivesAdminPage() {
   const { data: subs } = await supabase
     .from("incentive_submissions")
     .select(
-      "user_id, year_month, sales_amount, status, submitted_at, rate_snapshot",
+      "user_id, year_month, sales_amount, status, submitted_at, rate_snapshot, deal_role",
     )
     .eq("year_month", ym);
 
   const subByUser = new Map(
-    (subs as { user_id: string; sales_amount: number | null; status: string; submitted_at: string | null; rate_snapshot: number | null }[])?.map(
-      (s) => [s.user_id, s],
-    ) ?? [],
+    (subs as {
+      user_id: string;
+      sales_amount: number | null;
+      status: string;
+      submitted_at: string | null;
+      rate_snapshot: number | null;
+      deal_role: string | null;
+    }[])?.map((s) => [s.user_id, s]) ?? [],
   );
 
   return (
@@ -100,7 +111,8 @@ export default async function IncentivesAdminPage() {
             <tr>
               <th className="px-4 py-3">名前</th>
               <th className="px-4 py-3">区分</th>
-              <th className="px-4 py-3">売上（円）</th>
+              <th className="px-4 py-3">案件役割</th>
+              <th className="px-4 py-3">純利益基準（円）</th>
               <th className="px-4 py-3">率</th>
               <th className="px-4 py-3">試算</th>
               <th className="px-4 py-3">ステータス</th>
@@ -110,7 +122,7 @@ export default async function IncentivesAdminPage() {
             {rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-4 py-6 text-center text-zinc-500"
                 >
                   対象者がいません。
@@ -130,6 +142,12 @@ export default async function IncentivesAdminPage() {
                   .filter(Boolean)
                   .join("・");
 
+                const dr = s?.deal_role as IncentiveDealRole | null | undefined;
+                const roleLabel =
+                  dr && (dr === "appo" || dr === "closer")
+                    ? INCENTIVE_DEAL_ROLE_LABEL[dr]
+                    : "—";
+
                 return (
                   <tr
                     key={person.id}
@@ -140,6 +158,9 @@ export default async function IncentivesAdminPage() {
                     </td>
                     <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                       {flags}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                      {roleLabel}
                     </td>
                     <td className="px-4 py-3 tabular-nums">
                       {sales != null ? formatYen(sales) : "—"}
@@ -166,6 +187,11 @@ export default async function IncentivesAdminPage() {
                       {s?.status === "rejected" && (
                         <span className="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-900 dark:bg-red-950/60 dark:text-red-200">
                           差戻し
+                        </span>
+                      )}
+                      {s?.status === "draft" && (
+                        <span className="inline-flex rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200">
+                          下書き
                         </span>
                       )}
                       {!s && (

@@ -82,7 +82,9 @@ export default async function MyIncentivePage() {
 
   const { data: submission } = await supabase
     .from("incentive_submissions")
-    .select("id, sales_amount, status, submitted_at, rate_snapshot")
+    .select(
+      "id, sales_amount, status, submitted_at, rate_snapshot, selling_price_tax_in, actual_cost, service_cost_deduction, deal_role, net_profit_ex_tax, product_id",
+    )
     .eq("user_id", user.id)
     .eq("year_month", ym)
     .maybeSingle();
@@ -95,6 +97,12 @@ export default async function MyIncentivePage() {
         | "status"
         | "submitted_at"
         | "rate_snapshot"
+        | "selling_price_tax_in"
+        | "actual_cost"
+        | "service_cost_deduction"
+        | "deal_role"
+        | "net_profit_ex_tax"
+        | "product_id"
       >
     | null;
 

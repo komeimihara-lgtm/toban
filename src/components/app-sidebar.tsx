@@ -5,21 +5,25 @@ import { usePathname } from "next/navigation";
 import {
   Banknote,
   Bot,
+  ClipboardCheck,
   Clock,
   Coins,
+  FileText,
   Home,
+  LayoutDashboard,
   ListChecks,
   Receipt,
+  Settings,
   Umbrella,
+  User,
   UserPlus,
+  Users,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 
 export type AppSidebarProps = {
   userLabel: string;
-  /** /my/incentive。is_sales_target / is_service_target の対象者のみ */
   showIncentiveLink: boolean;
-  /** 入社30日以内または onboarding_tasks 未完了のときのみ（layout 側で判定） */
   showOnboardingLink: boolean;
   showAdminSection: boolean;
 };
@@ -81,12 +85,11 @@ export function AppSidebar({
           {userLabel}
         </p>
       </div>
-      <nav className="flex flex-col gap-0.5 p-3" aria-label="メインメニュー">
+      <nav
+        className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3 pb-8"
+        aria-label="メインメニュー"
+      >
         <SectionLabel>マイページ</SectionLabel>
-        {
-          /* 順: 1ホーム 2勤怠 3経費申請 4申請状況(旧:自分の申請) 5インセ対象のみ 6給与 7有給休暇 8AI相談窓口(旧:AI人事)。
-           打刻修正申請はサイドバーに置かない（勤怠ページ内）。 */
-        }
         <NavLink href="/my" label="ホーム" icon={Home} />
         <NavLink
           href="/my/attendance"
@@ -102,23 +105,44 @@ export function AppSidebar({
         <NavLink href="/my/payslip" label="給与明細" icon={Banknote} />
         <NavLink href="/my/leave" label="有給・休暇" icon={Umbrella} />
         <NavLink href="/hr-ai" label="AI相談窓口" icon={Bot} />
+        <NavLink href="/my/contract" label="契約内容" icon={FileText} />
+        <NavLink href="/my/profile" label="プロフィール設定" icon={User} />
         {showOnboardingLink && (
-          <NavLink
-            href="/onboarding"
-            label="入社手続き"
-            icon={UserPlus}
-          />
+          <NavLink href="/onboarding" label="入社手続き" icon={UserPlus} />
         )}
 
         {showAdminSection && (
           <>
             <SectionLabel>管理</SectionLabel>
             <NavLink
+              href="/dashboard"
+              label="管理ダッシュボード"
+              icon={LayoutDashboard}
+            />
+            <NavLink href="/approval" label="承認" icon={ClipboardCheck} />
+            <NavLink
               href="/incentives"
-              label="インセンティブ"
+              label="インセンティブ管理"
               icon={Coins}
               pathPrefixes={["/incentives"]}
             />
+            <NavLink href="/employees" label="従業員管理" icon={Users} />
+            <NavLink
+              href="/expenses/audit"
+              label="経費審査"
+              icon={Receipt}
+            />
+            <NavLink
+              href="/onboarding/admin"
+              label="入退社手続き"
+              icon={UserPlus}
+            />
+            <NavLink
+              href="/settings/auto-approval"
+              label="自動承認ルール"
+              icon={Settings}
+            />
+            <NavLink href="/settings" label="設定" icon={Settings} />
           </>
         )}
       </nav>
