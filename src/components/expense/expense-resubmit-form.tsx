@@ -1,142 +1,110 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { EXPENSE_CLAIM_KINDS, type ExpenseClaimKindId } from "@/lib/expense-ui";
+import { resubmitRejectedExpenseAction } from "@/app/actions/expense-resubmit-actions";
+import { useActionState } from "react";
 
-type Props = {
-  action: (formData: FormData) => void | Promise<void>;
-  previousId: string;
-  defaultAmount: number;
-  defaultCategory: string;
-  categoryLabels: string[];
+type Row = {
+  id: string;
+  type: string;
+  category: string;
+  amount: number;
+  paid_date: string;
+  purpose: string;
+  vendor: string | null;
+  rejection_reason: string | null;
 };
 
-export function ExpenseResubmitForm({
-  action,
-  previousId,
-  defaultAmount,
-  defaultCategory,
-  categoryLabels,
-}: Props) {
-  const [kind, setKind] = useState<ExpenseClaimKindId>("expense");
-  const [amountStr, setAmountStr] = useState(String(defaultAmount));
-
-  const amount = Number(amountStr.replace(/,/g, ""));
-  const taxHint = useMemo(() => {
-    if (!Number.isFinite(amount) || amount <= 0) return null;
-    const net = Math.round((amount / 1.1) * 100) / 100;
-    const tax = Math.round((amount - net) * 100) / 100;
-    return { net, tax };
-  }, [amount]);
-
-  const selectDefault = defaultCategory || "";
-  const prevCategoryCustom =
-    defaultCategory && !categoryLabels.includes(defaultCategory);
+export function ExpenseResubmitForm({ row }: { row: Row }) {
+  const [state, action, pending] = useActionState(resubmitRejectedExpenseAction, null as null | {
+    ok: boolean;
+    message?: string;
+  });
 
   return (
-    <form action={action} className="mt-3 space-y-3">
-      <input type="hidden" name="previous_id" value={previousId} />
-      <input type="hidden" name="claim_kind" value={kind} />
-
-      <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
-        {EXPENSE_CLAIM_KINDS.map((k) => (
-          <button
-            key={k.id}
-            type="button"
-            onClick={() => setKind(k.id)}
-            className={`rounded-lg border px-2 py-2 text-left text-xs ${
-              kind === k.id
-                ? "border-red-800 bg-red-50 text-red-950"
-                : "border-stone-200 bg-white"
-            }`}
-          >
-            {k.emoji} {k.label}
-          </button>
-        ))}
-      </div>
-
-      <input
-        name="pay_date"
-        type="date"
-        className="w-full rounded border border-stone-200 px-2 py-1.5 text-sm"
-      />
-
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <input
-          name="amount"
-          type="number"
-          min={1}
-          required
-          value={amountStr}
-          onChange={(e) => setAmountStr(e.target.value)}
-          className="rounded border border-stone-200 px-2 py-1.5 text-sm tabular-nums"
-        />
-        <select
-          name="category"
-          required
-          className="rounded border border-stone-200 px-2 py-1.5 text-sm"
-          defaultValue={selectDefault}
+    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-900/50 dark:bg-amber-950/20">
+      <p className="text-xs font-medium text-amber-900 dark:text-amber-100">差戻し理由</p>
+      <p className="mt-1 whitespace-pre-wrap text-sm text-amber-950 dark:text-amber-50">
+        {row.rejection_reason?.trim() || "（理由なし）"}
+      </p>
+      <form action={action} className="mt-4 space-y-3">
+        <input type="hidden" name="id" value={row.id} />
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="text-xs text-zinc-600 dark:text-zinc-400">
+            種別
+            <select
+              name="type"
+              defaultValue={row.type}
+              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            >
+              <option value="expense">経費</option>
+              <option value="travel">出張</option>
+              <option value="advance">仮払</option>
+              <option value="advance_settle">仮払精算</option>
+            </select>
+          </label>
+          <label className="text-xs text-zinc-600 dark:text-zinc-400">
+            カテゴリ
+            <input
+              name="category"
+              required
+              defaultValue={row.category}
+              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            />
+          </label>
+          <label className="text-xs text-zinc-600 dark:text-zinc-400">
+            金額
+            <input
+              name="amount"
+              type="number"
+              step="1"
+              required
+              defaultValue={row.amount}
+              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            />
+          </label>
+          <label className="text-xs text-zinc-600 dark:text-zinc-400">
+            支払日
+            <input
+              name="paid_date"
+              type="date"
+              required
+              defaultValue={row.paid_date}
+              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            />
+          </label>
+        </div>
+        <label className="block text-xs text-zinc-600 dark:text-zinc-400">
+          支払先・取引先
+          <input
+            name="vendor"
+            defaultValue={row.vendor ?? ""}
+            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+          />
+        </label>
+        <label className="block text-xs text-zinc-600 dark:text-zinc-400">
+          用途・内容
+          <textarea
+            name="purpose"
+            required
+            rows={3}
+            defaultValue={row.purpose}
+            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+          />
+        </label>
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-600 dark:hover:bg-emerald-500"
         >
-          {prevCategoryCustom ? (
-            <option value={defaultCategory}>{defaultCategory}（前回）</option>
-          ) : null}
-          {categoryLabels.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </div>
-      {taxHint ? (
-        <p className="text-xs text-stone-600">
-          税込目安: 本体約 {new Intl.NumberFormat("ja-JP").format(taxHint.net)} / 税{" "}
-          {new Intl.NumberFormat("ja-JP").format(taxHint.tax)}
-        </p>
-      ) : null}
-
-      <input
-        name="payee"
-        type="text"
-        placeholder="支払先"
-        className="w-full rounded border border-stone-200 px-2 py-1.5 text-sm"
-      />
-
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          name="route_from"
-          type="text"
-          placeholder="区間・出発"
-          className="rounded border border-stone-200 px-2 py-1.5 text-sm"
-        />
-        <input
-          name="route_to"
-          type="text"
-          placeholder="区間・到着"
-          className="rounded border border-stone-200 px-2 py-1.5 text-sm"
-        />
-      </div>
-
-      <input
-        name="participants"
-        type="text"
-        placeholder="参加者（任意）"
-        className="w-full rounded border border-stone-200 px-2 py-1.5 text-sm"
-      />
-
-      <textarea
-        name="purpose"
-        rows={2}
-        required
-        className="w-full rounded border border-stone-200 px-2 py-1.5 text-sm"
-        placeholder="修正内容・用途 *必須"
-      />
-
-      <button
-        type="submit"
-        className="rounded-lg bg-emerald-900 px-3 py-2 text-xs font-medium text-amber-50"
-      >
-        修正して再申請
-      </button>
-    </form>
+          {pending ? "送信中…" : "修正して再申請（第1承認待ちへ）"}
+        </button>
+        {state && !state.ok && state.message ? (
+          <p className="text-sm text-red-600 dark:text-red-400">{state.message}</p>
+        ) : null}
+        {state && state.ok ? (
+          <p className="text-sm text-emerald-700 dark:text-emerald-400">再提出しました。</p>
+        ) : null}
+      </form>
+    </div>
   );
 }

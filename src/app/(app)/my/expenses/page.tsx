@@ -17,7 +17,7 @@ export default async function MyExpensesPage() {
   const { data: rows, error } = await supabase
     .from("expenses")
     .select(
-      "id, type, status, category, amount, paid_date, purpose, vendor, submitter_name, created_at, receipt_url, auto_approved, audit_score",
+      "id, type, status, category, amount, paid_date, purpose, vendor, submitter_name, created_at, receipt_url, auto_approved, audit_score, rejection_reason",
     )
     .eq("submitter_id", user.id)
     .order("created_at", { ascending: false });

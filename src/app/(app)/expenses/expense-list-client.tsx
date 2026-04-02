@@ -1,5 +1,6 @@
 "use client";
 
+import { ExpenseResubmitForm } from "@/components/expense/expense-resubmit-form";
 import { useCallback, useMemo, useState } from "react";
 
 type ExpenseRow = {
@@ -16,6 +17,7 @@ type ExpenseRow = {
   receipt_url: string | null;
   auto_approved?: boolean | null;
   audit_score?: number | null;
+  rejection_reason?: string | null;
 };
 
 function isReceiptMissing(r: ExpenseRow) {
@@ -155,6 +157,20 @@ export function ExpenseListClient({ initialRows }: { initialRows: ExpenseRow[] }
                 ) : null}
                 <p className="mt-2 whitespace-pre-wrap">{r.purpose}</p>
                 <p className="mt-2 text-xs">種別: {r.type}</p>
+                {r.status === "rejected" ? (
+                  <ExpenseResubmitForm
+                    row={{
+                      id: r.id,
+                      type: r.type,
+                      category: r.category,
+                      amount: Number(r.amount),
+                      paid_date: r.paid_date,
+                      purpose: r.purpose,
+                      vendor: r.vendor,
+                      rejection_reason: r.rejection_reason ?? null,
+                    }}
+                  />
+                ) : null}
               </div>
             )}
           </li>
