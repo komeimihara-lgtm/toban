@@ -20,6 +20,11 @@ function getResend() {
   return new Resend(key);
 }
 
+/** Resend 経由のメール送信が可能か（`RESEND_API_KEY` 設定の有無） */
+export function isResendConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY?.trim());
+}
+
 function fromAddress() {
   return process.env.RESEND_FROM?.trim() || "LENARD HR <onboarding@resend.dev>";
 }
