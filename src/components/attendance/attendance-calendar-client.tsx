@@ -126,7 +126,7 @@ export function AttendanceCalendarClient({
             <dd className="mt-1 text-lg font-semibold tabular-nums">{workDays} 日</dd>
           </div>
           <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">
-            <dt className="text-xs text-zinc-500">総労働時間</dt>
+            <dt className="text-xs text-zinc-500">総労働時間（自動休憩控除後）</dt>
             <dd className="mt-1 text-lg font-semibold tabular-nums">
               {formatHoursMinutes(totalWorkMinutes)}
             </dd>

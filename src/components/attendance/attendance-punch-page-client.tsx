@@ -141,13 +141,7 @@ export function AttendancePunchPageClient({
         punchType: p.punch_type,
         punchedAt: p.punched_at,
       });
-      if (
-        !insertedAuto &&
-        autoMins > 0 &&
-        firstIn &&
-        p.id === firstIn.id &&
-        firstIn
-      ) {
+      if (!insertedAuto && autoMins > 0 && firstIn && p.id === firstIn.id) {
         out.push({
           kind: "auto_break",
           id: `auto-break-${firstIn.id}`,
