@@ -10,12 +10,14 @@ import {
   ClipboardList,
   Coins,
   FileSearch,
+  FileText,
   Home,
   Receipt,
   Settings,
   SlidersHorizontal,
   Timer,
   Umbrella,
+  UserCircle,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -158,6 +160,12 @@ export function AppSidebar({
         <NavLink href="/my/payslip" label="給与明細" icon={Banknote} exact />
         <NavLink href="/my/leave" label="有給・休暇" icon={Umbrella} pathPrefixes={["/my/leave"]} />
         <NavLink
+          href="/my/contract"
+          label="契約内容"
+          icon={FileText}
+          pathPrefixes={["/my/contract"]}
+        />
+        <NavLink
           href="/hr-ai"
           label="AI相談窓口"
           icon={Bot}
@@ -172,6 +180,12 @@ export function AppSidebar({
             excludePrefixes={["/onboarding/admin"]}
           />
         ) : null}
+        <NavLink
+          href="/my/profile"
+          label="プロフィール設定"
+          icon={UserCircle}
+          pathPrefixes={["/my/profile"]}
+        />
 
         {showAdminSection ? (
           <>
