@@ -1,6 +1,7 @@
 import {
   createProductAction,
   setProductActiveAction,
+  updateProductCostAction,
 } from "@/app/actions/product-settings-actions";
 import { IncentiveRatesSettings } from "@/components/settings/incentive-rates-settings";
 import { createClient } from "@/lib/supabase/server";
@@ -131,43 +132,68 @@ export default async function SettingsPage() {
 
       <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="border-b border-zinc-100 px-6 py-4 text-sm font-medium text-zinc-500 dark:border-zinc-800">
-          登録済み商品
+          商品マスタ（一覧・原価）
         </h2>
+        <p className="border-b border-zinc-100 px-6 py-2 text-xs text-zinc-500 dark:border-zinc-800">
+          原価は案件入力時の「実質原価」の初期値になります。廃盤は無効化してください。
+        </p>
         <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
           {rows.length === 0 && (
             <li className="px-6 py-8 text-sm text-zinc-500">商品がありません。</li>
           )}
-          {rows.map((p) => (
+          {rows.map((_product) => (
             <li
-              key={p.id}
-              className="flex flex-wrap items-center justify-between gap-3 px-6 py-4"
+              key={_product.id}
+              className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
             >
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-medium text-zinc-900 dark:text-zinc-100">
-                  {p.name}
-                  {!p.is_active && (
+                  {_product.name}
+                  {!_product.is_active && (
                     <span className="ml-2 text-xs font-normal text-amber-700 dark:text-amber-400">
                       無効
                     </span>
                   )}
                 </p>
-                <p className="text-xs text-zinc-500">
-                  原価: {Number(p.cost_price).toLocaleString("ja-JP")} 円
-                  {p.notes ? ` · ${p.notes}` : ""}
-                </p>
+                {_product.notes ? (
+                  <p className="text-xs text-zinc-500">{_product.notes}</p>
+                ) : null}
               </div>
+              <form
+                action={updateProductCostAction}
+                className="flex flex-wrap items-center gap-2"
+              >
+                <input type="hidden" name="id" value={_product.id} />
+                <label className="flex items-center gap-1 text-xs text-zinc-500">
+                  原価（円）
+                  <input
+                    name="cost_price"
+                    type="number"
+                    min={0}
+                    step={1}
+                    defaultValue={Number(_product.cost_price)}
+                    className="w-28 rounded border px-2 py-1 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className="rounded bg-zinc-800 px-3 py-1.5 text-xs text-white dark:bg-zinc-200 dark:text-zinc-900"
+                >
+                  原価を保存
+                </button>
+              </form>
               <form action={setProductActiveAction}>
-                <input type="hidden" name="id" value={p.id} />
+                <input type="hidden" name="id" value={_product.id} />
                 <input
                   type="hidden"
                   name="is_active"
-                  value={(!p.is_active).toString()}
+                  value={(!_product.is_active).toString()}
                 />
                 <button
                   type="submit"
                   className="rounded border border-zinc-300 px-3 py-1.5 text-xs font-medium dark:border-zinc-600"
                 >
-                  {p.is_active ? "無効化" : "有効化"}
+                  {_product.is_active ? "廃盤（無効化）" : "有効化"}
                 </button>
               </form>
             </li>

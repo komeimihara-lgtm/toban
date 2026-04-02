@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/analyze-retention",
-      "schedule": "0 3 * * *"
+      "schedule": "0 1 * * *"
     },
     {
       "path": "/api/cron/sync-ot",

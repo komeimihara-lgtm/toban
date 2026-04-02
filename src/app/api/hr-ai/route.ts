@@ -1,5 +1,6 @@
 import { getProfile, getSessionUser } from "@/lib/api-auth";
 import { buildHrAiSystemPrompt } from "@/lib/hr-ai-build-prompt";
+import { HR_AI_INTERVIEW_MODE_APPENDIX } from "@/lib/hr-ai-interview-prompt-appendix";
 import {
   normalizeHrConversationHistory,
   type HrChatTurn,
@@ -30,22 +31,31 @@ export async function POST(req: Request) {
       message?: string;
       conversation_history?: unknown;
       conversation_id?: string | null;
+      interview_mode?: boolean | string;
     };
     const message = String(body.message ?? "").trim();
     if (!message) {
       return NextResponse.json({ error: "message が必要です" }, { status: 400 });
     }
 
-    const systemPrompt = await buildHrAiSystemPrompt(supabase, user.id);
-    if (!systemPrompt) {
+    const interviewMode =
+      body.interview_mode === true || body.interview_mode === "true";
+
+    let basePrompt = await buildHrAiSystemPrompt(supabase, user.id);
+    if (!basePrompt) {
       return NextResponse.json(
         { error: "プロフィールが見つかりません" },
         { status: 403 },
       );
     }
 
+    const systemPrompt = interviewMode
+      ? `${basePrompt}${HR_AI_INTERVIEW_MODE_APPENDIX}`
+      : basePrompt;
+
     let prior: HrChatTurn[] = [];
-    let conversationId = body.conversation_id?.trim() || null;
+    let conversationId =
+      interviewMode ? null : body.conversation_id?.trim() || null;
 
     if (conversationId) {
       const { data: row, error } = await supabase
@@ -94,40 +104,42 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "プロフィールが見つかりません" }, { status: 403 });
     }
 
-    if (conversationId) {
-      const { error: upErr } = await supabase
-        .from("hr_conversations")
-        .update({
-          messages: newMessages,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", conversationId)
-        .eq("employee_id", user.id);
-      if (upErr) {
-        return NextResponse.json({ error: upErr.message }, { status: 500 });
+    if (!interviewMode) {
+      if (conversationId) {
+        const { error: upErr } = await supabase
+          .from("hr_conversations")
+          .update({
+            messages: newMessages,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", conversationId)
+          .eq("employee_id", user.id);
+        if (upErr) {
+          return NextResponse.json({ error: upErr.message }, { status: 500 });
+        }
+      } else {
+        const { data: ins, error: insErr } = await supabase
+          .from("hr_conversations")
+          .insert({
+            company_id: profile.company_id,
+            employee_id: user.id,
+            messages: newMessages,
+          })
+          .select("id")
+          .single();
+        if (insErr || !ins) {
+          return NextResponse.json(
+            { error: insErr?.message ?? "会話の保存に失敗しました" },
+            { status: 500 },
+          );
+        }
+        conversationId = (ins as { id: string }).id;
       }
-    } else {
-      const { data: ins, error: insErr } = await supabase
-        .from("hr_conversations")
-        .insert({
-          company_id: profile.company_id,
-          employee_id: user.id,
-          messages: newMessages,
-        })
-        .select("id")
-        .single();
-      if (insErr || !ins) {
-        return NextResponse.json(
-          { error: insErr?.message ?? "会話の保存に失敗しました" },
-          { status: 500 },
-        );
-      }
-      conversationId = (ins as { id: string }).id;
     }
 
     return NextResponse.json({
       reply: assistantText,
-      conversation_id: conversationId,
+      conversation_id: interviewMode ? null : conversationId,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "error";

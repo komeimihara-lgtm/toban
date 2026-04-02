@@ -133,6 +133,8 @@ export default async function MyHomePage() {
     .select("id")
     .eq("employee_id", user.id)
     .eq("status", "pending")
+    .order("requested_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   let incentivePreview: string | null = null;

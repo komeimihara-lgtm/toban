@@ -21,17 +21,32 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const q = new URL(req.url).searchParams.get("company_id");
+  const url = new URL(req.url);
+  const q = url.searchParams.get("company_id");
   if (q && q !== companyId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { data, error } = await supabase
+  const { data: me } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  const includeInactive =
+    url.searchParams.get("include_inactive") === "1" &&
+    isAdminRole((me as { role?: string })?.role ?? "");
+
+  let rq = supabase
     .from("products")
     .select("id, company_id, name, cost_price, is_active, notes, created_at, updated_at")
     .eq("company_id", companyId)
-    .eq("is_active", true)
     .order("name");
+
+  if (!includeInactive) {
+    rq = rq.eq("is_active", true);
+  }
+
+  const { data, error } = await rq;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -5,22 +5,10 @@ import {
   completeAiInterview,
 } from "@/app/actions/ai-interview-actions";
 import type { HrChatTurn } from "@/lib/hr-ai-messages";
+import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { HrAssistantChat } from "./hr-assistant-chat";
-
-type ChatLine = { role: "user" | "assistant"; text: string };
-
-function interviewReply(userText: string): string {
-  const t = userText.toLowerCase();
-  if (/疲|つら|困|ストレス|不安/.test(t)) {
-    return "お疲れさまです。その状況が続くと負担が大きいですね。いま一番しんどいのは業務量でしょうか、人間関係でしょうか。短く教えてください。";
-  }
-  if (/休|有給|休み/.test(t)) {
-    return "休養を取ることは大切です。有給や相談窓口の利用も検討できます。人事に詳しく相談したい topics はありますか？";
-  }
-  return "ありがとうございます。ほかに話しておきたいことはありますか。よければ、仕事の希望や不安を一文で教えてください。";
-}
 
 export type HrAiClientProps = {
   hrInitialConversationId?: string | null;
@@ -32,18 +20,25 @@ export function HrAiClient({
   hrInitialMessages = [],
 }: HrAiClientProps) {
   const searchParams = useSearchParams();
-  const mode = searchParams.get("mode");
   const requestId = searchParams.get("request");
-  const isInterview = mode === "interview" && Boolean(requestId);
+  const interviewModeFlag =
+    searchParams.get("interview_mode") === "true" ||
+    searchParams.get("mode") === "interview";
+  const isInterview = interviewModeFlag && Boolean(requestId);
 
   const [accepted, setAccepted] = useState(false);
-  const [messages, setMessages] = useState<ChatLine[]>([]);
+  const [messages, setMessages] = useState<HrChatTurn[]>([]);
   const [input, setInput] = useState("");
-  const [summary, setSummary] = useState("");
   const [doneMsg, setDoneMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [pending, start] = useTransition();
   const acceptOnce = useRef(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading, accepted]);
 
   useEffect(() => {
     if (!isInterview || !requestId || acceptOnce.current) return;
@@ -59,40 +54,62 @@ export function HrAiClient({
       setMessages([
         {
           role: "assistant",
-          text: "こんにちは。今日の面談では、お仕事の様子やご不安な点を自由にお聞かせください。内容は厳重に取り扱い、外部には出しません。",
+          content:
+            "こんにちは。今日は、お仕事のことやお気持ちになっていることを、焦らずお聞かせください。ここでの会話の内容が、具体的な文面として上司に伝わることはありません。",
         },
       ]);
     });
   }, [isInterview, requestId]);
 
-  const appendSummaryLine = useCallback((line: string) => {
-    setSummary((prev) => (prev ? `${prev}\n${line}` : line));
-  }, []);
-
-  const send = () => {
-    const t = input.trim();
-    if (!t) return;
+  const sendInterviewMessage = useCallback(async () => {
+    const text = input.trim();
+    if (!text || loading || !accepted || doneMsg) return;
+    setErr(null);
+    const prior = messages;
+    setMessages((m) => [...m, { role: "user", content: text }]);
+    setLoading(true);
     setInput("");
-    setMessages((m) => [...m, { role: "user", text: t }]);
-    const reply = interviewReply(t);
-    setMessages((m) => [...m, { role: "assistant", text: reply }]);
-    appendSummaryLine(`自分: ${t}`);
-    appendSummaryLine(`AI: ${reply}`);
-  };
+    try {
+      const res = await fetch("/api/hr-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          interview_mode: true,
+          conversation_history: prior,
+        }),
+      });
+      const j = (await res.json()) as { error?: string; reply?: string };
+      if (!res.ok) {
+        setMessages(prior);
+        setErr(j.error ?? "エラーが発生しました");
+        return;
+      }
+      setMessages([
+        ...prior,
+        { role: "user", content: text },
+        { role: "assistant", content: j.reply ?? "" },
+      ]);
+    } catch {
+      setMessages(prior);
+      setErr("通信エラー");
+    } finally {
+      setLoading(false);
+    }
+  }, [input, loading, accepted, doneMsg, messages]);
 
   const finish = () => {
     if (!requestId) return;
     start(async () => {
       setErr(null);
-      const body =
-        summary.trim() ||
-        messages.map((m) => `${m.role === "user" ? "自分" : "AI"}: ${m.text}`).join("\n");
-      const r = await completeAiInterview(requestId, body);
+      const r = await completeAiInterview(requestId);
       if (!r.ok) {
-        setErr("message" in r ? r.message : "保存に失敗しました");
+        setErr(r.message ?? "保存に失敗しました");
         return;
       }
-      setDoneMsg("面談を記録しました。担当へ通知を送りました（LINE 設定時）。");
+      setDoneMsg(
+        "面談を終了しました。担当へ「面談が行われた事実」のみ通知しました（内容は伝えていません）。",
+      );
     });
   };
 
@@ -104,7 +121,7 @@ export function HrAiClient({
             AI 面談
           </h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            プライバシーに配慮し、会話の要点は要約として人事担当へ共有されます。
+            会話は通常のAI相談履歴には保存されません。終了後、上司には「面談があった事実」だけが届きます。
           </p>
         </div>
 
@@ -117,7 +134,7 @@ export function HrAiClient({
             <div className="max-h-80 space-y-3 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
               {messages.map((m, i) => (
                 <div
-                  key={`${i}-${m.role}`}
+                  key={`${i}-${m.role}-${m.content.slice(0, 12)}`}
                   className={`text-sm ${
                     m.role === "user"
                       ? "ml-8 text-right text-zinc-900 dark:text-zinc-100"
@@ -125,51 +142,51 @@ export function HrAiClient({
                   }`}
                 >
                   <span className="inline-block rounded-2xl bg-white px-3 py-2 shadow-sm dark:bg-zinc-800">
-                    {m.text}
+                    {m.content}
                   </span>
                 </div>
               ))}
+              {loading && (
+                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  応答を生成しています…
+                </div>
+              )}
+              <div ref={bottomRef} />
             </div>
 
             <div className="flex gap-2">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && send()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void sendInterviewMessage();
+                  }
+                }}
                 placeholder="メッセージを入力…"
                 className="min-w-0 flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
                 disabled={Boolean(doneMsg)}
               />
               <button
                 type="button"
-                onClick={send}
-                disabled={Boolean(doneMsg) || pending}
+                onClick={() => void sendInterviewMessage()}
+                disabled={Boolean(doneMsg) || loading || pending}
                 className="rounded-lg bg-violet-700 px-4 py-2 text-sm font-medium text-white hover:bg-violet-800 disabled:opacity-50"
               >
                 送信
               </button>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-zinc-500">
-                要約（編集可・終了時に保存）
-              </label>
-              <textarea
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                rows={6}
-                className="w-full rounded-lg border border-zinc-300 p-3 text-sm dark:border-zinc-600 dark:bg-zinc-900"
-                disabled={Boolean(doneMsg)}
-              />
-              <button
-                type="button"
-                onClick={finish}
-                disabled={Boolean(doneMsg) || pending}
-                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900"
-              >
-                面談を終了して保存
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={finish}
+              disabled={Boolean(doneMsg) || pending}
+              className="w-full rounded-lg border border-zinc-400 bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+            >
+              面談を終了する
+            </button>
           </>
         )}
 

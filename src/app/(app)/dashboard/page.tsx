@@ -1,3 +1,5 @@
+import { recommendAiInterviewFromRetentionAction } from "@/app/actions/ai-interview-actions";
+import { resolveRetentionAlertAction } from "@/app/actions/retention-actions";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { isAdminRole } from "@/types/incentive";
@@ -199,6 +201,26 @@ export default async function DashboardPage() {
     .order("updated_at", { ascending: false })
     .limit(5);
 
+  const { data: retentionRows } = await supabase
+    .from("retention_alerts")
+    .select("id, employee_id, company_id, severity, message, detected_at, alert_type")
+    .eq("is_resolved", false)
+    .order("detected_at", { ascending: false })
+    .limit(100);
+
+  const nameById = new Map<string, string>();
+  for (const m of team ?? []) {
+    const r = m as { id: string; full_name: string | null };
+    nameById.set(r.id, r.full_name?.trim() || "（無名）");
+  }
+
+  const sevOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+  const retentionAlerts = [...(retentionRows ?? [])].sort(
+    (a, b) =>
+      (sevOrder[String((a as { severity: string }).severity)] ?? 9) -
+      (sevOrder[String((b as { severity: string }).severity)] ?? 9),
+  );
+
   const staffAttendance = (team ?? [])
     .map((m) => {
       const row = m as { id: string; full_name: string | null; role: string };
@@ -255,6 +277,96 @@ export default async function DashboardPage() {
               経費審査
             </Link>
           </li>
+        </ul>
+      </section>
+
+      <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
+        <h2 className="font-medium text-zinc-900 dark:text-zinc-100">
+          退職リスクアラート（離職防止）
+        </h2>
+        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+          日次バッチで検知。高リスクはオーナーに LINE 通知されます。
+        </p>
+        <ul className="mt-4 space-y-3">
+          {retentionAlerts.length === 0 && (
+            <li className="text-sm text-zinc-500">未対応のアラートはありません</li>
+          )}
+          {retentionAlerts.map((raw) => {
+            const r = raw as {
+              id: string;
+              employee_id: string;
+              company_id: string;
+              severity: string;
+              message: string;
+              detected_at: string;
+              alert_type: string;
+            };
+            const sev = r.severity as "high" | "medium" | "low";
+            const badge =
+              sev === "high"
+                ? "border-red-600 bg-red-50 text-red-900 dark:border-red-500 dark:bg-red-950/40 dark:text-red-100"
+                : sev === "medium"
+                  ? "border-amber-500 bg-amber-50 text-amber-950 dark:border-amber-600 dark:bg-amber-950/30 dark:text-amber-100"
+                  : "border-blue-500 bg-blue-50 text-blue-950 dark:border-blue-700 dark:bg-blue-950/30 dark:text-blue-100";
+            const sevLabel =
+              sev === "high" ? "高（即対応）" : sev === "medium" ? "中（要注意）" : "低（観察）";
+            const empName = nameById.get(r.employee_id) ?? "—";
+            return (
+              <li
+                key={r.id}
+                className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700"
+              >
+                <div className="flex flex-wrap items-start gap-2">
+                  <span
+                    className={`inline-flex shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium ${badge}`}
+                  >
+                    {sevLabel}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      {empName}
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">{r.message}</p>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      検知:{" "}
+                      {new Date(r.detected_at).toLocaleString("ja-JP", {
+                        timeZone: "Asia/Tokyo",
+                      })}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link
+                    href={`/employees/${r.employee_id}/retention`}
+                    className="inline-flex rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  >
+                    詳細を見る
+                  </Link>
+                  <form action={resolveRetentionAlertAction}>
+                    <input type="hidden" name="id" value={r.id} />
+                    <input type="hidden" name="employee_id" value={r.employee_id} />
+                    <button
+                      type="submit"
+                      className="inline-flex rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    >
+                      対応済み
+                    </button>
+                  </form>
+                  <form action={recommendAiInterviewFromRetentionAction}>
+                    <input type="hidden" name="employee_id" value={r.employee_id} />
+                    <input type="hidden" name="alert_id" value={r.id} />
+                    <input type="hidden" name="company_id" value={r.company_id} />
+                    <button
+                      type="submit"
+                      className="inline-flex rounded-lg border border-violet-600 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-100 dark:border-violet-500 dark:bg-violet-950/50 dark:text-violet-100 dark:hover:bg-violet-900/40"
+                    >
+                      AI面談を推奨する
+                    </button>
+                  </form>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </section>
 

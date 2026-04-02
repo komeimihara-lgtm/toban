@@ -13,5 +13,11 @@ export async function GET(req: Request) {
   }
 
   const result = await runRetentionAnalysis();
+  if (result.highRiskLineSent > 0) {
+    console.log(
+      "[cron/analyze-retention] high-risk LINE notifications:",
+      result.highRiskLineSent,
+    );
+  }
   return NextResponse.json(result);
 }

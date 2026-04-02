@@ -235,3 +235,34 @@ export async function sendPaidLeaveGrantedEmail(to: string, days: number) {
   return sendHtml(to, subject, html);
 }
 
+export function buildAiInterviewInviteMail(employeeName: string) {
+  const name = employeeName.trim() || "従業員";
+  const subject = `【LENARD HR】上司よりAI面談のご案内`;
+  const html = baseLayout(`
+    <p>${name} 様</p>
+    <p>上司からAI面談のご案内が届いています。LENARD HR の<strong>マイページ</strong>を開き、画面上部の案内からお進みください。</p>
+    <p>面談で話された内容は、管理者に具体的な文面として開示されません。</p>
+  `);
+  return { subject, html };
+}
+
+export function buildAiInterviewCompletedAdminMail(employeeName: string) {
+  const name = employeeName.trim() || "従業員";
+  const subject = `【LENARD HR】AI面談が完了しました`;
+  const html = baseLayout(`
+    <p><strong>${name}</strong> 様のAI面談セッションが終了しました。</p>
+    <p>会話の具体的内容はシステム上で管理者に共有していません（事実の通知のみです）。</p>
+  `);
+  return { subject, html };
+}
+
+export async function sendAiInterviewInviteEmail(to: string, employeeName: string) {
+  const { subject, html } = buildAiInterviewInviteMail(employeeName);
+  return sendHtml(to, subject, html);
+}
+
+export async function sendAiInterviewCompletedAdminEmail(to: string, employeeName: string) {
+  const { subject, html } = buildAiInterviewCompletedAdminMail(employeeName);
+  return sendHtml(to, subject, html);
+}
+

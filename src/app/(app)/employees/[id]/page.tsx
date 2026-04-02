@@ -9,7 +9,9 @@ import {
   nextMilestoneGrantDelta,
   ymdJst,
 } from "@/lib/paid-leave";
+import { retentionRiskScoreFromOpenAlerts } from "@/lib/retention-analyzer";
 import { isAdminRole } from "@/types/incentive";
+import { subMonths } from "date-fns";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -103,6 +105,24 @@ export default async function EmployeeDetailPage({
     .eq("employee_id", id)
     .order("requested_at", { ascending: false });
 
+  const threeMoIso = subMonths(new Date(), 3).toISOString();
+  const { data: retentionOpenRows } = await supabase
+    .from("retention_alerts")
+    .select("severity")
+    .eq("employee_id", id)
+    .eq("is_resolved", false);
+  const { data: retentionHistory } = await supabase
+    .from("retention_alerts")
+    .select("id, severity, message, detected_at, is_resolved, alert_type")
+    .eq("employee_id", id)
+    .gte("detected_at", threeMoIso)
+    .order("detected_at", { ascending: false })
+    .limit(40);
+
+  const riskScore = retentionRiskScoreFromOpenAlerts(
+    (retentionOpenRows ?? []) as { severity: "high" | "medium" | "low" }[],
+  );
+
   const startYmd = (c?.start_date as string) ?? (c?.hire_date as string) ?? "";
   const startDate =
     startYmd && /^\d{4}-\d{2}-\d{2}$/.test(startYmd)
@@ -132,6 +152,71 @@ export default async function EmployeeDetailPage({
           部署: {p.department ?? "—"} · ロール: {p.role ?? "—"}
         </p>
       </header>
+
+      {isAdmin ? (
+        <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">
+                退職リスクスコア（未対応アラートから概算）
+              </h2>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
+                {riskScore}
+                <span className="text-base font-normal text-zinc-500"> / 100</span>
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/employees/${id}/retention`}
+                className="inline-flex rounded-lg border border-zinc-300 bg-white px-3 py-2 text-xs font-medium text-zinc-800 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200"
+              >
+                勤怠・経費・インセンティブ詳細
+              </Link>
+              <button
+                type="button"
+                disabled
+                title="準備中"
+                className="inline-flex cursor-not-allowed rounded-lg border border-dashed border-zinc-400 px-3 py-2 text-xs text-zinc-500 opacity-70 dark:border-zinc-600"
+              >
+                1on1を設定する（将来）
+              </button>
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-xs font-medium text-zinc-500">過去3ヶ月のアラート履歴</h3>
+            <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto text-xs">
+              {(retentionHistory ?? []).length === 0 && (
+                <li className="text-zinc-500">履歴がありません</li>
+              )}
+              {(retentionHistory ?? []).map((row) => {
+                const h = row as {
+                  id: string;
+                  severity: string;
+                  message: string;
+                  detected_at: string;
+                  is_resolved: boolean;
+                };
+                return (
+                  <li
+                    key={h.id}
+                    className="rounded border border-zinc-200 bg-white/60 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900/50"
+                  >
+                    <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                      [{h.severity}] {h.is_resolved ? "対応済" : "未対応"}
+                    </span>{" "}
+                    <span className="text-zinc-600 dark:text-zinc-400">{h.message}</span>
+                    <span className="mt-0.5 block text-zinc-400">
+                      {new Date(h.detected_at).toLocaleString("ja-JP", {
+                        timeZone: "Asia/Tokyo",
+                      })}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </section>
+      ) : null}
 
       <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
         <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">

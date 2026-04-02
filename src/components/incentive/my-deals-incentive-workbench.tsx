@@ -1,6 +1,10 @@
 "use client";
 
-import { DEAL_MACHINE_TYPES, buildDealComputed, ratesFromDbRows } from "@/lib/deals-compute";
+import {
+  buildDealComputed,
+  computeNetProfit,
+  ratesFromDbRows,
+} from "@/lib/deals-compute";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type DealRow = {
@@ -27,6 +31,7 @@ type DealRow = {
 };
 
 type RateRow = { machine_type: string; role: string; rate: number };
+type ProductRowApi = { id: string; name: string; cost_price: number };
 
 function formatYen(n: number) {
   return new Intl.NumberFormat("ja-JP", {
@@ -48,6 +53,8 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
 
   const [deals, setDeals] = useState<DealRow[]>([]);
   const [rateRows, setRateRows] = useState<RateRow[]>([]);
+  const [products, setProducts] = useState<ProductRowApi[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -56,7 +63,7 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     salon_name: "",
-    machine_type: DEAL_MACHINE_TYPES[0] as string,
+    machine_type: "その他",
     cost_price: "",
     sale_price: "",
     payment_method: "",
@@ -78,6 +85,19 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
     );
   }, []);
 
+  const loadProducts = useCallback(async () => {
+    const res = await fetch("/api/products");
+    const j = (await res.json()) as { products?: ProductRowApi[]; error?: string };
+    if (!res.ok) return;
+    setProducts(
+      (j.products ?? []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        cost_price: Number(p.cost_price),
+      })),
+    );
+  }, []);
+
   const loadDeals = useCallback(async () => {
     const res = await fetch(`/api/deals?year=${year}&month=${month}`);
     const j = (await res.json()) as { deals?: DealRow[]; error?: string };
@@ -87,7 +107,8 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
 
   useEffect(() => {
     void loadRates();
-  }, [loadRates]);
+    void loadProducts();
+  }, [loadRates, loadProducts]);
 
   useEffect(() => {
     void (async () => {
@@ -138,12 +159,32 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
     });
   }, [form, rateRows, props.userId]);
 
+  const netProfitPreview = useMemo(() => {
+    const sp = Number(form.sale_price);
+    const cp = Number(form.cost_price);
+    if (!Number.isFinite(sp) || !Number.isFinite(cp)) return null;
+    return computeNetProfit(sp, cp);
+  }, [form.sale_price, form.cost_price]);
+
+  const applyProductById = (productId: string) => {
+    setSelectedProductId(productId);
+    const p = products.find((x) => x.id === productId);
+    if (!p) return;
+    setForm((f) => ({
+      ...f,
+      machine_type: p.name,
+      cost_price: String(p.cost_price),
+    }));
+  };
+
   const openCreate = () => {
     setEditingId(null);
+    const first = products[0];
+    setSelectedProductId(first?.id ?? "");
     setForm({
       salon_name: "",
-      machine_type: DEAL_MACHINE_TYPES[0],
-      cost_price: "",
+      machine_type: first?.name ?? "その他",
+      cost_price: first != null ? String(first.cost_price) : "",
       sale_price: "",
       payment_method: "",
       payment_date: "",
@@ -157,11 +198,11 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
   const openEdit = (d: DealRow) => {
     if (d.submit_status !== "draft" && d.submit_status !== "rejected") return;
     setEditingId(d.id);
+    const match = products.find((p) => p.name === d.machine_type);
+    setSelectedProductId(match?.id ?? "");
     setForm({
       salon_name: d.salon_name,
-      machine_type: (DEAL_MACHINE_TYPES as readonly string[]).includes(d.machine_type)
-        ? d.machine_type
-        : (DEAL_MACHINE_TYPES[0] as string),
+      machine_type: d.machine_type,
       cost_price: String(d.cost_price),
       sale_price: String(d.sale_price),
       payment_method: d.payment_method,
@@ -455,8 +496,30 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
             <h3 className="text-lg font-semibold">{editingId ? "案件を編集" : "新規案件"}</h3>
             <div className="mt-4 grid gap-3 text-sm">
               <label className="block">
-                <span className="text-xs text-zinc-500">自分の役割（複数可）</span>
-                <div className="mt-2 flex gap-4">
+                <span className="text-xs text-zinc-500">商品マスタ</span>
+                <select
+                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  value={selectedProductId}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v) applyProductById(v);
+                    else setSelectedProductId("");
+                  }}
+                >
+                  <option value="">選択してください（その他は手で原価入力）</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}（標準原価 {p.cost_price.toLocaleString("ja-JP")} 円）
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-zinc-500">
+                  インセンティブ率は「{form.machine_type}」に紐づくマスタを参照します。
+                </p>
+              </label>
+              <label className="block">
+                <span className="text-xs text-zinc-500">自分の役割（複数可・インセン試算）</span>
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:gap-4">
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -473,6 +536,10 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
                     />
                     クローザー
                   </label>
+                  <label className="flex cursor-not-allowed items-center gap-2 opacity-55">
+                    <input type="checkbox" disabled checked={false} readOnly />
+                    ヒト幹（案件フロー未対応）
+                  </label>
                 </div>
               </label>
               <label className="block">
@@ -482,20 +549,6 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
                   value={form.salon_name}
                   onChange={(e) => setForm((f) => ({ ...f, salon_name: e.target.value }))}
                 />
-              </label>
-              <label className="block">
-                <span className="text-xs text-zinc-500">機械種別</span>
-                <select
-                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
-                  value={form.machine_type}
-                  onChange={(e) => setForm((f) => ({ ...f, machine_type: e.target.value }))}
-                >
-                  {DEAL_MACHINE_TYPES.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <label className="block">
@@ -508,7 +561,7 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs text-zinc-500">実質原価</span>
+                  <span className="text-xs text-zinc-500">実質原価（商品選択で自動・編集可）</span>
                   <input
                     type="number"
                     className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
@@ -517,6 +570,13 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
                   />
                 </label>
               </div>
+              {netProfitPreview != null ? (
+                <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">
+                  純利益（税込販売価格÷1.1 − 実質原価）: {formatYen(netProfitPreview)}
+                </p>
+              ) : (
+                <p className="text-xs text-zinc-500">販売価格・実質原価を入力すると純利益を表示します。</p>
+              )}
               <label className="block">
                 <span className="text-xs text-zinc-500">支払い方法</span>
                 <input
@@ -545,10 +605,11 @@ export function MyDealsIncentiveWorkbench(props: { userId: string; userName: str
               </label>
               {preview ? (
                 <div className="rounded-lg bg-zinc-100 p-3 text-xs dark:bg-zinc-900/80">
-                  <p className="font-medium">プレビュー</p>
-                  <p>純利益: {formatYen(preview.net_profit)}</p>
+                  <p className="font-medium">インセンティブ試算（あなたの役割分）</p>
+                  <p className="mt-1">純利益: {formatYen(preview.net_profit)}</p>
                   <p>
-                    アポ {formatYen(preview.appo_incentive)} / クローザー {formatYen(preview.closer_incentive)}
+                    アポ {formatYen(preview.appo_incentive)} · クローザー{" "}
+                    {formatYen(preview.closer_incentive)}
                   </p>
                 </div>
               ) : null}

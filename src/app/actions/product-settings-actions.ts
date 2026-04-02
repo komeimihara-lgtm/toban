@@ -57,3 +57,21 @@ export async function setProductActiveAction(formData: FormData) {
     .eq("company_id", companyId);
   revalidatePath("/settings");
 }
+
+export async function updateProductCostAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "").trim();
+  const costRaw = String(formData.get("cost_price") ?? "");
+  const cost_price = Number(costRaw);
+  if (!id || !Number.isFinite(cost_price) || cost_price < 0) return;
+
+  const { supabase, companyId } = await adminSupabase();
+  await supabase
+    .from("products")
+    .update({
+      cost_price,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("company_id", companyId);
+  revalidatePath("/settings");
+}
