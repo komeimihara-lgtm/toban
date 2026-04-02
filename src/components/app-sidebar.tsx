@@ -7,6 +7,7 @@ import {
   BarChart3,
   Bot,
   ClipboardCheck,
+  ClipboardList,
   Coins,
   FileSearch,
   Home,
@@ -23,6 +24,7 @@ export type AppSidebarProps = {
   userLabel: string;
   tenantName?: string | null;
   showMyIncentiveNav: boolean;
+  showOnboardingNav: boolean;
   showAdminSection: boolean;
   approvalBadgeCount?: number;
   incentiveDraftBadgeCount?: number;
@@ -93,6 +95,7 @@ export function AppSidebar({
   userLabel,
   tenantName,
   showMyIncentiveNav,
+  showOnboardingNav,
   showAdminSection,
   approvalBadgeCount = 0,
   incentiveDraftBadgeCount = 0,
@@ -113,31 +116,49 @@ export function AppSidebar({
         <SectionLabel>マイページ</SectionLabel>
         <NavLink href="/my" label="ホーム" icon={Home} exact />
         <NavLink
+          href="/my/attendance"
+          label="勤怠"
+          icon={Timer}
+          pathPrefixes={["/my/attendance"]}
+        />
+        <NavLink
           href="/my/expenses"
           label="経費申請"
           icon={Receipt}
           pathPrefixes={["/my/expenses"]}
         />
         <NavLink
-          href="/my/attendance"
-          label="勤怠"
-          icon={Timer}
-          pathPrefixes={["/my/attendance"]}
+          href="/my/expenses"
+          label="申請状況"
+          icon={ClipboardList}
+          pathPrefixes={["/my/expenses"]}
         />
-        <NavLink href="/my/payslip" label="給与明細" icon={Banknote} exact />
-        <NavLink href="/my/leave" label="有給・休暇" icon={Umbrella} pathPrefixes={["/my/leave"]} />
         {showMyIncentiveNav ? (
           <NavLink
-            href={showAdminSection ? "/incentives" : "/my/incentive"}
+            href="/my/incentive"
             label="インセンティブ"
             icon={Coins}
-            pathPrefixes={
-              showAdminSection ? ["/incentives"] : ["/my/incentive"]
-            }
+            pathPrefixes={["/my/incentive"]}
             badgeCount={incentiveDraftBadgeCount > 0 ? incentiveDraftBadgeCount : undefined}
           />
         ) : null}
-        <NavLink href="/hr-ai" label="AI人事" icon={Bot} pathPrefixes={["/hr-ai", "/my/hr-ai"]} />
+        <NavLink href="/my/payslip" label="給与明細" icon={Banknote} exact />
+        <NavLink href="/my/leave" label="有給・休暇" icon={Umbrella} pathPrefixes={["/my/leave"]} />
+        {showOnboardingNav ? (
+          <NavLink
+            href="/onboarding"
+            label="入社手続き"
+            icon={UserPlus}
+            pathPrefixes={["/onboarding"]}
+            exact
+          />
+        ) : null}
+        <NavLink
+          href="/hr-ai"
+          label="AI相談窓口"
+          icon={Bot}
+          pathPrefixes={["/hr-ai", "/my/hr-ai"]}
+        />
 
         {showAdminSection ? (
           <>
