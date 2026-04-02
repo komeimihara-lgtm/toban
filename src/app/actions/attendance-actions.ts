@@ -55,6 +55,13 @@ export async function punchAttendance(
   if (!user) {
     return { ok: false, message: "ログインが必要です" };
   }
+  if (punchType === "break_start" || punchType === "break_end") {
+    return {
+      ok: false,
+      message:
+        "休憩打刻は廃止されました。出勤・退勤の差から労基法準拠の自動休憩控除を適用します。",
+    };
+  }
   const row: Record<string, unknown> = {
     user_id: user.id,
     punch_type: punchType,

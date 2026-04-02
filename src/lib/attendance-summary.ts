@@ -1,5 +1,7 @@
 /** 勤怠サマリー計算（JST の日付で集計） */
 
+import { calcBreakTime } from "@/lib/attendance-storage";
+
 const MS_MIN = 60_000;
 
 export type PunchLike = {
@@ -64,33 +66,14 @@ export function summarizePunchesInRange(
       continue;
     }
 
-    let gross = Math.max(
+    const gross = Math.max(
       0,
       Math.round((endT.getTime() - firstIn.t.getTime()) / MS_MIN),
     );
 
-    for (let i = 0; i < times.length; i++) {
-      const ev = times[i];
-      if (ev.type !== "break_start") continue;
-      let beIdx = -1;
-      for (let j = i + 1; j < times.length; j++) {
-        if (times[j].type === "break_end") {
-          beIdx = j;
-          break;
-        }
-      }
-      if (beIdx >= 0) {
-        gross -= Math.max(
-          0,
-          Math.round((times[beIdx].t.getTime() - ev.t.getTime()) / MS_MIN),
-        );
-        i = beIdx;
-      }
-    }
-
-    gross = Math.max(0, gross);
-    totalWork += gross;
-    overtime += Math.max(0, gross - standard);
+    const net = Math.max(0, gross - calcBreakTime(gross));
+    totalWork += net;
+    overtime += Math.max(0, net - standard);
   }
 
   return {
