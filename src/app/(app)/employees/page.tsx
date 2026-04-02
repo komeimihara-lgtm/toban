@@ -1,3 +1,4 @@
+import { EmployeeIncentiveCell } from "@/components/employees/employee-incentive-cell";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import {
@@ -161,8 +162,6 @@ export default async function EmployeesPage({
               }
               const hire =
                 ctr?.start_date ?? ctr?.hire_date ?? "—";
-              const inc =
-                row.is_sales_target || row.is_service_target ? "対象" : "—";
               const cc = commuteCount.get(row.id) ?? 0;
               return (
                 <tr
@@ -186,7 +185,13 @@ export default async function EmployeesPage({
                   <td className="px-3 py-2">
                     {cc > 0 ? `登録 ${cc}` : "未登録"}
                   </td>
-                  <td className="px-3 py-2">{inc}</td>
+                  <td className="px-3 py-2">
+                    <EmployeeIncentiveCell
+                      employeeId={row.id}
+                      isSales={row.is_sales_target}
+                      isService={row.is_service_target}
+                    />
+                  </td>
                 </tr>
               );
             })}

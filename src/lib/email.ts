@@ -15,7 +15,7 @@ function baseLayout(inner: string) {
 }
 
 function getResend() {
-  const key = process.env.RESEND_API_KEY;
+  const key = process.env.RESEND_API_KEY?.trim();
   if (!key) return null;
   return new Resend(key);
 }
@@ -55,7 +55,12 @@ export type AttendanceCorrectionEmailContext = {
 async function sendHtml(to: string, subject: string, html: string) {
   const resend = getResend();
   if (!resend) {
-    console.warn("[email] RESEND_API_KEY 未設定 — スキップ:", subject);
+    console.warn(
+      "[email] RESEND_API_KEY 未設定のため送信スキップ:",
+      subject,
+      "| 宛先:",
+      to,
+    );
     return { ok: false as const, skipped: true };
   }
   const { error } = await resend.emails.send({
@@ -78,16 +83,17 @@ export function buildApprovalRequestMail(expense: ExpenseEmailContext) {
   const cat = expense.category ?? "—";
   const amt = expense.amount != null ? `¥${Number(expense.amount).toLocaleString("ja-JP")}` : "—";
   const flow = expense.flowStatus ?? "承認待ち";
-  const subject = `【LENARD HR】経費精算の承認依頼のお知らせ`;
+  const subject = `【LENARD HR】経費申請の承認依頼`;
   const html = baseLayout(`
-    <p>経費申請の承認をお願いします。</p>
+    <p>いつもお世話になっております。以下の経費申請の承認をお願いいたします。</p>
     <ul>
-      <li>会社: ${co}</li>
+      <li>会社名: ${co}</li>
       <li>申請者: ${name}</li>
-      <li>カテゴリ: ${cat}</li>
+      <li>科目: ${cat}</li>
       <li>金額: ${amt}</li>
-      <li>フロー状況: ${flow}</li>
+      <li>フロー: ${flow}</li>
     </ul>
+    <p>LENARD HR の「承認」画面からご対応ください。</p>
   `);
   return { subject, html };
 }
@@ -97,19 +103,21 @@ export function buildExpenseApprovedMail(expense: ExpenseEmailContext) {
   const name = expense.applicantName?.trim() || "申請者";
   const cat = expense.category ?? "—";
   const amt = expense.amount != null ? `¥${Number(expense.amount).toLocaleString("ja-JP")}` : "—";
-  const subject = `【LENARD HR】経費精算が承認されました`;
+  const subject = `【LENARD HR】経費申請が承認されました`;
   const note = expense.extraNote?.trim()
     ? `<p>${expense.extraNote.trim()}</p>`
     : "";
   const html = baseLayout(`
-    <p>${name} 様の経費申請が承認されました。</p>
+    <p>${name} 様</p>
+    <p>ご申請いただいた経費が承認されました。</p>
     ${note}
     <ul>
-      <li>会社: ${co}</li>
-      <li>カテゴリ: ${cat}</li>
+      <li>会社名: ${co}</li>
+      <li>科目: ${cat}</li>
       <li>金額: ${amt}</li>
-      <li>承認フロー: 完了</li>
+      <li>ステータス: 承認完了</li>
     </ul>
+    <p>内容は LENARD HR の「申請状況」でご確認ください。</p>
   `);
   return { subject, html };
 }
@@ -119,15 +127,18 @@ export function buildExpenseRejectedMail(expense: ExpenseEmailContext, reason: s
   const name = expense.applicantName?.trim() || "申請者";
   const cat = expense.category ?? "—";
   const amt = expense.amount != null ? `¥${Number(expense.amount).toLocaleString("ja-JP")}` : "—";
-  const subject = `【LENARD HR】経費精算の差戻しのお知らせ`;
+  const subject = `【LENARD HR】経費申請の差戻し`;
   const html = baseLayout(`
-    <p>${name} 様の経費申請が差戻されました。</p>
+    <p>${name} 様</p>
+    <p>ご申請いただいた経費は差戻しとなりました。内容を修正のうえ、再申請をお願いいたします。</p>
     <ul>
-      <li>会社: ${co}</li>
-      <li>カテゴリ: ${cat}</li>
+      <li>会社名: ${co}</li>
+      <li>科目: ${cat}</li>
       <li>金額: ${amt}</li>
     </ul>
-    <p><strong>理由:</strong><br/>${reason.replace(/\n/g, "<br/>")}</p>
+    <p><strong>差戻し理由</strong></p>
+    <p>${reason.replace(/\n/g, "<br/>")}</p>
+    <p>LENARD HR の「申請状況」から「修正して再申請」がご利用いただけます。</p>
   `);
   return { subject, html };
 }
