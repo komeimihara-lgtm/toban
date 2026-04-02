@@ -10,13 +10,6 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-const EMP_LABEL: Record<string, string> = {
-  full_time: "正社員",
-  part_time: "短時間勤務",
-  contract: "契約",
-  dispatch: "派遣",
-};
-
 export default async function EmployeesPage({
   searchParams,
 }: {
@@ -141,11 +134,11 @@ export default async function EmployeesPage({
             <tr>
               <th className="px-3 py-2">名前</th>
               <th className="px-3 py-2">部署</th>
-              <th className="px-3 py-2">雇用区分</th>
+              <th className="px-3 py-2">入社日</th>
               <th className="px-3 py-2">有給残（概算）</th>
               <th className="px-3 py-2">次回有給付与日</th>
               <th className="px-3 py-2">通勤費</th>
-              <th className="px-3 py-2">インセンティブ</th>
+              <th className="px-3 py-2">インセンティブ対象</th>
             </tr>
           </thead>
           <tbody>
@@ -166,9 +159,8 @@ export default async function EmployeesPage({
                 );
                 nextGrant = d ? ymdJst(d) : null;
               }
-              const empType = ctr?.employment_type
-                ? EMP_LABEL[ctr.employment_type] ?? ctr.employment_type
-                : "—";
+              const hire =
+                ctr?.start_date ?? ctr?.hire_date ?? "—";
               const inc =
                 row.is_sales_target || row.is_service_target ? "対象" : "—";
               const cc = commuteCount.get(row.id) ?? 0;
@@ -186,7 +178,7 @@ export default async function EmployeesPage({
                     </Link>
                   </td>
                   <td className="px-3 py-2">{row.department ?? "—"}</td>
-                  <td className="px-3 py-2">{empType}</td>
+                  <td className="px-3 py-2 tabular-nums">{hire}</td>
                   <td className="px-3 py-2 tabular-nums">
                     {Math.round((leaveRemain.get(row.id) ?? 0) * 100) / 100} 日
                   </td>

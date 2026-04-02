@@ -1,13 +1,6 @@
 import type { PersonalHrData } from "@/lib/employee-hr-queries";
 import Link from "next/link";
 
-const EMP_LABEL: Record<string, string> = {
-  full_time: "正社員",
-  part_time: "短時間勤務",
-  contract: "契約社員",
-  dispatch: "派遣",
-};
-
 function yen(n: number | null | undefined) {
   if (n == null || !Number.isFinite(Number(n))) return "—";
   return new Intl.NumberFormat("ja-JP", {
@@ -19,8 +12,6 @@ function yen(n: number | null | undefined) {
 
 export function PersonalHrSummary({ data }: { data: PersonalHrData }) {
   const c = data.contract;
-  const empKey = c?.employment_type != null ? String(c.employment_type) : "";
-  const empLabel = EMP_LABEL[empKey] ?? (empKey || "—");
 
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
@@ -33,10 +24,6 @@ export function PersonalHrSummary({ data }: { data: PersonalHrData }) {
         </p>
       ) : (
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-xs text-zinc-500">雇用形態</dt>
-            <dd className="font-medium">{empLabel}</dd>
-          </div>
           <div>
             <dt className="text-xs text-zinc-500">入社日</dt>
             <dd className="font-medium tabular-nums">

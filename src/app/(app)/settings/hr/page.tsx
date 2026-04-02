@@ -75,8 +75,6 @@ export default async function SettingsHrPage() {
                 <th className="py-2 pr-2">部門</th>
                 <th className="py-2 pr-2">営業対象</th>
                 <th className="py-2 pr-2">ｻｰﾋﾞｽ対象</th>
-                <th className="py-2 pr-2">契約</th>
-                <th className="py-2 pr-2">短時間</th>
               </tr>
             </thead>
             <tbody>
@@ -88,8 +86,6 @@ export default async function SettingsHrPage() {
                   department_id: string | null;
                   is_sales_target: boolean;
                   is_service_target: boolean;
-                  is_contract: boolean;
-                  is_part_time: boolean;
                 };
                 return (
                   <tr key={row.id} className="border-b border-zinc-100 dark:border-zinc-800/80">
@@ -100,8 +96,6 @@ export default async function SettingsHrPage() {
                     </td>
                     <td className="py-2 pr-2">{row.is_sales_target ? "○" : "—"}</td>
                     <td className="py-2 pr-2">{row.is_service_target ? "○" : "—"}</td>
-                    <td className="py-2 pr-2">{row.is_contract ? "○" : "—"}</td>
-                    <td className="py-2 pr-2">{row.is_part_time ? "○" : "—"}</td>
                   </tr>
                 );
               })}
