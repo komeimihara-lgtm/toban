@@ -18,14 +18,14 @@
 }
 
 /*
- * ダーク: warm グレー背景 + ネイビーサイドバー、ブルーアクセント・セマンティック色
+ * ダーク: ログイン画面と同系（slate + #0c1222）、ブルーアクセント
  * html に class="dark" が必要（root layout で付与）
  */
 html.dark {
-  --background: #0d1526;
-  --background-sidebar: #111d35;
-  --card: #111d35;
-  --border: #243860;
+  --background: #0c1222;
+  --background-sidebar: #0f172a;
+  --card: #162033;
+  --border: #1e2d45;
   --foreground: #f0f4ff;
   --muted-foreground: #94a3b8;
   --accent: #2563eb;
@@ -33,8 +33,8 @@ html.dark {
   --success: #22c55e;
   --warning: #f59e0b;
   --error: #ef4444;
-  --surface-sidebar: #111d35;
-  --sidebar-border: #243860;
+  --surface-sidebar: #0f172a;
+  --sidebar-border: #1e2d45;
   --sidebar-muted: #cbd5e1;
   --sidebar-text: #ffffff;
   --radius: 14px;
@@ -69,7 +69,7 @@ body {
 }
 
 html.dark body {
-  background: linear-gradient(135deg, #0d1526 0%, #111d35 100%);
+  background: linear-gradient(to bottom, #020617, #0c1222, #0f172a);
 }
 
 /* ダークモードのカードに光沢感 */
