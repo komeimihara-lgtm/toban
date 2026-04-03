@@ -16,8 +16,8 @@ export default async function ExpensesNewPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">経費・新規申請</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="text-2xl font-semibold text-foreground">経費・新規申請</h1>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
           申請後は千葉（第1承認）→ 代表（最終承認）の順です。差戻し時は理由が必須です。
         </p>
       </div>

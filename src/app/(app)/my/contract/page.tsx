@@ -46,9 +46,14 @@ export default async function MyContractPage() {
 
   if (!c) {
     return (
-      <div className="mx-auto max-w-xl rounded-lg border border-amber-200 bg-amber-50 p-6 dark:border-amber-900/50 dark:bg-amber-950/30">
-        <p className="font-medium">契約情報が見つかりません</p>
-        <p className="mt-2 text-sm">管理者にお問い合わせください。</p>
+      <div
+        className="mx-auto max-w-xl rounded-lg border border-amber-300 bg-amber-50 p-6 text-amber-950 shadow-sm dark:border-amber-700 dark:bg-amber-950 dark:text-amber-50"
+        role="alert"
+      >
+        <p className="text-lg font-semibold">契約情報が見つかりません</p>
+        <p className="mt-2 text-sm font-medium text-amber-900 dark:text-amber-100">
+          管理者にお問い合わせください。
+        </p>
       </div>
     );
   }
