@@ -68,8 +68,8 @@ export default async function EmployeeDetailPage({
   }
 
   const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, full_name, role, department, department_id")
+    .from("employees")
+    .select("id, name, role, department, department_id")
     .eq("id", id)
     .maybeSingle();
   if (!profile) notFound();
@@ -128,7 +128,7 @@ export default async function EmployeeDetailPage({
   const yrs = startYmd ? yearsEmployed(startYmd) : null;
 
   const p = profile as {
-    full_name?: string | null;
+    name?: string | null;
     department?: string | null;
     role?: string;
   };
@@ -142,7 +142,7 @@ export default async function EmployeeDetailPage({
         ← {isAdmin ? "一覧" : "マイページ"}
       </Link>
       <header>
-        <h1 className="text-2xl font-semibold">{p.full_name ?? "従業員"}</h1>
+        <h1 className="text-2xl font-semibold">{p.name ?? "従業員"}</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           部署: {p.department ?? "—"} · ロール: {p.role ?? "—"}
         </p>

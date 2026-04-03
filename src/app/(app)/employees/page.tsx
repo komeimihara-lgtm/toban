@@ -25,10 +25,10 @@ export default async function EmployeesPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const { data: me } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("company_id")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
   const companyId = (me as { company_id?: string })?.company_id;
   const role = await resolveUserRole(supabase, user.id);
   if (!isAdminRole(role) || !companyId) {
@@ -36,17 +36,17 @@ export default async function EmployeesPage({
   }
 
   let qy = supabase
-    .from("profiles")
-    .select("id, full_name, department, department_id, is_sales_target, is_service_target")
+    .from("employees")
+    .select("id, name, department, department_id, is_sales_target, is_service_target")
     .eq("company_id", companyId)
-    .order("full_name");
+    .order("name");
   if (sp.q?.trim()) {
-    qy = qy.ilike("full_name", `%${sp.q.trim()}%`);
+    qy = qy.ilike("name", `%${sp.q.trim()}%`);
   }
   if (sp.dept?.trim()) {
     qy = qy.eq("department", sp.dept.trim());
   }
-  const { data: profiles } = await qy;
+  const { data: employees } = await qy;
 
   const [{ data: contracts }, { data: grants }, { data: commutes }] =
     await Promise.all([
@@ -145,10 +145,10 @@ export default async function EmployeesPage({
             </tr>
           </thead>
           <tbody>
-            {(profiles ?? []).map((r) => {
+            {(employees ?? []).map((r) => {
               const row = r as {
                 id: string;
-                full_name: string | null;
+                name: string | null;
                 department: string | null;
                 is_sales_target: boolean;
                 is_service_target: boolean;
@@ -175,7 +175,7 @@ export default async function EmployeesPage({
                       href={`/employees/${row.id}`}
                       className="font-medium text-emerald-700 underline dark:text-emerald-400"
                     >
-                      {row.full_name ?? "（無名）"}
+                      {row.name ?? "（無名）"}
                     </Link>
                   </td>
                   <td className="px-3 py-2">{row.department ?? "—"}</td>
