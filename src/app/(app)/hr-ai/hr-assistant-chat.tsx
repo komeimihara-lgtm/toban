@@ -98,7 +98,7 @@ export function HrAssistantChat({
                   type="button"
                   disabled={loading}
                   onClick={() => void send(q)}
-                  className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-left text-sm text-zinc-800 transition hover:border-blue-400 hover:bg-blue-50/80 disabled:opacity-50 dark:border-zinc-600 dark:bg-card/80 dark:text-zinc-200 dark:hover:border-blue-500 dark:hover:bg-blue-950/40"
+                  className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-center text-sm text-zinc-800 transition hover:border-blue-400 hover:bg-blue-50/80 disabled:opacity-50 dark:border-zinc-600 dark:bg-card/80 dark:text-zinc-200 dark:hover:border-blue-500 dark:hover:bg-blue-950/40"
                 >
                   {q}
                 </button>

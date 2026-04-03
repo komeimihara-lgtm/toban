@@ -352,6 +352,12 @@ export function AppSidebar({
           icon={Target}
           pathPrefixes={["/my/self-management", "/my/goals", "/my/check-sheet", "/my/growth"]}
         />
+        <NavLink
+          href="/hr-ai"
+          label="AI相談窓口"
+          icon={Sparkles}
+          pathPrefixes={["/hr-ai", "/my/hr-ai"]}
+        />
         <NavLink href="/my/payslip" label="給与明細" icon={Banknote} exact />
         <NavLink href="/my/leave" label="有給・休暇" icon={Umbrella} pathPrefixes={["/my/leave"]} />
         {showMyIncentiveNav ? (
@@ -363,12 +369,6 @@ export function AppSidebar({
             badgeCount={incentiveDraftBadgeCount > 0 ? incentiveDraftBadgeCount : undefined}
           />
         ) : null}
-        <NavLink
-          href="/hr-ai"
-          label="AI相談窓口"
-          icon={Sparkles}
-          pathPrefixes={["/hr-ai", "/my/hr-ai"]}
-        />
         <NavLink href="/my/vehicles" label="設備予約" icon={Car} pathPrefixes={["/my/vehicles"]} />
         <NavLink
           href="/my/rules"
