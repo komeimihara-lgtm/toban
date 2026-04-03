@@ -348,9 +348,14 @@ export function AppSidebar({
           pathPrefixes={["/my/expenses"]}
           excludePrefixes={["/expenses", "/expenses/new"]}
         />
+        <NavLink
+          href="/my/self-management"
+          label="自己管理"
+          icon={Target}
+          pathPrefixes={["/my/self-management", "/my/goals", "/my/check-sheet", "/my/growth"]}
+        />
         <NavLink href="/my/payslip" label="給与明細" icon={Banknote} exact />
         <NavLink href="/my/leave" label="有給・休暇" icon={Umbrella} pathPrefixes={["/my/leave"]} />
-        <NavLink href="/my/vehicles" label="社用車予約" icon={Car} pathPrefixes={["/my/vehicles"]} />
         {showMyIncentiveNav ? (
           <NavLink
             href="/my/incentive"
@@ -366,17 +371,18 @@ export function AppSidebar({
           icon={Sparkles}
           pathPrefixes={["/hr-ai", "/my/hr-ai"]}
         />
-        <NavLink
-          href="/my/self-management"
-          label="自己管理"
-          icon={Target}
-          pathPrefixes={["/my/self-management", "/my/goals", "/my/check-sheet", "/my/growth"]}
-        />
+        <NavLink href="/my/vehicles" label="設備予約" icon={Car} pathPrefixes={["/my/vehicles"]} />
         <NavLink
           href="/my/rules"
           label="就業規則・社内規定"
           icon={BookOpen}
           pathPrefixes={["/my/rules"]}
+        />
+        <NavLink
+          href="/my/profile"
+          label="プロフィール設定"
+          icon={UserCircle}
+          pathPrefixes={["/my/profile"]}
         />
         <NavLink
           href="/my/contract"
@@ -393,12 +399,6 @@ export function AppSidebar({
             excludePrefixes={["/onboarding/admin"]}
           />
         ) : null}
-        <NavLink
-          href="/my/profile"
-          label="プロフィール設定"
-          icon={UserCircle}
-          pathPrefixes={["/my/profile"]}
-        />
       </nav>
     </aside>
     </>
