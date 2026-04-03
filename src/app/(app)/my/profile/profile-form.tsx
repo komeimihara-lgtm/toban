@@ -123,11 +123,8 @@ export function ProfileForm({
 
         <div className="border-t border-zinc-200 pt-6 dark:border-zinc-700">
           <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-            緊急連絡先・個人情報
+            本人情報
           </h3>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            生年月日・緊急連絡先は人事安否確認などに利用します。
-          </p>
           <div className="mt-4 space-y-4">
             <label className={labelClass}>
               生年月日
@@ -138,8 +135,19 @@ export function ProfileForm({
                 className={fieldClass}
               />
             </label>
+          </div>
+        </div>
+
+        <div className="border-t border-zinc-200 pt-6 dark:border-zinc-700">
+          <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            緊急連絡先
+          </h3>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            人事安否確認などに利用します。
+          </p>
+          <div className="mt-4 space-y-4">
             <label className={labelClass}>
-              緊急連絡先・氏名
+              氏名
               <input
                 name="emergency_name"
                 type="text"
@@ -150,7 +158,7 @@ export function ProfileForm({
               />
             </label>
             <label className={labelClass}>
-              緊急連絡先・続柄
+              続柄
               <input
                 name="emergency_relation"
                 type="text"
@@ -160,7 +168,7 @@ export function ProfileForm({
               />
             </label>
             <label className={labelClass}>
-              緊急連絡先・電話番号
+              電話番号
               <input
                 name="emergency_contact"
                 type="tel"
