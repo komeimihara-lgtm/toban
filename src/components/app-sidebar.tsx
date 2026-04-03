@@ -7,6 +7,7 @@ import {
   BarChart3,
   BookOpen,
   Building2,
+  CheckSquare,
   ClipboardCheck,
   ClipboardList,
   Coins,
@@ -15,11 +16,12 @@ import {
   FileText,
   Home,
   LayoutDashboard,
-
   Settings,
   SlidersHorizontal,
   Sparkles,
+  Target,
   Timer,
+  TrendingUp,
   Umbrella,
   UserCircle,
   UserPlus,
@@ -287,6 +289,24 @@ export function AppSidebar({
           label="AI相談窓口"
           icon={Sparkles}
           pathPrefixes={["/hr-ai", "/my/hr-ai"]}
+        />
+        <NavLink
+          href="/my/goals"
+          label="月間目標"
+          icon={Target}
+          pathPrefixes={["/my/goals"]}
+        />
+        <NavLink
+          href="/my/check-sheet"
+          label="チェックシート"
+          icon={CheckSquare}
+          pathPrefixes={["/my/check-sheet"]}
+        />
+        <NavLink
+          href="/my/growth"
+          label="成長履歴"
+          icon={TrendingUp}
+          pathPrefixes={["/my/growth"]}
         />
         <NavLink
           href="/my/rules"

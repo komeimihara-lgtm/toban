@@ -2,6 +2,8 @@ import {
   approveLeaveFormAction,
   rejectLeaveFormAction,
 } from "@/app/actions/approval-actions";
+import { GoalApprovalSection } from "@/components/approval/goal-approval-section";
+import { CheckSheetApprovalSection } from "@/components/approval/check-sheet-approval-section";
 import { ExpenseV2Approval } from "@/components/expense/expense-v2-approval";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -27,6 +29,14 @@ export default async function ApprovalPage({
   if (!user) redirect("/login");
 
   const role = await resolveUserRole(supabase, user.id);
+
+  // 自分のemployee情報
+  const { data: meRow } = await supabase
+    .from("employees")
+    .select("id, company_id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  const me = meRow as { id: string; company_id: string } | null;
   if (!isAdminRole(role)) {
     redirect("/my");
   }
@@ -102,6 +112,48 @@ export default async function ApprovalPage({
     hour: "時間単位",
   };
 
+  // 月間目標の承認待ち
+  let pendingGoals: { id: string; year: number; month: number; theme: string; employee_id: string; status: string }[] = [];
+  if (me) {
+    const goalStatus = role === "owner" ? ["submitted", "step2_pending"] : ["submitted"];
+    const { data: gData } = await supabase
+      .from("monthly_goals")
+      .select("id, year, month, theme, employee_id, status")
+      .eq("company_id", me.company_id)
+      .in("status", goalStatus)
+      .order("created_at", { ascending: true });
+    pendingGoals = (gData ?? []) as typeof pendingGoals;
+  }
+  // 目標提出者の名前解決
+  const goalEmpIds = [...new Set(pendingGoals.map((g) => g.employee_id))];
+  const { data: goalEmps } = goalEmpIds.length > 0
+    ? await supabase.from("employees").select("id, name").in("id", goalEmpIds)
+    : { data: [] as { id: string; name: string | null }[] };
+  const goalNameBy = new Map((goalEmps ?? []).map((e) => {
+    const r = e as { id: string; name: string | null };
+    return [r.id, r.name?.trim() || "（無名）"] as const;
+  }));
+
+  // チェックシート承認待ち
+  let pendingSheets: { id: string; year: number; month: number; employee_id: string; self_check: { item: string; score: number }[]; status: string }[] = [];
+  if (me) {
+    const { data: sData } = await supabase
+      .from("check_sheets")
+      .select("id, year, month, employee_id, self_check, status")
+      .eq("company_id", me.company_id)
+      .eq("status", "submitted")
+      .order("created_at", { ascending: true });
+    pendingSheets = (sData ?? []) as typeof pendingSheets;
+  }
+  const sheetEmpIds = [...new Set(pendingSheets.map((s) => s.employee_id))];
+  const { data: sheetEmps } = sheetEmpIds.length > 0
+    ? await supabase.from("employees").select("id, name").in("id", sheetEmpIds)
+    : { data: [] as { id: string; name: string | null }[] };
+  const sheetNameBy = new Map((sheetEmps ?? []).map((e) => {
+    const r = e as { id: string; name: string | null };
+    return [r.id, r.name?.trim() || "（無名）"] as const;
+  }));
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">承認</h1>
@@ -125,6 +177,26 @@ export default async function ApprovalPage({
           }`}
         >
           有給
+        </Link>
+        <Link
+          href="/approval?tab=goals"
+          className={`border-b-2 px-3 py-2 text-sm font-medium ${
+            tab === "goals"
+              ? "border-zinc-900 dark:border-zinc-100"
+              : "border-transparent text-zinc-500"
+          }`}
+        >
+          月間目標{pendingGoals.length > 0 ? ` (${pendingGoals.length})` : ""}
+        </Link>
+        <Link
+          href="/approval?tab=check"
+          className={`border-b-2 px-3 py-2 text-sm font-medium ${
+            tab === "check"
+              ? "border-zinc-900 dark:border-zinc-100"
+              : "border-transparent text-zinc-500"
+          }`}
+        >
+          チェックシート{pendingSheets.length > 0 ? ` (${pendingSheets.length})` : ""}
         </Link>
       </div>
 
@@ -200,6 +272,14 @@ export default async function ApprovalPage({
             );
           })}
         </ul>
+      )}
+
+      {tab === "goals" && (
+        <GoalApprovalSection goals={pendingGoals} nameMap={Object.fromEntries(goalNameBy)} />
+      )}
+
+      {tab === "check" && (
+        <CheckSheetApprovalSection sheets={pendingSheets} nameMap={Object.fromEntries(sheetNameBy)} />
       )}
     </div>
   );
