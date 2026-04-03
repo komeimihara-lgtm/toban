@@ -159,11 +159,13 @@ export async function POST(req: Request) {
     let appo_employee_id = body.appo_employee_id ?? null;
     let closer_employee_id = body.closer_employee_id ?? null;
 
+    // is_appo / is_closer フラグから employee_id を解決（全ロール共通）
+    if (body.is_appo === true) appo_employee_id = appo_employee_id ?? user.id;
+    if (body.is_closer === true) closer_employee_id = closer_employee_id ?? user.id;
+    if (body.is_appo === false) appo_employee_id = null;
+    if (body.is_closer === false) closer_employee_id = null;
+
     if (!isOwnerOrApprover(profile.role)) {
-      if (body.is_appo === true) appo_employee_id = user.id;
-      if (body.is_closer === true) closer_employee_id = user.id;
-      if (body.is_appo === false) appo_employee_id = null;
-      if (body.is_closer === false) closer_employee_id = null;
       if (!appo_employee_id && !closer_employee_id) {
         return NextResponse.json(
           { error: "アポまたはクローザーのいずれかに自分を割り当ててください" },
