@@ -158,6 +158,21 @@ export async function buildHrAiSystemPrompt(
     })
     .join("\n\n---\n\n");
 
+  // company_documents（就業規則PDF等）のAI要約を取得
+  const { data: companyDocs } = await supabase
+    .from("company_documents")
+    .select("name, document_type, ai_summary")
+    .eq("company_id", p.company_id)
+    .order("created_at", { ascending: false });
+
+  const companyDocBlocks = (companyDocs ?? [])
+    .filter((d) => (d as { ai_summary: string | null }).ai_summary)
+    .map((d) => {
+      const row = d as { name: string; document_type: string; ai_summary: string };
+      return `【就業規則: ${row.name}】\n${row.ai_summary}`;
+    })
+    .join("\n\n---\n\n");
+
   const deptName = p.departments?.name ?? "未所属";
   const employeeName = p.name?.trim() ?? "（氏名未登録）";
   const contactHint =
@@ -168,6 +183,11 @@ export async function buildHrAiSystemPrompt(
   const settingsSupplement =
     settingsHrDocBlock.trim().length > 0
       ? `\n\n【company_settings 由来の hr_documents（補足）】\n${settingsHrDocBlock}`
+      : "";
+
+  const rulesDocSupplement =
+    companyDocBlocks.trim().length > 0
+      ? `\n\n【就業規則ドキュメント（PDF要約）】\n以下は会社の就業規則です。質問には必ずこの規則に基づいて回答してください。\n${companyDocBlocks}`
       : "";
 
   return `あなたは${companyName}の専任AI人事アシスタントです。
@@ -190,7 +210,7 @@ export async function buildHrAiSystemPrompt(
 - 経費（旧フォーム）: ${legacyLines}
 
 【社内文書（参照用・ダミー含む可能性あり）】
-${docBlocks || "（文書が未登録です。一般的な労働法知識で案内し、確約は避けてください）"}${settingsSupplement}
+${docBlocks || "（文書が未登録です。一般的な労働法知識で案内し、確約は避けてください）"}${settingsSupplement}${rulesDocSupplement}
 
 【厳守事項】
 - 個人情報・他従業員の情報は開示しない。ユーザー本人の文脈内に留める。

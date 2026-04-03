@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Banknote,
   BarChart3,
+  BookOpen,
   Building2,
   ClipboardCheck,
   ClipboardList,
@@ -286,6 +287,12 @@ export function AppSidebar({
           label="AI相談窓口"
           icon={Sparkles}
           pathPrefixes={["/hr-ai", "/my/hr-ai"]}
+        />
+        <NavLink
+          href="/my/rules"
+          label="就業規則"
+          icon={BookOpen}
+          pathPrefixes={["/my/rules"]}
         />
         <NavLink
           href="/my/contract"
