@@ -62,7 +62,7 @@ export default async function ApprovalPage({
       .eq("status", "step1_pending")
       .order("created_at", { ascending: true });
     if (!error) v2ExpenseRows = (data ?? []) as typeof v2ExpenseRows;
-  } else if (role === "owner") {
+  } else if (role === "owner" || role === "director") {
     const { data, error } = await supabase
       .from("expenses")
       .select(
@@ -115,7 +115,7 @@ export default async function ApprovalPage({
   // 月間目標の承認待ち
   let pendingGoals: { id: string; year: number; month: number; theme: string; employee_id: string; status: string }[] = [];
   if (me) {
-    const goalStatus = role === "owner" ? ["submitted", "step2_pending"] : ["submitted"];
+    const goalStatus = (role === "owner" || role === "director") ? ["submitted", "step2_pending"] : ["submitted"];
     const { data: gData } = await supabase
       .from("monthly_goals")
       .select("id, year, month, theme, employee_id, status")
@@ -206,7 +206,7 @@ export default async function ApprovalPage({
             経費（2段階承認）
           </h2>
           <p className="text-xs text-zinc-500">
-            {role === "owner"
+            {role === "owner" || role === "director"
               ? "最終承認待ちを上に表示しています。第1承認待ちも閲覧できます。"
               : "第1承認待ちの申請のみ表示されます。"}
           </p>

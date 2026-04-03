@@ -73,5 +73,5 @@ export function isApprover(role: string) {
 }
 
 export function isOwnerOrApprover(role: string) {
-  return role === "owner" || role === "approver";
+  return role === "owner" || role === "director" || role === "approver";
 }

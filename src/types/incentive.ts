@@ -3,7 +3,7 @@ export type ProfileRow = {
   id: string;
   company_id: string;
   name: string | null;
-  role: "owner" | "approver" | "staff";
+  role: "owner" | "director" | "approver" | "sr" | "staff";
   is_sales_target: boolean;
   is_service_target: boolean;
 };
@@ -58,6 +58,22 @@ export function isIncentiveEligible(p: Pick<ProfileRow, "is_sales_target" | "is_
   return p.is_sales_target || p.is_service_target;
 }
 
+/** 管理者ロール（全管理メニュー表示対象） */
 export function isAdminRole(role: string) {
-  return role === "owner" || role === "approver";
+  return role === "owner" || role === "director" || role === "approver" || role === "sr";
+}
+
+/** 給与・契約・退職リスク閲覧可（owner / director / sr） */
+export function isSalaryAllowed(role: string) {
+  return role === "owner" || role === "director" || role === "sr";
+}
+
+/** 退職リスク閲覧可（owner / director / sr） */
+export function isRetentionAllowed(role: string) {
+  return role === "owner" || role === "director" || role === "sr";
+}
+
+/** 承認権限（owner / director / approver） */
+export function isApprovalAllowed(role: string) {
+  return role === "owner" || role === "director" || role === "approver";
 }

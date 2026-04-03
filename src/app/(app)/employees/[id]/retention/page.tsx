@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import { checkAdminRole } from "@/lib/require-admin";
+import { resolveUserRole } from "@/lib/require-admin";
+import { isRetentionAllowed } from "@/types/incentive";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -19,7 +20,8 @@ export default async function EmployeeRetentionDetailPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  if (!(await checkAdminRole(supabase, user.id))) {
+  const myRole = await resolveUserRole(supabase, user.id);
+  if (!isRetentionAllowed(myRole)) {
     redirect("/my");
   }
   const { data: me } = await supabase

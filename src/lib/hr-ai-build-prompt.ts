@@ -9,7 +9,9 @@ function yearMonthKey() {
 
 function roleLabel(role: string) {
   if (role === "owner") return "オーナー／経営";
+  if (role === "director") return "取締役";
   if (role === "approver") return "第1承認者";
+  if (role === "sr") return "社労士";
   return "スタッフ";
 }
 

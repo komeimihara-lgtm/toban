@@ -10,7 +10,8 @@ import {
   ymdJst,
 } from "@/lib/paid-leave";
 import { retentionRiskScoreFromOpenAlerts } from "@/lib/retention-analyzer";
-import { checkAdminRole } from "@/lib/require-admin";
+import { checkAdminRole, resolveUserRole } from "@/lib/require-admin";
+import { isRetentionAllowed, isSalaryAllowed } from "@/types/incentive";
 import { subMonths } from "date-fns";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -61,7 +62,10 @@ export default async function EmployeeDetailPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const myRole = await resolveUserRole(supabase, user.id);
   const isAdmin = await checkAdminRole(supabase, user.id);
+  const canViewSalary = isSalaryAllowed(myRole);
+  const canViewRetention = isRetentionAllowed(myRole);
 
   // 非管理者は自分の従業員レコードのみアクセス可
   if (!isAdmin) {
@@ -157,7 +161,7 @@ export default async function EmployeeDetailPage({
         </p>
       </header>
 
-      {isAdmin ? (
+      {canViewRetention ? (
         <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -261,17 +265,6 @@ export default async function EmployeeDetailPage({
               <dt className="text-xs text-zinc-500">試用期間終了</dt>
               <dd>{String(c.trial_end_date ?? "—")}</dd>
             </div>
-            <div>
-              <dt className="text-xs text-zinc-500">基本給</dt>
-              <dd>{String(c.base_salary ?? "—")}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-zinc-500">みなし残業</dt>
-              <dd>
-                {String(c.deemed_overtime_hours ?? "—")} h /{" "}
-                {String(c.deemed_overtime_amount ?? "—")} 円
-              </dd>
-            </div>
             <div className="sm:col-span-2">
               <dt className="text-xs text-zinc-500">通勤（契約欄）</dt>
               <dd>
@@ -324,85 +317,83 @@ export default async function EmployeeDetailPage({
               />
             </label>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block">
-                <span className="text-xs text-zinc-500">基本給（月）</span>
-                <input
-                  type="number"
-                  name="base_salary"
-                  defaultValue={c?.base_salary != null ? String(c.base_salary) : ""}
-                  disabled={!isAdmin}
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs text-zinc-500">時給</span>
-                <input
-                  type="number"
-                  name="hourly_wage"
-                  defaultValue={c?.hourly_wage != null ? String(c.hourly_wage) : ""}
-                  disabled={!isAdmin}
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs text-zinc-500">所定労働時間 / 日</span>
-                <input
-                  type="number"
-                  step="0.1"
-                  name="work_hours_per_day"
-                  defaultValue={
-                    c?.work_hours_per_day != null
-                      ? String(c.work_hours_per_day)
-                      : ""
-                  }
-                  disabled={!isAdmin}
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs text-zinc-500">所定労働日数 / 週</span>
-                <input
-                  type="number"
-                  step="0.1"
-                  name="work_days_per_week"
-                  defaultValue={
-                    c?.work_days_per_week != null
-                      ? String(c.work_days_per_week)
-                      : ""
-                  }
-                  disabled={!isAdmin}
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs text-zinc-500">みなし残業（時間）</span>
-                <input
-                  type="number"
-                  step="0.1"
-                  name="deemed_overtime_hours"
-                  defaultValue={
-                    c?.deemed_overtime_hours != null
-                      ? String(c.deemed_overtime_hours)
-                      : ""
-                  }
-                  disabled={!isAdmin}
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs text-zinc-500">みなし残業代</span>
-                <input
-                  type="number"
-                  name="deemed_overtime_amount"
-                  defaultValue={
-                    c?.deemed_overtime_amount != null
-                      ? String(c.deemed_overtime_amount)
-                      : ""
-                  }
-                  disabled={!isAdmin}
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
-                />
-              </label>
+              {canViewSalary && (
+                <>
+                  <label className="block">
+                    <span className="text-xs text-zinc-500">基本給（月）</span>
+                    <input
+                      type="number"
+                      name="base_salary"
+                      defaultValue={c?.base_salary != null ? String(c.base_salary) : ""}
+                      className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs text-zinc-500">時給</span>
+                    <input
+                      type="number"
+                      name="hourly_wage"
+                      defaultValue={c?.hourly_wage != null ? String(c.hourly_wage) : ""}
+                      className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs text-zinc-500">所定労働時間 / 日</span>
+                    <input
+                      type="number"
+                      step="0.1"
+                      name="work_hours_per_day"
+                      defaultValue={
+                        c?.work_hours_per_day != null
+                          ? String(c.work_hours_per_day)
+                          : ""
+                      }
+                      className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs text-zinc-500">所定労働日数 / 週</span>
+                    <input
+                      type="number"
+                      step="0.1"
+                      name="work_days_per_week"
+                      defaultValue={
+                        c?.work_days_per_week != null
+                          ? String(c.work_days_per_week)
+                          : ""
+                      }
+                      className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs text-zinc-500">みなし残業（時間）</span>
+                    <input
+                      type="number"
+                      step="0.1"
+                      name="deemed_overtime_hours"
+                      defaultValue={
+                        c?.deemed_overtime_hours != null
+                          ? String(c.deemed_overtime_hours)
+                          : ""
+                      }
+                      className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs text-zinc-500">みなし残業代</span>
+                    <input
+                      type="number"
+                      name="deemed_overtime_amount"
+                      defaultValue={
+                        c?.deemed_overtime_amount != null
+                          ? String(c.deemed_overtime_amount)
+                          : ""
+                      }
+                      className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                    />
+                  </label>
+                </>
+              )}
               <label className="block">
                 <span className="text-xs text-zinc-500">通勤手当（月額）</span>
                 <input

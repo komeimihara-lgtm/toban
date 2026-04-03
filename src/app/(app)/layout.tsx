@@ -127,7 +127,7 @@ export default async function AppGroupLayout({
           (emp as { role?: string | null } | null)?.role ??
           (profile as { role?: string } | null)?.role ??
           "staff";
-        showAdminSection = role === "owner" || role === "approver";
+        showAdminSection = role === "owner" || role === "director" || role === "approver" || role === "sr";
         if (showAdminSection) {
           dashboardHref = "/";
           expensesListHref = "/expenses";
