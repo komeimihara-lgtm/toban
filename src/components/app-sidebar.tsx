@@ -34,6 +34,7 @@ export type AppSidebarProps = {
   tenantName?: string | null;
   showMyIncentiveNav: boolean;
   showAdminSection: boolean;
+  showCheckSheetApproval?: boolean;
   showEmployeeOnboardingNav?: boolean;
   approvalBadgeCount?: number;
   incentiveDraftBadgeCount?: number;
@@ -133,6 +134,7 @@ export function AppSidebar({
   tenantName,
   showMyIncentiveNav,
   showAdminSection,
+  showCheckSheetApproval = false,
   showEmployeeOnboardingNav = false,
   approvalBadgeCount = 0,
   incentiveDraftBadgeCount = 0,
@@ -180,6 +182,17 @@ export function AppSidebar({
         className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3 pb-8"
         aria-label="メインメニュー"
       >
+        {showCheckSheetApproval && !showAdminSection ? (
+          <>
+            <SectionLabel variant="blue">⚙ 評価</SectionLabel>
+            <NavLink
+              href="/approval?tab=check"
+              label="チェックシート評価"
+              icon={ClipboardCheck}
+              pathPrefixes={["/approval"]}
+            />
+          </>
+        ) : null}
         {showAdminSection ? (
           <>
             <SectionLabel variant="blue">⚙ 管理</SectionLabel>

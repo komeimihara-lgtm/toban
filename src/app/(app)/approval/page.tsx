@@ -7,7 +7,7 @@ import { CheckSheetApprovalSection } from "@/components/approval/check-sheet-app
 import { ExpenseV2Approval } from "@/components/expense/expense-v2-approval";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import { isAdminRole } from "@/types/incentive";
+import { isAdminRole, canAccessApproval } from "@/types/incentive";
 import { resolveUserRole } from "@/lib/require-admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -19,7 +19,7 @@ export default async function ApprovalPage({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  const tab = (await searchParams).tab ?? "expense";
+  const requestedTab = (await searchParams).tab ?? "expense";
   if (!isSupabaseConfigured()) return <p>未設定</p>;
 
   const supabase = await createClient();
@@ -37,9 +37,11 @@ export default async function ApprovalPage({
     .eq("auth_user_id", user.id)
     .maybeSingle();
   const me = meRow as { id: string; company_id: string } | null;
-  if (!isAdminRole(role)) {
+  if (!canAccessApproval(role)) {
     redirect("/my");
   }
+  const isLeaderOnly = role === "leader";
+  const tab = isLeaderOnly ? "check" : requestedTab;
   let v2ExpenseRows: {
     id: string;
     status: string;
@@ -134,16 +136,35 @@ export default async function ApprovalPage({
     return [r.id, r.name?.trim() || "（無名）"] as const;
   }));
 
-  // チェックシート承認待ち
+  // チェックシート承認待ち（manager_id で担当部下のみ表示、ownerは全員）
   let pendingSheets: { id: string; year: number; month: number; employee_id: string; self_check: { category: string; item: string; score: number }[]; status: string }[] = [];
   if (me) {
-    const { data: sData } = await supabase
-      .from("check_sheets")
-      .select("id, year, month, employee_id, self_check, status")
-      .eq("company_id", me.company_id)
-      .eq("status", "submitted")
-      .order("created_at", { ascending: true });
-    pendingSheets = (sData ?? []) as typeof pendingSheets;
+    if (role === "owner") {
+      const { data: sData } = await supabase
+        .from("check_sheets")
+        .select("id, year, month, employee_id, self_check, status")
+        .eq("company_id", me.company_id)
+        .eq("status", "submitted")
+        .order("created_at", { ascending: true });
+      pendingSheets = (sData ?? []) as typeof pendingSheets;
+    } else {
+      // leader / approver / director: 自分の部下（manager_id = me.id）のみ
+      const { data: subs } = await supabase
+        .from("employees")
+        .select("id")
+        .eq("manager_id", me.id);
+      const subIds = (subs ?? []).map((s) => (s as { id: string }).id);
+      if (subIds.length > 0) {
+        const { data: sData } = await supabase
+          .from("check_sheets")
+          .select("id, year, month, employee_id, self_check, status")
+          .eq("company_id", me.company_id)
+          .eq("status", "submitted")
+          .in("employee_id", subIds)
+          .order("created_at", { ascending: true });
+        pendingSheets = (sData ?? []) as typeof pendingSheets;
+      }
+    }
   }
   const sheetEmpIds = [...new Set(pendingSheets.map((s) => s.employee_id))];
   const { data: sheetEmps } = sheetEmpIds.length > 0
@@ -158,36 +179,40 @@ export default async function ApprovalPage({
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">承認</h1>
       <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-800">
-        <Link
-          href="/approval?tab=expense"
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${
-            tab === "expense"
-              ? "border-zinc-900 dark:border-zinc-100"
-              : "border-transparent text-zinc-500"
-          }`}
-        >
-          経費
-        </Link>
-        <Link
-          href="/approval?tab=leave"
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${
-            tab === "leave"
-              ? "border-zinc-900 dark:border-zinc-100"
-              : "border-transparent text-zinc-500"
-          }`}
-        >
-          有給
-        </Link>
-        <Link
-          href="/approval?tab=goals"
-          className={`border-b-2 px-3 py-2 text-sm font-medium ${
-            tab === "goals"
-              ? "border-zinc-900 dark:border-zinc-100"
-              : "border-transparent text-zinc-500"
-          }`}
-        >
-          月間目標{pendingGoals.length > 0 ? ` (${pendingGoals.length})` : ""}
-        </Link>
+        {!isLeaderOnly && (
+          <>
+            <Link
+              href="/approval?tab=expense"
+              className={`border-b-2 px-3 py-2 text-sm font-medium ${
+                tab === "expense"
+                  ? "border-zinc-900 dark:border-zinc-100"
+                  : "border-transparent text-zinc-500"
+              }`}
+            >
+              経費
+            </Link>
+            <Link
+              href="/approval?tab=leave"
+              className={`border-b-2 px-3 py-2 text-sm font-medium ${
+                tab === "leave"
+                  ? "border-zinc-900 dark:border-zinc-100"
+                  : "border-transparent text-zinc-500"
+              }`}
+            >
+              有給
+            </Link>
+            <Link
+              href="/approval?tab=goals"
+              className={`border-b-2 px-3 py-2 text-sm font-medium ${
+                tab === "goals"
+                  ? "border-zinc-900 dark:border-zinc-100"
+                  : "border-transparent text-zinc-500"
+              }`}
+            >
+              月間目標{pendingGoals.length > 0 ? ` (${pendingGoals.length})` : ""}
+            </Link>
+          </>
+        )}
         <Link
           href="/approval?tab=check"
           className={`border-b-2 px-3 py-2 text-sm font-medium ${

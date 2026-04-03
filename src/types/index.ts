@@ -7,7 +7,7 @@ export type TenantScoped = {
   company_id: string;
 };
 
-export type EmployeeRole = "owner" | "approver" | "staff";
+export type EmployeeRole = "owner" | "approver" | "leader" | "staff";
 
 export type CompanyPlan = "free" | "starter" | "pro";
 

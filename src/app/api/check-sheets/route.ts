@@ -79,7 +79,7 @@ export async function PATCH(req: Request) {
     const profile = await getProfile(supabase, user.id);
     if (!profile) return NextResponse.json({ error: "プロフィールが見つかりません" }, { status: 403 });
 
-    if (!["owner", "approver"].includes(profile.role)) {
+    if (!["owner", "director", "approver", "leader"].includes(profile.role)) {
       return NextResponse.json({ error: "権限がありません" }, { status: 403 });
     }
 

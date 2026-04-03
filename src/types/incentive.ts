@@ -3,7 +3,7 @@ export type ProfileRow = {
   id: string;
   company_id: string;
   name: string | null;
-  role: "owner" | "director" | "approver" | "sr" | "staff";
+  role: "owner" | "director" | "approver" | "sr" | "leader" | "staff";
   is_sales_target: boolean;
   is_service_target: boolean;
 };
@@ -76,4 +76,9 @@ export function isRetentionAllowed(role: string) {
 /** 承認権限（owner / director / approver） */
 export function isApprovalAllowed(role: string) {
   return role === "owner" || role === "director" || role === "approver";
+}
+
+/** 承認ページアクセス可（admin + leader） */
+export function canAccessApproval(role: string) {
+  return isAdminRole(role) || role === "leader";
 }
