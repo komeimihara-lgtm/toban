@@ -63,13 +63,21 @@ export default async function EmployeeDetailPage({
 
   const isAdmin = await checkAdminRole(supabase, user.id);
 
-  if (!isAdmin && user.id !== id) {
-    redirect("/my");
+  // 非管理者は自分の従業員レコードのみアクセス可
+  if (!isAdmin) {
+    const { data: myEmp } = await supabase
+      .from("employees")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+    if (!myEmp || (myEmp as { id: string }).id !== id) {
+      redirect("/my");
+    }
   }
 
   const { data: profile } = await supabase
     .from("employees")
-    .select("id, name, role, department, department_id")
+    .select("id, name, role, department_id, departments ( name )")
     .eq("id", id)
     .maybeSingle();
   if (!profile) notFound();
@@ -127,9 +135,10 @@ export default async function EmployeeDetailPage({
   const nextDelta = startDate ? nextMilestoneGrantDelta(startDate) : null;
   const yrs = startYmd ? yearsEmployed(startYmd) : null;
 
-  const p = profile as {
+  const p = profile as unknown as {
     name?: string | null;
-    department?: string | null;
+    department_id?: string | null;
+    departments?: { name: string } | null;
     role?: string;
   };
 
@@ -144,7 +153,7 @@ export default async function EmployeeDetailPage({
       <header>
         <h1 className="text-2xl font-semibold">{p.name ?? "従業員"}</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          部署: {p.department ?? "—"} · ロール: {p.role ?? "—"}
+          部署: {p.departments?.name ?? "—"} · ロール: {p.role ?? "—"}
         </p>
       </header>
 
