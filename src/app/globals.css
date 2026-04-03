@@ -11,7 +11,7 @@
   --sidebar-border: #e2e8f0;
   --sidebar-muted: #64748b;
   --sidebar-text: #0f172a;
-  --card: #ffffff;
+  --card: #f1f5f9;
   --success: #22c55e;
   --warning: #f59e0b;
   --error: #ef4444;
@@ -24,7 +24,7 @@
 html.dark {
   --background: #0d1526;
   --background-sidebar: #111d35;
-  --card: #1a2d50;
+  --card: #111d35;
   --border: #243860;
   --foreground: #f0f4ff;
   --muted-foreground: #94a3b8;
