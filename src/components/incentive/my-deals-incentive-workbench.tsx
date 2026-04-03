@@ -327,6 +327,8 @@ export function MyDealsIncentiveWorkbench(props: {
         const j2 = (await res2.json()) as { error?: string };
         if (!res2.ok) throw new Error(j2.error ?? "提出に失敗しました");
         setMsg("提出しました。承認をお待ちください。");
+      } else {
+        setMsg("下書き保存しました。");
       }
       closeModal();
       await loadDeals();
