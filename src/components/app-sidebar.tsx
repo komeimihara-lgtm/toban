@@ -156,6 +156,13 @@ export function AppSidebar({
     setMobileOpen(false);
   }, [pathname]);
 
+  // ボトムナビの「メニュー」ボタンからの開閉イベント
+  useEffect(() => {
+    const handler = () => setMobileOpen(true);
+    window.addEventListener("open-mobile-menu", handler);
+    return () => window.removeEventListener("open-mobile-menu", handler);
+  }, []);
+
   useEffect(() => {
     const el = navRef.current;
     if (!el) return;
@@ -182,17 +189,6 @@ export function AppSidebar({
 
   return (
     <>
-      {/* ハンバーガーボタン（モバイルのみ） */}
-      {!mobileOpen && (
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="fixed left-4 top-4 z-50 rounded-lg border border-zinc-200 bg-white p-2 shadow-md dark:border-zinc-700 dark:bg-zinc-900 md:hidden"
-          aria-label="メニューを開く"
-        >
-          <Menu className="size-5" />
-        </button>
-      )}
-
       {/* オーバーレイ（モバイルのみ） */}
       {mobileOpen && (
         <div
@@ -203,7 +199,7 @@ export function AppSidebar({
 
       <aside
         className={`no-print flex w-56 shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--background-sidebar)]
-          max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:shadow-xl
+          max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:w-72 max-md:shadow-xl
           max-md:transition-transform max-md:duration-300 max-md:ease-in-out
           ${mobileOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"}
         `}

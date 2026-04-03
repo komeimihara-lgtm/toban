@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import { BottomNav } from "@/components/bottom-nav";
 import { countExpenseApprovalBadges } from "@/lib/overview-stats";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -194,9 +195,10 @@ export default async function AppGroupLayout({
         expensesListHref={expensesListHref}
         showCompanyDocumentsAdminNav={showCompanyDocumentsAdminNav}
       />
-      <main className="print-full text-foreground min-h-0 min-w-0 flex-1 overflow-auto px-4 pb-6 pt-16 md:p-10 md:pt-10">
+      <main className="print-full text-foreground min-h-0 min-w-0 flex-1 overflow-auto px-4 pb-20 pt-6 md:p-10 md:pb-10">
         {children}
       </main>
+      <BottomNav />
     </div>
   );
 }
