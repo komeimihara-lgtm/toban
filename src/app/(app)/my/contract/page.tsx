@@ -23,20 +23,31 @@ export default async function MyContractPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: c } = await supabase
-    .from("employment_contracts")
-    .select("*")
-    .eq("employee_id", user.id)
+  const { data: empRow } = await supabase
+    .from("employees")
+    .select("id")
+    .eq("auth_user_id", user.id)
     .maybeSingle();
+  const employeePk = (empRow as { id: string } | null)?.id ?? null;
 
-  const { data: commutes } = await supabase
-    .from("commute_expenses")
-    .select(
-      "route_name, from_station, to_station, transportation, monthly_amount, ticket_type, is_active",
-    )
-    .eq("employee_id", user.id)
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
+  const { data: c } = employeePk
+    ? await supabase
+        .from("employment_contracts")
+        .select("*")
+        .eq("employee_id", employeePk)
+        .maybeSingle()
+    : { data: null };
+
+  const { data: commutes } = employeePk
+    ? await supabase
+        .from("commute_expenses")
+        .select(
+          "route_name, from_station, to_station, transportation, monthly_amount, ticket_type, is_active",
+        )
+        .eq("employee_id", employeePk)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+    : { data: [] };
 
   const { data: plb } = await supabase
     .from("paid_leave_balances")

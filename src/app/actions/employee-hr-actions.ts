@@ -34,16 +34,38 @@ async function requireAdmin(): Promise<AdminCtx> {
   return { supabase, user: { id: user.id }, companyId, ok: true };
 }
 
-export async function upsertEmploymentContractAction(
+export type EmploymentContractFormState = { ok: boolean; message?: string } | null;
+
+export async function submitEmploymentContractAction(
+  _prev: EmploymentContractFormState,
   formData: FormData,
-): Promise<void> {
+): Promise<EmploymentContractFormState> {
   const ctx = await requireAdmin();
   if (!ctx.ok) {
-    return;
+    return { ok: false, message: "権限がありません（owner / approver のみ保存できます）。" };
   }
 
   const employeeId = String(formData.get("employee_id") ?? "").trim();
-  if (!employeeId) return;
+  if (!employeeId) {
+    return { ok: false, message: "従業員IDが指定されていません。" };
+  }
+
+  const { data: targetEmp, error: empErr } = await ctx.supabase
+    .from("employees")
+    .select("id, company_id")
+    .eq("id", employeeId)
+    .maybeSingle();
+
+  if (empErr) {
+    return { ok: false, message: empErr.message };
+  }
+  const emp = targetEmp as { id: string; company_id: string } | null;
+  if (!emp || emp.company_id !== ctx.companyId) {
+    return {
+      ok: false,
+      message: "対象従業員が見つからないか、別会社のレコードです。",
+    };
+  }
 
   const employment_type = String(formData.get("employment_type") ?? "").trim();
   const start_date = String(formData.get("start_date") ?? "").trim();
@@ -69,7 +91,9 @@ export async function upsertEmploymentContractAction(
   const notes = String(formData.get("notes") ?? "").trim() || null;
   const is_active = formData.getAll("is_active").includes("on");
 
-  if (!start_date) return;
+  if (!start_date) {
+    return { ok: false, message: "入社日を入力してください。" };
+  }
 
   const row = {
     employee_id: employeeId,
@@ -101,12 +125,14 @@ export async function upsertEmploymentContractAction(
   });
   if (error) {
     console.error("employment_contracts upsert:", error.message);
-    return;
+    return { ok: false, message: error.message };
   }
+
   revalidatePath("/employees");
   revalidatePath(`/employees/${employeeId}`);
   revalidatePath("/dashboard");
   revalidatePath("/my/contract");
+  return { ok: true };
 }
 
 function parseOptionalNum(v: FormDataEntryValue | null): number | null {

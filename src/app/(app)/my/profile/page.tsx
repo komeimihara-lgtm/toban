@@ -64,7 +64,7 @@ export default function MyProfilePage() {
       const { data: emp } = await supabase
         .from("employees")
         .select(
-          "full_name, phone, address, emergency_contact, emergency_name, emergency_relation, birth_date, line_user_id, department, job_title, department_id",
+          "id, full_name, phone, address, emergency_contact, emergency_name, emergency_relation, birth_date, line_user_id, department, job_title, department_id",
         )
         .eq("auth_user_id", user.id)
         .maybeSingle();
@@ -115,11 +115,14 @@ export default function MyProfilePage() {
       setDepartmentLabel(dept ?? "—");
       setJobTitleLabel(p?.job_title?.trim() || "—");
 
-      const { data: contract } = await supabase
-        .from("employment_contracts")
-        .select("hire_date, start_date")
-        .eq("employee_id", user.id)
-        .maybeSingle();
+      const empPk = (emp as { id?: string } | null)?.id;
+      const { data: contract } = empPk
+        ? await supabase
+            .from("employment_contracts")
+            .select("hire_date, start_date")
+            .eq("employee_id", empPk)
+            .maybeSingle()
+        : { data: null };
 
       const c = contract as {
         hire_date?: string | null;
