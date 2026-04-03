@@ -99,13 +99,23 @@ function NavLink({
 function SectionLabel({
   children,
   badgeCount,
+  variant = "blue",
 }: {
   children: ReactNode;
   badgeCount?: number;
+  variant?: "blue" | "emerald";
 }) {
+  const colors =
+    variant === "emerald"
+      ? "bg-emerald-600/20 border-emerald-500/30 text-emerald-300"
+      : "bg-blue-600/20 border-blue-500/30 text-blue-300";
   return (
-    <p className="mb-1.5 mt-5 flex items-center gap-2 px-3 text-[11px] font-bold tracking-[0.06em] text-zinc-700 normal-case dark:text-white first:mt-0">
-      <span>{children}</span>
+    <p className="mb-2 mt-6 flex items-center gap-2 px-2 first:mt-0">
+      <span
+        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1 text-[11px] font-bold uppercase tracking-widest ${colors}`}
+      >
+        {children}
+      </span>
       {badgeCount != null && badgeCount > 0 ? (
         <span className="rounded-full bg-amber-600/90 px-1.5 py-0.5 text-[10px] font-bold text-white tabular-nums dark:bg-amber-500">
           {badgeCount > 99 ? "99+" : badgeCount}
@@ -161,7 +171,7 @@ export function AppSidebar({
       >
         {showAdminSection ? (
           <>
-            <SectionLabel>管理</SectionLabel>
+            <SectionLabel variant="blue">⚙ 管理</SectionLabel>
             <NavLink
               href="/"
               label="管理ダッシュボード"
@@ -259,7 +269,7 @@ export function AppSidebar({
           </>
         ) : null}
 
-        <SectionLabel>マイページ</SectionLabel>
+        <SectionLabel variant="emerald">👤 マイページ</SectionLabel>
         <NavLink href="/my" label="ホーム" icon={Home} exact />
         <NavLink
           href="/my/attendance"
