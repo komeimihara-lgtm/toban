@@ -1,7 +1,7 @@
 "use client";
 
 import { ExpenseResubmitForm } from "@/components/expense/expense-resubmit-form";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 
 type ExpenseRow = {
   id: string;
@@ -35,7 +35,14 @@ const TABS = [
   { id: "rejected", label: "差戻し" },
 ];
 
-export function ExpenseListClient({ initialRows }: { initialRows: ExpenseRow[] }) {
+export function ExpenseListClient({
+  initialRows,
+  beforeFilters,
+}: {
+  initialRows: ExpenseRow[];
+  /** フィルタ・CSV の直前に差し込む（例: 「申請状況」見出し） */
+  beforeFilters?: ReactNode;
+}) {
   const [tab, setTab] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -81,6 +88,7 @@ export function ExpenseListClient({ initialRows }: { initialRows: ExpenseRow[] }
 
   return (
     <div className="space-y-4">
+      {beforeFilters ? <div className="space-y-0">{beforeFilters}</div> : null}
       <div className="flex flex-wrap items-center gap-2">
         {TABS.map((t) => (
           <button
