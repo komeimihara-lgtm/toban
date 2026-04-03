@@ -194,7 +194,7 @@ export default async function AppGroupLayout({
         expensesListHref={expensesListHref}
         showCompanyDocumentsAdminNav={showCompanyDocumentsAdminNav}
       />
-      <main className="print-full text-foreground min-h-0 min-w-0 flex-1 overflow-auto p-6 md:p-10">
+      <main className="print-full text-foreground min-h-0 min-w-0 flex-1 overflow-auto px-4 pb-6 pt-16 md:p-10 md:pt-10">
         {children}
       </main>
     </div>

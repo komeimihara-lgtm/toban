@@ -27,8 +27,10 @@ import {
   UserCircle,
   UserPlus,
   Users,
+  Menu,
+  X,
 } from "lucide-react";
-import { useEffect, useRef, type ComponentType, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 
 export type AppSidebarProps = {
   userLabel: string;
@@ -147,6 +149,12 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const navRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // モバイルメニュー: ページ遷移時に自動で閉じる
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const el = navRef.current;
@@ -173,19 +181,54 @@ export function AppSidebar({
   }, []);
 
   return (
-    <aside className="no-print flex w-56 shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--background-sidebar)]">
-      <div className="border-b border-[var(--sidebar-border)] px-4 py-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-accent">LENARD HR</p>
-        <p className="mt-1 truncate text-sm text-zinc-900 dark:text-white">{userLabel}</p>
-        {tenantName ? (
-          <p className="mt-1 truncate text-xs text-zinc-600 dark:text-white">{tenantName}</p>
-        ) : null}
-      </div>
-      <nav
-        ref={navRef}
-        className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3 pb-8"
-        aria-label="メインメニュー"
+    <>
+      {/* ハンバーガーボタン（モバイルのみ） */}
+      {!mobileOpen && (
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="fixed left-4 top-4 z-50 rounded-lg border border-zinc-200 bg-white p-2 shadow-md dark:border-zinc-700 dark:bg-zinc-900 md:hidden"
+          aria-label="メニューを開く"
+        >
+          <Menu className="size-5" />
+        </button>
+      )}
+
+      {/* オーバーレイ（モバイルのみ） */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`no-print flex w-56 shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--background-sidebar)]
+          max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:shadow-xl
+          max-md:transition-transform max-md:duration-300 max-md:ease-in-out
+          ${mobileOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"}
+        `}
       >
+        <div className="flex items-start justify-between border-b border-[var(--sidebar-border)] px-4 py-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-accent">LENARD HR</p>
+            <p className="mt-1 truncate text-sm text-zinc-900 dark:text-white">{userLabel}</p>
+            {tenantName ? (
+              <p className="mt-1 truncate text-xs text-zinc-600 dark:text-white">{tenantName}</p>
+            ) : null}
+          </div>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="shrink-0 rounded-lg p-1 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700 md:hidden"
+            aria-label="メニューを閉じる"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+        <nav
+          ref={navRef}
+          className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3 pb-8"
+          aria-label="メインメニュー"
+        >
         {showCheckSheetApproval && !showAdminSection ? (
           <>
             <SectionLabel variant="blue">⚙ 評価</SectionLabel>
@@ -371,5 +414,6 @@ export function AppSidebar({
         />
       </nav>
     </aside>
+    </>
   );
 }
