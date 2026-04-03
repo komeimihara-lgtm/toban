@@ -94,7 +94,6 @@ export default async function AppGroupLayout({
   let showEmployeeOnboardingNav = false;
   let tenantName: string | null = null;
   let showCheckSheetApproval = false;
-  let dashboardHref = "/my";
   let expensesListHref = "/my/expenses";
   let showCompanyDocumentsAdminNav = false;
 
@@ -135,7 +134,6 @@ export default async function AppGroupLayout({
         const isLeaderRole = role === "leader";
         showCheckSheetApproval = isLeaderRole;
         if (showAdminSection) {
-          dashboardHref = "/";
           expensesListHref = "/expenses";
         }
 
@@ -191,7 +189,6 @@ export default async function AppGroupLayout({
         showEmployeeOnboardingNav={showEmployeeOnboardingNav}
         approvalBadgeCount={approvalBadgeCount}
         incentiveDraftBadgeCount={incentiveDraftBadgeCount}
-        dashboardHref={dashboardHref}
         expensesListHref={expensesListHref}
         showCompanyDocumentsAdminNav={showCompanyDocumentsAdminNav}
       />

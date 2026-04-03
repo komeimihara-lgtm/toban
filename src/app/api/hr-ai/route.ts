@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     const interviewMode =
       body.interview_mode === true || body.interview_mode === "true";
 
-    let basePrompt = await buildHrAiSystemPrompt(supabase, user.id);
+    const basePrompt = await buildHrAiSystemPrompt(supabase, user.id);
     if (!basePrompt) {
       return NextResponse.json(
         { error: "プロフィールが見つかりません" },

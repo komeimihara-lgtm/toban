@@ -31,8 +31,10 @@ export function EmploymentContractForm({
 
   useEffect(() => {
     if (state?.ok) {
-      setToast("保存しました");
-      router.refresh();
+      queueMicrotask(() => {
+        setToast("保存しました");
+        router.refresh();
+      });
       const t = window.setTimeout(() => setToast(null), 3500);
       return () => window.clearTimeout(t);
     }

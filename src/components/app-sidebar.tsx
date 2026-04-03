@@ -28,7 +28,6 @@ import {
   UserCircle,
   UserPlus,
   Users,
-  Menu,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
@@ -42,8 +41,6 @@ export type AppSidebarProps = {
   showEmployeeOnboardingNav?: boolean;
   approvalBadgeCount?: number;
   incentiveDraftBadgeCount?: number;
-  /** owner/approver は `/`、その他は `/my` */
-  dashboardHref: string;
   /** 全社一覧 `/expenses` or 個人 `/my/expenses` */
   expensesListHref: string;
   /** owner / director のみ（就業規則PDF・AI学習の管理） */
@@ -144,7 +141,6 @@ export function AppSidebar({
   showEmployeeOnboardingNav = false,
   approvalBadgeCount = 0,
   incentiveDraftBadgeCount = 0,
-  dashboardHref,
   expensesListHref,
   showCompanyDocumentsAdminNav = false,
 }: AppSidebarProps) {
@@ -154,7 +150,7 @@ export function AppSidebar({
 
   // モバイルメニュー: ページ遷移時に自動で閉じる
   useEffect(() => {
-    setMobileOpen(false);
+    queueMicrotask(() => setMobileOpen(false));
   }, [pathname]);
 
   // ボトムナビの「メニュー」ボタンからの開閉イベント

@@ -14,11 +14,13 @@ export function InterviewInviteBanner({ requestId }: { requestId: string }) {
   const router = useRouter();
 
   useEffect(() => {
-    try {
-      setHidden(localStorage.getItem(storageKey(requestId)) === "1");
-    } catch {
-      setHidden(false);
-    }
+    queueMicrotask(() => {
+      try {
+        setHidden(localStorage.getItem(storageKey(requestId)) === "1");
+      } catch {
+        setHidden(false);
+      }
+    });
   }, [requestId]);
 
   if (hidden) return null;

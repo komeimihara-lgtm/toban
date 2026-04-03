@@ -14,7 +14,6 @@ import {
 } from "@/lib/expense-audit-rules";
 import { getProfileSalesTargetFlag, resolveIsSalesTarget } from "@/lib/employee-sales-target";
 import type { ExpenseAuditInput, ExpenseAuditResult } from "@/types/expense-audit";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export const maxDuration = 120;

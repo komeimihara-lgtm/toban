@@ -51,6 +51,8 @@ export default async function MyHomePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const requestAt = new Date();
+
   const { data: empProfile } = await supabase
     .from("employees")
     .select("*")
@@ -250,7 +252,9 @@ export default async function MyHomePage() {
     .in("submit_status", ["approved", "rejected"])
     .order("updated_at", { ascending: false })
     .limit(20);
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+  const thirtyDaysAgo = new Date(
+    requestAt.getTime() - 30 * 86400000,
+  ).toISOString();
   const { data: grantNews } = await supabase
     .from("paid_leave_grants")
     .select("grant_date, days_granted, grant_reason, created_at")

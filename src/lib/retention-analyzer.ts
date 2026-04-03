@@ -251,8 +251,6 @@ export async function runRetentionAnalysis(): Promise<{
   const curEnd = endOfMonth(now);
   const prevStart = startOfMonth(subMonths(now, 1));
   const prevEnd = endOfMonth(subMonths(now, 1));
-  const p2Start = startOfMonth(subMonths(now, 2));
-  const p3Start = startOfMonth(subMonths(now, 3));
 
   const curStartYmd = format(curStart, "yyyy-MM-dd");
   const curEndYmd = format(curEnd, "yyyy-MM-dd");

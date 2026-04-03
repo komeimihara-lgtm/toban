@@ -39,12 +39,12 @@ export function AttendanceQrPanel() {
   }, []);
 
   useEffect(() => {
-    setOrigin(window.location.origin);
+    queueMicrotask(() => setOrigin(window.location.origin));
   }, []);
 
   useEffect(() => {
-    void refresh();
     const id = window.setInterval(() => void refresh(), 240_000);
+    queueMicrotask(() => void refresh());
     return () => window.clearInterval(id);
   }, [refresh]);
 

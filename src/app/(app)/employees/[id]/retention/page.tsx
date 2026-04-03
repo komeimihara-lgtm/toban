@@ -24,11 +24,6 @@ export default async function EmployeeRetentionDetailPage({
   if (!isRetentionAllowed(myRole)) {
     redirect("/my");
   }
-  const { data: me } = await supabase
-    .from("employees")
-    .select("name")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
 
   const { data: target } = await supabase
     .from("employees")

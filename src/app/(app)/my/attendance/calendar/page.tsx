@@ -100,8 +100,9 @@ export default async function MyAttendanceCalendarPage({
   const endOfMonthJst = new Date(
     `${y}-${pad(m)}-${pad(dim)}T23:59:59+09:00`,
   );
+  const requestAt = new Date();
   const summaryNow =
-    endOfMonthJst.getTime() < Date.now() ? endOfMonthJst : new Date();
+    endOfMonthJst.getTime() < requestAt.getTime() ? endOfMonthJst : requestAt;
   const summary = summarizePunchesInRange(punches, { now: summaryNow });
   const paidLeaveDays = paidLeaveDaysInMonth(leaves, y, m);
 

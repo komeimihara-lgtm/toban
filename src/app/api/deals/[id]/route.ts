@@ -110,7 +110,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
       }
     }
 
-    let payment_status =
+    const payment_status =
       body.payment_status != null ? String(body.payment_status) : String(e.payment_status ?? "pending");
     if (!["pending", "partial", "paid"].includes(payment_status)) {
       return NextResponse.json({ error: "payment_status が不正です" }, { status: 400 });

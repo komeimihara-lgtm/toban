@@ -94,8 +94,10 @@ export function ShiftWeekClient() {
   } | null>(null);
 
   useEffect(() => {
-    setGrid(loadGrid(weekStart));
-    setHydrated(true);
+    queueMicrotask(() => {
+      setGrid(loadGrid(weekStart));
+      setHydrated(true);
+    });
   }, [weekStart]);
 
   const days = useMemo(

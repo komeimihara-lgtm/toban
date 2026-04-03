@@ -7,7 +7,7 @@ import { CheckSheetApprovalSection } from "@/components/approval/check-sheet-app
 import { ExpenseV2Approval } from "@/components/expense/expense-v2-approval";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import { isAdminRole, canAccessApproval } from "@/types/incentive";
+import { canAccessApproval } from "@/types/incentive";
 import { resolveUserRole } from "@/lib/require-admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
