@@ -13,7 +13,7 @@ type RawRow = {
   month: number;
   incentive_amount: number;
   status: string;
-  profiles: { full_name: string | null }[] | { full_name: string | null } | null;
+  employees: { name: string | null }[] | { name: string | null } | null;
 };
 
 type Row = {
@@ -43,7 +43,7 @@ export default async function IncentivesHistoryPage() {
 
   const { data: rows, error } = await supabase
     .from("incentive_configs")
-    .select("id, year, month, incentive_amount, status, profiles!employee_id(full_name)")
+    .select("id, year, month, incentive_amount, status, employees!employee_id(name)")
     .order("year", { ascending: false })
     .order("month", { ascending: false })
     .limit(500);
@@ -52,9 +52,9 @@ export default async function IncentivesHistoryPage() {
     id: r.id,
     year: r.year,
     month: r.month,
-    employee_name: Array.isArray(r.profiles)
-      ? (r.profiles[0]?.full_name ?? null)
-      : (r.profiles?.full_name ?? null),
+    employee_name: Array.isArray(r.employees)
+      ? (r.employees[0]?.name ?? null)
+      : (r.employees?.name ?? null),
     incentive_amount: r.incentive_amount,
     status: r.status,
   })) satisfies Row[];
