@@ -1,24 +1,14 @@
 import type { AuthProfile } from "@/lib/api-auth";
 import { claudeExpenseAuditNarrative } from "@/lib/expense-audit-claude";
+import { enrichInputFromLinkedActivityReports } from "@/lib/expense-audit-sales-enrich";
 import {
   runExpenseAuditRules,
   scoreFromIssues,
   verdictFromScore,
 } from "@/lib/expense-audit-rules";
+import { getProfileSalesTargetFlag, resolveIsSalesTarget } from "@/lib/employee-sales-target";
 import type { ExpenseAuditInput, ExpenseAuditResult } from "@/types/expense-audit";
 import type { SupabaseClient } from "@supabase/supabase-js";
-
-async function fetchIsSalesTarget(
-  supabase: SupabaseClient,
-  submitterId: string,
-): Promise<boolean> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("is_sales_target")
-    .eq("id", submitterId)
-    .maybeSingle();
-  return Boolean((data as { is_sales_target?: boolean } | null)?.is_sales_target);
-}
 
 /**
  * 申請直後など: DB上の経費1件を読み、AI審査を実行して audit_* 列に保存する。
@@ -27,6 +17,7 @@ export async function runPersistedExpenseAuditById(
   supabase: SupabaseClient,
   profile: AuthProfile,
   expenseId: string,
+  options?: { ride_hour_local?: number | null },
 ): Promise<{ ok: true; result: ExpenseAuditResult } | { ok: false; error: string }> {
   const { data: row, error } = await supabase
     .from("expenses")
@@ -64,7 +55,13 @@ export async function runPersistedExpenseAuditById(
     receipt_url: e.receipt_url != null ? String(e.receipt_url) : null,
     created_at: e.created_at != null ? String(e.created_at) : null,
     activity_report_id: e.activity_report_id != null ? String(e.activity_report_id) : null,
-    ride_hour_local: null,
+    ride_hour_local:
+      options?.ride_hour_local != null &&
+      Number.isFinite(options.ride_hour_local) &&
+      options.ride_hour_local >= 0 &&
+      options.ride_hour_local <= 23
+        ? Math.floor(options.ride_hour_local)
+        : null,
   };
 
   const arId = input.activity_report_id;
@@ -88,10 +85,13 @@ export async function runPersistedExpenseAuditById(
     }
   }
 
-  input.is_sales_target = await fetchIsSalesTarget(
+  const submitterId = String(e.submitter_id);
+  input.is_sales_target = await resolveIsSalesTarget(
     supabase,
-    String(e.submitter_id),
+    submitterId,
+    await getProfileSalesTargetFlag(supabase, submitterId),
   );
+  await enrichInputFromLinkedActivityReports(supabase, input);
 
   const issues = await runExpenseAuditRules(supabase, input);
   const score = scoreFromIssues(issues);
@@ -108,6 +108,7 @@ export async function runPersistedExpenseAuditById(
       from: input.from_location,
       to: input.to_location,
       is_sales_target: input.is_sales_target,
+      needs_ai_parse: issues.some((i) => Boolean(i.needs_ai_parse)),
       activity: {
         visit_count: input.activity_visit_count,
         meeting_count: input.activity_meeting_count,

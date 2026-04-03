@@ -57,7 +57,7 @@ export async function middleware(request: NextRequest) {
 
   const isLogin = pathname === "/login";
 
-  /** 未ログインは常に /login へ。ログイン後は src/app/page.tsx が / を /dashboard または /my に振り分ける。 */
+  /** 未ログインは常に /login へ。ログイン後は owner/approver は `/`、それ以外は /my へ。 */
   if (!user && !isLogin) {
     const u = request.nextUrl.clone();
     u.pathname = "/login";
@@ -72,7 +72,7 @@ export async function middleware(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
     const role = (pr as { role?: string } | null)?.role ?? "staff";
-    const dest = isAdminRole(role) ? "/dashboard" : "/my";
+    const dest = isAdminRole(role) ? "/" : "/my";
     const u = request.nextUrl.clone();
     u.pathname = dest;
     u.search = "";

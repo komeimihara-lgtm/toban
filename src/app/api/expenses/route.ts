@@ -1,4 +1,5 @@
 import { getProfile, getSessionUser } from "@/lib/api-auth";
+import { resolveIsSalesTarget } from "@/lib/employee-sales-target";
 import { tryAutoApproveExpense } from "@/lib/expense-auto-approve";
 import { runPersistedExpenseAuditById } from "@/lib/expense-audit-run";
 import { isActiveExpenseCategoryLabel } from "@/lib/expense-category-validate";
@@ -129,7 +130,12 @@ export async function POST(req: Request) {
     const status = submit ? "step1_pending" : "draft";
 
     let activityReportId: string | null = null;
-    if (profile.is_sales_target && isTravelishCategory(category)) {
+    const isSales = await resolveIsSalesTarget(
+      supabase,
+      user.id,
+      profile.is_sales_target,
+    );
+    if (isSales && isTravelishCategory(category)) {
       const visitRaw = body.activity_visit_count;
       const meetRaw = body.activity_meeting_count;
       const visitN =
@@ -206,9 +212,20 @@ export async function POST(req: Request) {
     let autoApproved = false;
     let responseStatus: string = status;
 
+    const rideRaw = body.ride_hour_local;
+    const rideHourLocal =
+      rideRaw != null && rideRaw !== "" && Number.isFinite(Number(rideRaw))
+        ? Math.max(0, Math.min(23, Math.floor(Number(rideRaw))))
+        : null;
+
     if (submit) {
       try {
-        const auditRes = await runPersistedExpenseAuditById(supabase, profile, newId);
+        const auditRes = await runPersistedExpenseAuditById(
+          supabase,
+          profile,
+          newId,
+          rideHourLocal != null ? { ride_hour_local: rideHourLocal } : undefined,
+        );
         if (!auditRes.ok) {
           console.error("[expenses POST] audit:", auditRes.error);
         } else {

@@ -1,6 +1,12 @@
 /**
  * HR ドメイン型（マルチテナント: company_id は profiles / 各テーブルでスコープ）
  */
+
+/** DB 行の共通: テナント分離キー */
+export type TenantScoped = {
+  company_id: string;
+};
+
 export type EmployeeRole = "owner" | "approver" | "staff";
 
 export type CompanyPlan = "free" | "starter" | "pro";
@@ -136,6 +142,65 @@ export type Department = {
   id: string;
   company_id: string;
   name: string;
+};
+
+/** 有給申請（leave_requests） */
+export type LeaveRequest = TenantScoped & {
+  id: string;
+  user_id: string;
+  start_date: string;
+  end_date: string;
+  kind: "full" | "half" | "hour" | string;
+  reason: string | null;
+  status: string;
+  reject_reason: string | null;
+};
+
+/** 有給残高 */
+export type PaidLeaveBalance = TenantScoped & {
+  user_id: string;
+  days_remaining: number | null;
+  next_accrual_date: string | null;
+  next_accrual_days: number | null;
+};
+
+/** 勤怠打刻 */
+export type AttendancePunch = TenantScoped & {
+  id: string;
+  user_id: string;
+  punch_type: AttendancePunchType;
+  punched_at: string;
+  source?: string | null;
+};
+
+export type AppNotification = TenantScoped & {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+/** 旧経費（expense_claims） */
+export type ExpenseClaim = TenantScoped & {
+  id: string;
+  user_id: string;
+  status: string;
+  amount: number;
+  category: string;
+};
+
+export type ApprovalLog = TenantScoped & {
+  id: string;
+  actor_id: string;
+  actor_name: string | null;
+  action: string;
+  target_type: string;
+  target_id: string;
+  reason: string | null;
+  created_at: string;
 };
 
 export * from "./incentive";

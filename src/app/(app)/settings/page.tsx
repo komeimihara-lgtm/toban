@@ -5,6 +5,7 @@ import {
 } from "@/app/actions/product-settings-actions";
 import { FreeeLinkPanel } from "@/components/settings/freee-link-panel";
 import { IncentiveRatesSettings } from "@/components/settings/incentive-rates-settings";
+import { normalizeCompanySettings } from "@/lib/company-settings";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminRole } from "@/types/incentive";
 import Link from "next/link";
@@ -28,6 +29,20 @@ export default async function SettingsPage() {
   const role = pr?.role ?? "staff";
   const companyId = pr?.company_id;
   if (!isAdminRole(role) || !companyId) redirect("/my");
+
+  const { data: coRow } = await supabase
+    .from("companies")
+    .select("settings, name")
+    .eq("id", companyId)
+    .maybeSingle();
+  const tenantSettings = normalizeCompanySettings(
+    (coRow as { settings?: unknown } | null)?.settings,
+  );
+  const approvalFlowText = tenantSettings.approval.steps
+    .sort((a, b) => a.order - b.order)
+    .map((s) => `${s.label}（${s.approver_role}）`)
+    .join(" → ");
+  const notifyText = tenantSettings.notification.channels.join("・");
 
   const { data: products } = await supabase
     .from("products")
@@ -55,6 +70,14 @@ export default async function SettingsPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-4">
+          {role === "owner" ? (
+            <Link
+              href="/settings/tenant"
+              className="text-sm font-medium text-violet-700 underline hover:text-violet-900 dark:text-violet-400"
+            >
+              会社・テナント設定 →
+            </Link>
+          ) : null}
           <Link
             href="/settings/export"
             className="text-sm font-medium text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
@@ -78,16 +101,20 @@ export default async function SettingsPage() {
 
       <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-          承認フロー（確認）
+          承認フロー（このテナントの設定）
         </h2>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          経費・インセンティブを含む全申請は次の順序です。差戻し時は理由が必須となり、申請者に通知されます。
+          経費・インセンティブを含む申請の段階は、会社マスタ（companies.settings）に保存されています。差戻し時は理由が必須です。通知チャネル:{" "}
+          <span className="font-medium">{notifyText || "（未設定）"}</span>
         </p>
         <p className="mt-3 text-sm font-medium text-zinc-800 dark:text-zinc-200">
-          申請者 → <span className="text-emerald-800 dark:text-emerald-300">千葉</span>
-          （第1承認）→ <span className="text-emerald-800 dark:text-emerald-300">三原孔明</span>
-          （最終承認）→ 完了
+          申請者 → {approvalFlowText} → 完了
         </p>
+        {(coRow as { name?: string } | null)?.name ? (
+          <p className="mt-2 text-xs text-zinc-500">
+            テナント: {(coRow as { name: string }).name}（<code>{companyId}</code>）
+          </p>
+        ) : null}
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">

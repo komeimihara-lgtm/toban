@@ -28,6 +28,8 @@ export function HrAssistantChat({
   );
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [notifyBusy, setNotifyBusy] = useState(false);
+  const [notifyMsg, setNotifyMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -77,6 +79,46 @@ export function HrAssistantChat({
     }
   }
 
+  async function summarizeToOwner() {
+    if (!conversationId || notifyBusy || loading) return;
+    const userMsgs = messages.filter((m) => m.role === "user");
+    if (userMsgs.length === 0) {
+      setErr("送信できる会話がありません");
+      return;
+    }
+    setNotifyMsg(null);
+    setErr(null);
+    setNotifyBusy(true);
+    try {
+      const res = await fetch("/api/hr-ai/summarize-to-owner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversation_id: conversationId }),
+      });
+      const j = (await res.json()) as {
+        error?: string;
+        summary?: string;
+        message?: string;
+        notified?: boolean;
+      };
+      if (!res.ok) {
+        setErr(j.error ?? "送信に失敗しました");
+        return;
+      }
+      setNotifyMsg(j.message ?? "処理しました。");
+      if (j.summary && !j.notified) {
+        setNotifyMsg(`${j.message ?? ""}\n\n【要約プレビュー】\n${j.summary}`);
+      }
+    } catch {
+      setErr("通信エラー");
+    } finally {
+      setNotifyBusy(false);
+    }
+  }
+
+  const canNotifyOwner =
+    Boolean(conversationId) && messages.some((m) => m.role === "user");
+
   return (
     <div className="mx-auto max-w-6xl">
       <header className="mb-6 border-b border-zinc-200 pb-4 dark:border-zinc-800">
@@ -84,7 +126,12 @@ export function HrAssistantChat({
           AI 人事アシスタント
         </h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          人事・労務・キャリアについて自然な日本语的でご相談ください。内容は保存され、あなた本人のみが参照できます。
+          人事・労務・キャリアについて自然な日本語でご相談ください。会話はあなた本人のみが参照できます。
+        </p>
+        <p className="mt-3 rounded-lg border border-violet-200 bg-violet-50/70 px-3 py-2 text-xs leading-relaxed text-violet-950 dark:border-violet-900 dark:bg-violet-950/35 dark:text-violet-100">
+          相談の内容が、他のスタッフへ自動では共有されません。必要なときだけ、代表（三原）向けに
+          <strong className="font-medium">要約テキスト</strong>
+          をLINE通知キューへ載せることができます（チャット原文は送りません）。
         </p>
       </header>
 
@@ -144,6 +191,24 @@ export function HrAssistantChat({
           </div>
 
           <div className="border-t border-zinc-200 p-3 dark:border-zinc-800">
+            {notifyMsg && (
+              <p className="mb-2 whitespace-pre-wrap rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-2 text-xs text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100">
+                {notifyMsg}
+              </p>
+            )}
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={!canNotifyOwner || notifyBusy || loading}
+                onClick={() => void summarizeToOwner()}
+                className="rounded-lg border border-violet-400 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-900 hover:bg-violet-100 disabled:opacity-50 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-100 dark:hover:bg-violet-900/60"
+              >
+                {notifyBusy ? "送信中…" : "三原代表に要約を送信"}
+              </button>
+              <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                1往復以上チャット後・会話が保存されているときに利用できます
+              </span>
+            </div>
             {err && (
               <p className="mb-2 text-sm text-red-600 dark:text-red-400">{err}</p>
             )}
@@ -160,7 +225,7 @@ export function HrAssistantChat({
                 placeholder="質問を日本語で入力…（Enter 送信 / Shift+Enter 改行）"
                 rows={2}
                 disabled={loading}
-                className="min-h-[44px] flex-1 resize-y rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+                className="min-h-[44px] flex-1 resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
               <button
                 type="button"

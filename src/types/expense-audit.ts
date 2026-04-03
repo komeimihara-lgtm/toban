@@ -31,6 +31,8 @@ export type ExpenseAuditIssue = {
   severity: ExpenseAuditIssueSeverity;
   message: string;
   saving_amount?: number;
+  /** purpose に商談っぽい語があるが件数が取れない → AI/OCR 側の確認フラグ */
+  needs_ai_parse?: boolean;
 };
 
 export type ExpenseAuditResult = {

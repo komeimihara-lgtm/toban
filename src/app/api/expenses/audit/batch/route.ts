@@ -3,6 +3,7 @@ import {
   parseDealCountFromPurpose,
   parseNightsFromPurpose,
 } from "@/lib/expense-audit-purpose-parse";
+import { fetchSalesTargetUserIds } from "@/lib/employee-sales-target";
 import Anthropic from "@anthropic-ai/sdk";
 import { isAdminRole } from "@/types/incentive";
 import { NextResponse } from "next/server";
@@ -33,8 +34,8 @@ type ExpenseRow = {
 };
 
 /** 会社推奨の宿泊費レンジ（上限を超過分の試算に使用） */
-const HOTEL_RECOMMENDED_RANGE_LABEL = "¥6,000〜¥7,000/泊";
-const HOTEL_CAP_PER_NIGHT_JPY = 7000;
+const HOTEL_RECOMMENDED_RANGE_LABEL = "¥8,000前後/泊（ビジネスホテル目安）";
+const HOTEL_CAP_PER_NIGHT_JPY = 8000;
 
 function estimateLodgingNights(amount: number, purpose: string | null): number {
   const parsed = parseNightsFromPurpose(String(purpose ?? ""));
@@ -143,15 +144,18 @@ export async function POST(req: Request) {
 
     const activityByEmployee = aggregateActivity(arRows ?? []);
 
-    const { data: salesProfiles } = await supabase
-      .from("profiles")
-      .select("id, full_name, is_sales_target")
-      .eq("company_id", profile.company_id)
-      .eq("is_sales_target", true);
+    const salesIdList = await fetchSalesTargetUserIds(supabase, profile.company_id);
+    const salesIds = new Set(salesIdList);
 
-    const salesIds = new Set(
-      (salesProfiles ?? []).map((p) => (p as { id: string }).id),
-    );
+    const { data: salesProfilesRaw } =
+      salesIdList.length > 0
+        ? await supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", salesIdList)
+        : { data: [] as { id: string; full_name: string | null }[] };
+
+    const salesProfiles = salesProfilesRaw ?? [];
 
     const deptIds = [
       ...new Set(rawList.map((r) => r.department_id).filter(Boolean)),
@@ -449,6 +453,86 @@ export async function POST(req: Request) {
       }
     }
 
+    /** 直近6ヶ月のチーム平均（商談1件あたり移動コスト）・全社交通費・宿泊÷件数の推移 */
+    const monthly_trend: {
+      year: number;
+      month: number;
+      team_avg_cost_per_deal_jpy: number;
+      company_transport_jpy: number;
+      lodging_per_deal_jpy: number;
+    }[] = [];
+    for (let back = 5; back >= 0; back--) {
+      let yy = year;
+      let mm = month - back;
+      while (mm < 1) {
+        yy--;
+        mm += 12;
+      }
+      const lastTrend = new Date(yy, mm, 0).getDate();
+      const rStart = `${yy}-${pad(mm)}-01`;
+      const rEnd = `${yy}-${pad(mm)}-${String(lastTrend).padStart(2, "0")}`;
+      const [{ data: trendExp }, { data: trendAr }] = await Promise.all([
+        supabase
+          .from("expenses")
+          .select("amount, category, purpose, submitter_id")
+          .eq("company_id", profile.company_id)
+          .gte("paid_date", rStart)
+          .lte("paid_date", rEnd),
+        supabase
+          .from("activity_reports")
+          .select("employee_id, visit_count, meeting_count")
+          .eq("company_id", profile.company_id)
+          .gte("report_date", rStart)
+          .lte("report_date", rEnd),
+      ]);
+      const tAct = aggregateActivity(trendAr ?? []);
+      const tList = (trendExp ?? []) as {
+        amount: number;
+        category: string;
+        purpose: string | null;
+        submitter_id: string;
+      }[];
+      let companyTransport = 0;
+      for (const r of tList) {
+        if (isTransportCat(r.category)) companyTransport += Number(r.amount);
+      }
+      const costs: number[] = [];
+      const lodgingRatios: number[] = [];
+      for (const sid of salesIds) {
+        const my = tList.filter((e) => e.submitter_id === sid);
+        let t = 0;
+        let lod = 0;
+        let pd = 0;
+        for (const e of my) {
+          if (isTransportCat(e.category)) t += Number(e.amount);
+          if (isLodgingCat(e.category)) lod += Number(e.amount);
+          const pc = parseDealCountFromPurpose(String(e.purpose ?? ""));
+          if (pc != null) pd += pc;
+        }
+        const ar = tAct.get(sid);
+        const ed = Math.max(1, pd + (ar?.visits ?? 0) + (ar?.meetings ?? 0));
+        if (t > 0) costs.push(t / ed);
+        if (lod > 0) lodgingRatios.push(lod / ed);
+      }
+      const teamAvgM =
+        costs.length > 0
+          ? Math.round(costs.reduce((a, b) => a + b, 0) / costs.length)
+          : 0;
+      const lodPer =
+        lodgingRatios.length > 0
+          ? Math.round(
+              lodgingRatios.reduce((a, b) => a + b, 0) / lodgingRatios.length,
+            )
+          : 0;
+      monthly_trend.push({
+        year: yy,
+        month: mm,
+        team_avg_cost_per_deal_jpy: teamAvgM,
+        company_transport_jpy: Math.round(companyTransport),
+        lodging_per_deal_jpy: lodPer,
+      });
+    }
+
     const statsPayload = {
       year,
       month,
@@ -470,6 +554,7 @@ export async function POST(req: Request) {
         ranking: sales_ranking_by_cost_per_deal,
         consolidation_suggestions: consolidation_suggestions.slice(0, 10),
         online_shift_estimate_jpy: online_shift_estimate_jpy,
+        monthly_trend,
       },
     };
 
@@ -481,8 +566,10 @@ export async function POST(req: Request) {
       const sys = `あなたは経費監査の担当として、承認者（第1承認・最終承認）向けの月次サマリーを書く。
 厳しすぎず、コスト削減とコンプライアンスのバランスを意識する。
 営業向けには「商談1件あたりの移動コスト」の観点と、出張集約・オンライン商談の検討を簡潔に触れる。
-category_savings_jpy と reduction_proposals_top5 を踏まえ、円建ての削減イメージを1-2か所入れる。
-宿泊は lodging_vs_recommended を必ず参照: 推奨レンジは ¥6,000〜¥7,000/泊、上限基準 ¥7,000/泊。total_excess_over_recommended_jpy をレポートに反映する。
+部門別は department_stats、カテゴリ別の削減試算は category_savings_jpy を参照し、円建てで触れる。
+reduction_proposals_top5 を要約し削減提案TOP5の観点を1-2文で書く。
+annual_savings_projection_jpy を使い「このペースで改善すると年間約◯◯万円の削減が見込まれます」と必ず1文入れる（◯◯＝annual_savings_projection_jpy÷10000、小数1桁）。
+宿泊は lodging_vs_recommended を参照（目安1泊¥8,000前後の比較）。total_excess_over_recommended_jpy を反映する。
 出力は JSON のみ: {"approver_notes":"箇条書きでもよい3-8文","report_md":"マークダウンで部門傾向・注意点・削減の狙いどころ・営業効率のコメント"} `;
 
       const resp = await client.messages.create({

@@ -58,6 +58,13 @@ type BatchPayload = {
       note: string;
     }[];
     online_shift_estimate_jpy: number;
+    monthly_trend?: {
+      year: number;
+      month: number;
+      team_avg_cost_per_deal_jpy: number;
+      company_transport_jpy: number;
+      lodging_per_deal_jpy: number;
+    }[];
   };
   department_stats: {
     department_id: string | null;
@@ -311,7 +318,7 @@ export function ExpenseAuditReportClient({
           {data.sales_efficiency?.ranking?.length ? (
             <section className="rounded-xl border border-teal-200 bg-teal-50/40 p-5 dark:border-teal-900 dark:bg-teal-950/25">
               <h2 className="text-sm font-semibold text-teal-950 dark:text-teal-100">
-                営業効率（商談1件あたりの移動コスト）
+                営業効率（商談1件あたりの移動コスト・低いほど効率良）
               </h2>
               <p className="mt-1 text-xs text-teal-900/80 dark:text-teal-200/90">
                 チーム平均（交通費÷推定商談件数）: 今月 ¥
@@ -349,6 +356,56 @@ export function ExpenseAuditReportClient({
                   </li>
                 ))}
               </ul>
+            </section>
+          ) : null}
+
+          {data.sales_efficiency?.monthly_trend && data.sales_efficiency.monthly_trend.length > 0 ? (
+            <section className="rounded-xl border border-cyan-200 bg-cyan-50/40 p-5 dark:border-cyan-900 dark:bg-cyan-950/25">
+              <h2 className="text-sm font-semibold text-cyan-950 dark:text-cyan-100">
+                月別トレンド（チーム平均・1件あたり移動コスト / 全社交通費）
+              </h2>
+              <p className="mt-1 text-xs text-cyan-900/85 dark:text-cyan-200/90">
+                直近6ヶ月＋当月。青系バー: チーム平均の商談1件あたり交通費。グレー: 全社交通費合計（最大比）。
+              </p>
+              <div className="mt-4 space-y-4">
+                {(() => {
+                  const trend = data.sales_efficiency!.monthly_trend!;
+                  const maxT = Math.max(...trend.map((t) => t.team_avg_cost_per_deal_jpy), 1);
+                  const maxTr = Math.max(...trend.map((t) => t.company_transport_jpy), 1);
+                  return trend.map((t) => (
+                    <div key={`${t.year}-${t.month}`}>
+                      <div className="mb-1 flex flex-wrap justify-between gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+                        <span className="font-medium text-zinc-800 dark:text-zinc-200">
+                          {t.year}年{t.month}月
+                        </span>
+                        <span className="tabular-nums">
+                          平均 ¥{t.team_avg_cost_per_deal_jpy.toLocaleString("ja-JP")}/件 · 交通計 ¥
+                          {t.company_transport_jpy.toLocaleString("ja-JP")}
+                          {t.lodging_per_deal_jpy > 0
+                            ? ` · 宿泊/件 約¥${t.lodging_per_deal_jpy.toLocaleString("ja-JP")}`
+                            : ""}
+                        </span>
+                      </div>
+                      <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-200/80 dark:bg-zinc-800">
+                        <div
+                          className="h-full rounded-full bg-cyan-500"
+                          style={{
+                            width: `${Math.min(100, (t.team_avg_cost_per_deal_jpy / maxT) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-900">
+                        <div
+                          className="h-full rounded-full bg-zinc-400/90 dark:bg-zinc-600"
+                          style={{
+                            width: `${Math.min(100, (t.company_transport_jpy / maxTr) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
             </section>
           ) : null}
 

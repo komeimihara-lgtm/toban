@@ -82,6 +82,8 @@ export default async function AppGroupLayout({
   let showMyIncentiveNav = false;
   let showEmployeeOnboardingNav = false;
   let tenantName: string | null = null;
+  let dashboardHref = "/my";
+  let expensesListHref = "/my/expenses";
 
   if (isSupabaseConfigured()) {
     try {
@@ -117,6 +119,10 @@ export default async function AppGroupLayout({
 
         const role = (profile as { role?: string } | null)?.role ?? "staff";
         showAdminSection = isAdminRole(role);
+        if (showAdminSection) {
+          dashboardHref = "/";
+          expensesListHref = "/expenses";
+        }
 
         const p = profile as ProfileRow | null;
         const { data: empIncentive } = await supabase
@@ -172,8 +178,10 @@ export default async function AppGroupLayout({
         showEmployeeOnboardingNav={showEmployeeOnboardingNav}
         approvalBadgeCount={approvalBadgeCount}
         incentiveDraftBadgeCount={incentiveDraftBadgeCount}
+        dashboardHref={dashboardHref}
+        expensesListHref={expensesListHref}
       />
-      <main className="print-full min-h-0 min-w-0 flex-1 overflow-auto p-6 md:p-10">
+      <main className="print-full text-foreground min-h-0 min-w-0 flex-1 overflow-auto p-6 md:p-10">
         {children}
       </main>
     </div>

@@ -4,7 +4,7 @@ import {
   appendExtendedCategoryRules,
   appendSalesLinkedRules,
 } from "@/lib/expense-audit-extra";
-import { fetchTransitDurationSeconds } from "@/lib/expense-audit-google";
+import { fetchTransitRouteInsight } from "@/lib/expense-audit-google";
 import type { ExpenseAuditInput, ExpenseAuditIssue } from "@/types/expense-audit";
 
 export type { ExpenseAuditInput } from "@/types/expense-audit";
@@ -56,7 +56,7 @@ export async function runExpenseAuditRules(
     issues.push({
       type: "purpose_short",
       severity: "warning",
-      message: "用途の説明が不十分です。確認事項として詳細を記載してください。",
+      message: "用途の説明が不十分です。詳細を記載してください（確認事項）。",
     });
   }
 
@@ -112,14 +112,18 @@ export async function runExpenseAuditRules(
   const from = String(input.from_location ?? "").trim();
   const to = String(input.to_location ?? "").trim();
   if (from && to && isTransportCategory(category) && amount > 0) {
-    const sec = await fetchTransitDurationSeconds(from, to);
-    if (sec != null && sec <= 30 * 60) {
+    const insight = await fetchTransitRouteInsight(from, to);
+    if (insight != null && insight.durationSec <= 30 * 60) {
       const trainEst = 500;
       const saving = Math.max(0, Math.round(amount - trainEst));
+      const km =
+        insight.distanceM > 0
+          ? (insight.distanceM / 1000).toFixed(1)
+          : "—";
       issues.push({
         type: "transit_preferred",
         severity: "warning",
-        message: `公共交通機関利用を推奨します（所要おおよそ ${Math.round(sec / 60)} 分以内の想定）。`,
+        message: `公共交通機関利用を推奨します（Google Maps の公共交通で所要おおよそ ${Math.round(insight.durationSec / 60)} 分・路線距離おおよそ ${km} km）。節約額: ¥${saving.toLocaleString("ja-JP")}（確認事項）。`,
         saving_amount: saving,
       });
     }
@@ -132,16 +136,12 @@ export async function runExpenseAuditRules(
         type: "entertainment_attendees",
         severity: "error",
         message:
-          "参加者の記載がありません。接待交際費の場合は必須です（確認事項）。",
+          "参加者の記載がありません。接待費の場合は必須です（確認事項）。",
       });
     } else {
       const per = amount / n;
       if (per < 5000) {
-        issues.push({
-          type: "entertainment_per_head",
-          severity: "info",
-          message: `1人あたり約 ¥${Math.round(per).toLocaleString("ja-JP")} であり、承認観点では大きな懸念は少ない想定です。`,
-        });
+        /* 承認推奨帯 — 確認事項は出さない */
       } else if (per < 15000) {
         issues.push({
           type: "entertainment_per_head",
@@ -189,23 +189,24 @@ export async function runExpenseAuditRules(
       const prevY = mo === 1 ? y - 1 : y;
       const pad = (n: number) => String(n).padStart(2, "0");
       const end = (yy: number, mm: number) => lastDay(yy, mm);
-      const transportCategories = ["交通費", "出張費（交通）"];
       const sumRange = async (yy: number, mm: number) => {
         const { data } = await supabase
           .from("expenses")
-          .select("amount")
+          .select("amount, category")
           .eq("submitter_id", submitterId)
           .eq("company_id", companyId)
-          .in("category", transportCategories)
           .gte("paid_date", `${yy}-${pad(mm)}-01`)
           .lte(
             "paid_date",
             `${yy}-${pad(mm)}-${String(end(yy, mm)).padStart(2, "0")}`,
           );
-        return (data ?? []).reduce(
-          (a, r) => a + Number((r as { amount: number }).amount),
-          0,
-        );
+        return (data ?? []).reduce((a, r) => {
+          const row = r as { amount: number; category: string };
+          if (isTransportCategory(String(row.category ?? ""))) {
+            return a + Number(row.amount);
+          }
+          return a;
+        }, 0);
       };
       const cur = await sumRange(y, mo);
       const prev = await sumRange(prevY, prevM);

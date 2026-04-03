@@ -282,7 +282,7 @@ export default async function MyHomePage() {
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
           マイページ
         </h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
           個人ダッシュボード — 自分のデータのみ表示されます
         </p>
       </div>
@@ -294,15 +294,17 @@ export default async function MyHomePage() {
       <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-sm font-medium text-zinc-500">今日の打刻</h2>
+            <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              今日の打刻
+            </h2>
             <p className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
               {punchStatus.label}
             </p>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">{punchStatus.detail}</p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-300">{punchStatus.detail}</p>
           </div>
           <Link
             href="/my/attendance"
-            className="shrink-0 text-sm font-medium text-blue-600 underline dark:text-blue-400"
+            className="shrink-0 text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
           >
             勤怠へ →
           </Link>
@@ -314,96 +316,121 @@ export default async function MyHomePage() {
 
       <section className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <h2 className="text-sm font-medium text-zinc-500">有給残日数・次回付与日</h2>
-          <p className="mt-2 text-2xl font-semibold tabular-nums">
+          <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            有給残日数・次回付与日
+          </h2>
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
             {(leaveBal as { days_remaining?: number } | null)?.days_remaining ?? "—"}
-            <span className="ml-1 text-base font-normal text-zinc-500">日</span>
+            <span className="ml-1 text-base font-normal text-zinc-600 dark:text-zinc-400">
+              日
+            </span>
           </p>
-          <p className="mt-2 text-xs text-zinc-500">
+          <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-300">
             次回付与日:{" "}
             {(leaveBal as { next_accrual_date?: string } | null)?.next_accrual_date ?? "—"}
             {((leaveBal as { next_accrual_days?: number } | null)?.next_accrual_days != null) &&
               `（${(leaveBal as { next_accrual_days: number }).next_accrual_days}日）`}
           </p>
-          <Link href="/my/leave" className="mt-3 inline-block text-sm text-blue-600 underline">
+          <Link
+            href="/my/leave"
+            className="mt-3 inline-block text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+          >
             有給・休暇の詳細 →
           </Link>
         </div>
         <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <h2 className="text-sm font-medium text-zinc-500">今月の承認待ち経費</h2>
-          <p className="mt-2 text-lg font-semibold tabular-nums">
+          <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            今月の承認待ち経費
+          </h2>
+          <p className="mt-2 text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
             {pendingCount} 件 · {yen(pendingSum)}
           </p>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
             第1・最終承認待ち・今月申請分（下書きは含みません）
           </p>
-          <Link href="/my/expenses" className="mt-3 inline-block text-sm text-blue-600 underline">
+          <Link
+            href="/my/expenses"
+            className="mt-3 inline-block text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+          >
             経費一覧へ
           </Link>
         </div>
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-sm font-medium text-zinc-500">
+        <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
           {payslipIsCurrentMonth ? "今月の給与明細（サマリー）" : "給与明細サマリー（直近）"}
         </h2>
         {!payslipIsCurrentMonth && psRow ? (
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
             今月分は未同期のため、最新の明細を表示しています。
           </p>
         ) : null}
         {psRow ? (
           <>
-            <p className="mt-2 text-lg font-semibold tabular-nums">
+            <p className="mt-2 text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
               手取り{" "}
               {psRow.net_payment != null ? yen(psRow.net_payment) : "—"}
-              <span className="ml-2 text-sm font-normal text-zinc-500">
+              <span className="ml-2 text-sm font-normal text-zinc-600 dark:text-zinc-400">
                 {psRow.year}年{psRow.month}月分
               </span>
             </p>
             {psRow.pay_date && (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">
                 支払日 <span className="tabular-nums">{psRow.pay_date}</span>
               </p>
             )}
           </>
         ) : (
-          <p className="mt-2 text-sm text-zinc-500">まだ同期された明細がありません。</p>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+            まだ同期された明細がありません。
+          </p>
         )}
-        <Link href="/my/payslip" className="mt-3 inline-block text-sm text-blue-600 underline">
+        <Link
+          href="/my/payslip"
+          className="mt-3 inline-block text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+        >
           給与明細の詳細へ
         </Link>
       </section>
 
       {incentivePreview != null && p && elig(p) && (
         <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-          <h2 className="text-sm font-medium text-zinc-500">今月のインセンティブ試算（案件）</h2>
+          <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            今月のインセンティブ試算（案件）
+          </h2>
           <p className="mt-2 text-lg font-semibold text-emerald-700 dark:text-emerald-400">
             {incentivePreview}
           </p>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
             差戻し案件を除き、あなたのアポ・クローズ分の合計です。
           </p>
-          <Link href="/my/incentive" className="mt-2 inline-block text-sm text-blue-600 underline">
+          <Link
+            href="/my/incentive"
+            className="mt-2 inline-block text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+          >
             入力・履歴へ
           </Link>
         </section>
       )}
 
       <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-sm font-medium text-zinc-500">お知らせ</h2>
+        <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">お知らせ</h2>
         {notices.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
             直近の承認・差戻し・有給付与の通知はありません。
           </p>
         ) : (
           <ul className="mt-3 space-y-2 text-sm text-zinc-800 dark:text-zinc-200">
             {notices.map((n, i) => (
               <li key={`${n.at}-${i}`}>
-                <Link href={n.href} className="text-blue-600 underline hover:no-underline dark:text-blue-400">
+                <Link
+                  href={n.href}
+                  className="font-medium text-blue-600 underline underline-offset-2 hover:no-underline hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                >
                   {n.text}
                 </Link>
-                <span className="ml-2 tabular-nums text-xs text-zinc-500">
+                <span className="ml-2 tabular-nums text-xs text-zinc-600 dark:text-zinc-400">
                   {new Date(n.at).toLocaleString("ja-JP", {
                     timeZone: "Asia/Tokyo",
                     month: "numeric",
@@ -419,29 +446,36 @@ export default async function MyHomePage() {
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-sm font-medium text-zinc-500">今月の勤務時間サマリー</h2>
-        <p className="mt-2 text-xs text-zinc-500">
+        <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+          今月の勤務時間サマリー
+        </h2>
+        <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-300">
           {yMonth}年{mMonth}月 · 出勤のあった日数と打刻から算出した労働時間（休憩控除後）
         </p>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
           <div>
-            <dt className="text-xs text-zinc-500">出勤日数</dt>
-            <dd className="text-lg font-semibold tabular-nums">{monthSummary.workDays} 日</dd>
+            <dt className="text-xs text-zinc-600 dark:text-zinc-400">出勤日数</dt>
+            <dd className="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+              {monthSummary.workDays} 日
+            </dd>
           </div>
           <div>
-            <dt className="text-xs text-zinc-500">総労働時間</dt>
-            <dd className="text-lg font-semibold tabular-nums">
+            <dt className="text-xs text-zinc-600 dark:text-zinc-400">総労働時間</dt>
+            <dd className="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
               {fmtHM(monthSummary.totalWorkMinutes)}
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-zinc-500">超過（8h/日基準）</dt>
+            <dt className="text-xs text-zinc-600 dark:text-zinc-400">超過（8h/日基準）</dt>
             <dd className="text-lg font-semibold tabular-nums text-amber-800 dark:text-amber-300">
               {fmtHM(monthSummary.overtimeMinutes)}
             </dd>
           </div>
         </dl>
-        <Link href="/my/attendance" className="mt-3 inline-block text-sm text-blue-600 underline">
+        <Link
+          href="/my/attendance"
+          className="mt-3 inline-block text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+        >
           勤怠の詳細へ
         </Link>
       </section>
@@ -453,7 +487,9 @@ export default async function MyHomePage() {
         >
           ✦ AI人事チャットを開く
         </Link>
-        <p className="mt-2 text-xs text-zinc-500">規程・手続きの案内にご利用ください</p>
+        <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+          規程・手続きの案内にご利用ください
+        </p>
       </div>
     </div>
   );

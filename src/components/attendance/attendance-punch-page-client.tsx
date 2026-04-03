@@ -10,6 +10,7 @@ import {
   punchTypeLabel,
 } from "@/lib/attendance-summary";
 import type { AttendancePunchType } from "@/types";
+import { LargePunchActionTiles } from "@/components/attendance/large-punch-tiles";
 import { MapPin, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -190,23 +191,12 @@ export function AttendancePunchPageClient({
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
           打刻
         </h2>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => onPunch("clock_in")}
-            className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-          >
-            出勤
-          </button>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => onPunch("clock_out")}
-            className="rounded-lg bg-zinc-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-600"
-          >
-            退勤
-          </button>
+        <div className="mt-4">
+          <LargePunchActionTiles
+            pending={pending}
+            onClockIn={() => onPunch("clock_in")}
+            onClockOut={() => onPunch("clock_out")}
+          />
         </div>
 
         <div className="mt-5 rounded-lg border border-blue-200 bg-blue-50/90 px-4 py-3 text-sm text-blue-950 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-100">

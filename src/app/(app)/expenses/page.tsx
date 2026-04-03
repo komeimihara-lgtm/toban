@@ -40,7 +40,7 @@ export default async function ExpensesListPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-2xl font-semibold">経費・申請一覧</h1>
         <Link
-          href="/my/expenses/new"
+          href="/expenses/new"
           className="text-sm font-medium text-emerald-700 underline dark:text-emerald-400"
         >
           新規申請

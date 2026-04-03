@@ -209,15 +209,15 @@ export function PayslipPortal() {
       {data && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_1fr]">
           <div className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="bg-zinc-900 px-5 py-4 text-white dark:bg-zinc-950">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">
+            <div className="bg-zinc-900 px-5 py-4 text-white">
+              <p className="text-[10px] uppercase tracking-wider text-zinc-400">
                 LENARD
               </p>
-              <p className="mt-1 text-lg font-light">
+              <p className="mt-1 text-lg font-light text-white">
                 {data.year}年{data.month}月分
               </p>
               {data.payroll?.pay_date && (
-                <p className="mt-2 text-xs text-zinc-400">
+                <p className="mt-2 text-xs text-zinc-300">
                   支給日 {data.payroll.pay_date}
                 </p>
               )}

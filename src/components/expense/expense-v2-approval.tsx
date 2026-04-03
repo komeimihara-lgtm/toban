@@ -36,7 +36,6 @@ export function ExpenseV2Approval({
   const [rejectModalFor, setRejectModalFor] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
-  const [auditDetailFor, setAuditDetailFor] = useState<string | null>(null);
   const [auditBusy, setAuditBusy] = useState<string | null>(null);
 
   async function approve(id: string, action: "step1" | "step2") {
@@ -202,7 +201,7 @@ export function ExpenseV2Approval({
                   {auditBusy === row.id ? "審査中…" : "AI審査を更新"}
                 </button>
               </div>
-              {ar && ar.issues.length > 0 && (
+              {ar && ar.issues.length > 0 ? (
                 <details className="mb-3 rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-zinc-900/50">
                   <summary className="cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300">
                     確認事項（{ar.issues.length} 件）
@@ -230,33 +229,30 @@ export function ExpenseV2Approval({
                     ))}
                   </ul>
                 </details>
-              )}
-              <button
-                type="button"
-                onClick={() =>
-                  setAuditDetailFor((v) => (v === row.id ? null : row.id))
-                }
-                className="mb-3 text-xs font-medium text-violet-700 underline dark:text-violet-400"
-              >
-                {auditDetailFor === row.id
-                  ? "AIの審査詳細を閉じる"
-                  : "AIの審査詳細を見る"}
-              </button>
-              {auditDetailFor === row.id && ar && (
-                <div className="mb-4 rounded-lg border border-violet-200 bg-violet-50/60 p-3 text-sm dark:border-violet-900 dark:bg-violet-950/40">
-                  <p className="font-medium text-violet-950 dark:text-violet-100">
+              ) : null}
+              {ar ? (
+                <details className="mb-4 rounded-lg border border-violet-200 bg-violet-50/60 p-3 text-sm dark:border-violet-900 dark:bg-violet-950/40">
+                  <summary className="cursor-pointer text-xs font-medium text-violet-800 dark:text-violet-200">
+                    AIの審査詳細を見る（サマリー・改善提案）
+                  </summary>
+                  <p className="mt-2 font-medium text-violet-950 dark:text-violet-100">
                     サマリー
                   </p>
                   <p className="mt-1 text-violet-900 dark:text-violet-200">{ar.summary}</p>
-                  {ar.suggestions.length > 0 && (
-                    <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-violet-900 dark:text-violet-200">
-                      {ar.suggestions.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
+                  {ar.suggestions.length > 0 ? (
+                    <>
+                      <p className="mt-3 text-xs font-medium text-violet-950 dark:text-violet-100">
+                        改善提案
+                      </p>
+                      <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-violet-900 dark:text-violet-200">
+                        {ar.suggestions.map((s, i) => (
+                          <li key={i}>{s}</li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : null}
+                </details>
+              ) : null}
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-1">
                 <div className="flex flex-wrap items-center gap-1 text-xs">
                   <span className="rounded-full bg-zinc-200 px-2.5 py-1 font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">

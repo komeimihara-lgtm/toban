@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdminRole } from "@/types/incentive";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -15,20 +14,26 @@ export default async function SettingsHrPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, company_id")
     .eq("id", user.id)
     .maybeSingle();
-  if (!isAdminRole((profile as { role?: string } | null)?.role ?? "")) {
+  const pr = profile as { role?: string; company_id?: string } | null;
+  if (!isAdminRole(pr?.role ?? "") || !pr?.company_id) {
     redirect("/my");
   }
+  const companyId = pr.company_id;
 
-  const admin = createAdminClient();
-  const { data: departments } = await admin.from("departments").select("id, name").order("name");
-  const { data: employees } = await admin
+  const { data: departments } = await supabase
+    .from("departments")
+    .select("id, name, incentive_enabled")
+    .eq("company_id", companyId)
+    .order("name");
+  const { data: employees } = await supabase
     .from("profiles")
     .select(
       "id, full_name, role, department_id, is_sales_target, is_service_target, is_contract, is_part_time",
     )
+    .eq("company_id", companyId)
     .order("full_name", { ascending: true });
 
   const deptName = new Map(
@@ -43,24 +48,37 @@ export default async function SettingsHrPage() {
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">HR 設定（STEP3）</h1>
         <p className="mt-1 text-sm text-zinc-600">
-          従業員フラグの更新は{" "}
-          <code className="rounded bg-zinc-100 px-1 text-xs dark:bg-zinc-800">PATCH /api/settings/employees</code>、
-          率は{" "}
-          <code className="rounded bg-zinc-100 px-1 text-xs dark:bg-zinc-800">
-            POST /api/settings/incentive-rates
-          </code>{" "}
-          を利用してください。
+          表示は自社テナント（<code className="text-xs">{companyId}</code>
+          ）のみです。インセンティブ対象部門の切替は{" "}
+          <Link href="/settings/tenant" className="underline">
+            会社・テナント設定
+          </Link>
+          から行えます。
         </p>
       </div>
 
       <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
         <h2 className="text-sm font-medium text-zinc-500">部門</h2>
-        <ul className="mt-2 text-sm">
-          {(departments ?? []).map((d) => (
-            <li key={(d as { id: string }).id}>
-              {(d as { name: string }).name}
-            </li>
-          ))}
+        <ul className="mt-2 space-y-1 text-sm">
+          {(departments ?? []).map((d) => {
+            const row = d as {
+              id: string;
+              name: string;
+              incentive_enabled: boolean;
+            };
+            return (
+              <li key={row.id}>
+                {row.name}
+                {row.incentive_enabled ? (
+                  <span className="ml-2 text-xs text-emerald-700 dark:text-emerald-400">
+                    インセンティブ対象
+                  </span>
+                ) : (
+                  <span className="ml-2 text-xs text-zinc-500">対象外</span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </section>
 

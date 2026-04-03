@@ -490,24 +490,24 @@ export default async function EmployeeDetailPage({
                         name="route_name"
                         defaultValue={String(cm.route_name ?? "")}
                         placeholder="経路名"
-                        className="rounded border px-2 py-1 dark:bg-zinc-900"
+                        className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                       />
                       <input
                         name="from_station"
                         defaultValue={String(cm.from_station ?? "")}
                         placeholder="出発"
-                        className="rounded border px-2 py-1 dark:bg-zinc-900"
+                        className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                       />
                       <input
                         name="to_station"
                         defaultValue={String(cm.to_station ?? "")}
                         placeholder="到着"
-                        className="rounded border px-2 py-1 dark:bg-zinc-900"
+                        className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                       />
                       <select
                         name="transportation"
                         defaultValue={String(cm.transportation ?? "train")}
-                        className="rounded border px-2 py-1 dark:bg-zinc-900"
+                        className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                       >
                         {TRANSPORT.map(([v, l]) => (
                           <option key={v} value={v}>
@@ -519,12 +519,12 @@ export default async function EmployeeDetailPage({
                         type="number"
                         name="monthly_amount"
                         defaultValue={String(cm.monthly_amount ?? 0)}
-                        className="rounded border px-2 py-1 dark:bg-zinc-900"
+                        className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                       />
                       <select
                         name="ticket_type"
                         defaultValue={String(cm.ticket_type ?? "monthly")}
-                        className="rounded border px-2 py-1 dark:bg-zinc-900"
+                        className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                       >
                         {TICKET.map(([v, l]) => (
                           <option key={v} value={v}>
@@ -536,13 +536,13 @@ export default async function EmployeeDetailPage({
                         type="date"
                         name="valid_from"
                         defaultValue={String(cm.valid_from ?? "")}
-                        className="rounded border px-2 py-1 dark:bg-zinc-900"
+                        className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                       />
                       <input
                         type="date"
                         name="valid_to"
                         defaultValue={String(cm.valid_to ?? "")}
-                        className="rounded border px-2 py-1 dark:bg-zinc-900"
+                        className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                       />
                       <label className="flex items-center gap-2 sm:col-span-2">
                         <input
@@ -589,22 +589,22 @@ export default async function EmployeeDetailPage({
               <input
                 name="route_name"
                 placeholder="経路名"
-                className="rounded border px-2 py-1 dark:bg-zinc-900"
+                className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
               <input
                 name="from_station"
                 placeholder="出発"
-                className="rounded border px-2 py-1 dark:bg-zinc-900"
+                className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
               <input
                 name="to_station"
                 placeholder="到着"
-                className="rounded border px-2 py-1 dark:bg-zinc-900"
+                className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
               <select
                 name="transportation"
                 defaultValue="train"
-                className="rounded border px-2 py-1 dark:bg-zinc-900"
+                className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               >
                 {TRANSPORT.map(([v, l]) => (
                   <option key={v} value={v}>
@@ -616,12 +616,12 @@ export default async function EmployeeDetailPage({
                 type="number"
                 name="monthly_amount"
                 placeholder="月額"
-                className="rounded border px-2 py-1 dark:bg-zinc-900"
+                className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
               <select
                 name="ticket_type"
                 defaultValue="monthly"
-                className="rounded border px-2 py-1 dark:bg-zinc-900"
+                className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               >
                 {TICKET.map(([v, l]) => (
                   <option key={v} value={v}>
@@ -632,12 +632,12 @@ export default async function EmployeeDetailPage({
               <input
                 type="date"
                 name="valid_from"
-                className="rounded border px-2 py-1 dark:bg-zinc-900"
+                className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
               <input
                 type="date"
                 name="valid_to"
-                className="rounded border px-2 py-1 dark:bg-zinc-900"
+                className="rounded border border-zinc-300 bg-white px-2 py-1 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
               <label className="flex items-center gap-2 sm:col-span-2">
                 <input type="checkbox" name="is_active" value="on" defaultChecked />

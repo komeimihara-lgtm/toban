@@ -19,7 +19,8 @@ export async function GET() {
       .from("profiles")
       .select(
         "id, full_name, role, department_id, is_sales_target, is_service_target, is_contract, is_part_time, line_user_id",
-      );
+      )
+      .eq("company_id", profile.company_id);
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -83,6 +84,18 @@ export async function PATCH(req: Request) {
     }
 
     const admin = createAdminClient();
+    const { data: targetProf, error: tgtErr } = await admin
+      .from("profiles")
+      .select("company_id")
+      .eq("id", targetId)
+      .maybeSingle();
+    if (tgtErr || !targetProf) {
+      return NextResponse.json({ error: "対象ユーザーが見つかりません" }, { status: 404 });
+    }
+    if ((targetProf as { company_id: string }).company_id !== me.company_id) {
+      return NextResponse.json({ error: "他社のユーザーは更新できません" }, { status: 403 });
+    }
+
     const { error } = await admin.from("profiles").update(patch).eq("id", targetId);
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -99,7 +112,8 @@ export async function PATCH(req: Request) {
       const { error: empErr } = await admin
         .from("employees")
         .update(empPatch)
-        .eq("user_id", targetId);
+        .eq("user_id", targetId)
+        .eq("company_id", me.company_id);
       if (empErr) {
         return NextResponse.json({ error: empErr.message }, { status: 500 });
       }

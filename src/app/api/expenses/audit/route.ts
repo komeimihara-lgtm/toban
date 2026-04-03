@@ -1,27 +1,23 @@
+/**
+ * POST JSON: { expense_id?: string, expense_data?: Partial<ExpenseAuditInput>, persist?: boolean }
+ * - expense_id: DB の行を読み取り審査（persist 既定 true で audit_* 列を更新）
+ * - expense_data: 下書きプレビュー用（category, amount, paid_date 必須。persist は無視）
+ * レスポンス: { verdict, score, issues, summary, suggestions }
+ */
 import { getProfile, getSessionUser } from "@/lib/api-auth";
 import { claudeExpenseAuditNarrative } from "@/lib/expense-audit-claude";
+import { enrichInputFromLinkedActivityReports } from "@/lib/expense-audit-sales-enrich";
 import {
   runExpenseAuditRules,
   scoreFromIssues,
   verdictFromScore,
 } from "@/lib/expense-audit-rules";
+import { getProfileSalesTargetFlag, resolveIsSalesTarget } from "@/lib/employee-sales-target";
 import type { ExpenseAuditInput, ExpenseAuditResult } from "@/types/expense-audit";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 export const maxDuration = 120;
-
-async function fetchIsSalesTarget(
-  supabase: SupabaseClient,
-  submitterId: string,
-): Promise<boolean> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("is_sales_target")
-    .eq("id", submitterId)
-    .maybeSingle();
-  return Boolean((data as { is_sales_target?: boolean } | null)?.is_sales_target);
-}
 
 function numFromUnknown(v: unknown): number | null {
   if (v == null || v === "") return null;
@@ -130,10 +126,13 @@ export async function POST(req: Request) {
       }
 
       mergeExpenseDataOverrides(input, body.expense_data);
-      input.is_sales_target = await fetchIsSalesTarget(
+      const submitterId = String(e.submitter_id);
+      input.is_sales_target = await resolveIsSalesTarget(
         supabase,
-        String(e.submitter_id),
+        submitterId,
+        await getProfileSalesTargetFlag(supabase, submitterId),
       );
+      await enrichInputFromLinkedActivityReports(supabase, input);
     } else if (body.expense_data) {
       const d = body.expense_data;
       input = {
@@ -151,9 +150,14 @@ export async function POST(req: Request) {
         receipt_url: d.receipt_url != null ? String(d.receipt_url) : null,
         ride_hour_local: d.ride_hour_local ?? null,
         created_at: d.created_at != null ? String(d.created_at) : null,
-        is_sales_target: profile.is_sales_target,
       };
       mergeExpenseDataOverrides(input, d);
+      input.is_sales_target = await resolveIsSalesTarget(
+        supabase,
+        user.id,
+        Boolean(profile.is_sales_target),
+      );
+      await enrichInputFromLinkedActivityReports(supabase, input);
       if (
         !input.category ||
         !Number.isFinite(input.amount) ||
@@ -187,6 +191,7 @@ export async function POST(req: Request) {
         from: input.from_location,
         to: input.to_location,
         is_sales_target: input.is_sales_target,
+        needs_ai_parse: issues.some((i) => Boolean(i.needs_ai_parse)),
         activity: {
           visit_count: input.activity_visit_count,
           meeting_count: input.activity_meeting_count,

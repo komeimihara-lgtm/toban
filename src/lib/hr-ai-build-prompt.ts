@@ -33,10 +33,12 @@ export async function buildHrAiSystemPrompt(
 
   const { data: company } = await supabase
     .from("companies")
-    .select("name")
+    .select("name, settings")
     .eq("id", p.company_id)
     .maybeSingle();
   const companyName = (company as { name?: string } | null)?.name ?? "御社";
+  const rawSettingsEarly = (company as { settings?: Record<string, unknown> } | null)
+    ?.settings;
 
   const { data: leaveRow } = await supabase
     .from("paid_leave_balances")
@@ -93,12 +95,33 @@ export async function buildHrAiSystemPrompt(
     const s = (row as { status: string }).status;
     byStatus[s] = (byStatus[s] ?? 0) + 1;
   }
+  const recentExpenseLines = (expRows ?? []).slice(0, 6).map((row) => {
+    const x = row as { status: string; amount: number; category: string; paid_date: string };
+    return `${x.paid_date} / ${x.category} / ${x.status} / ¥${Number(x.amount).toLocaleString("ja-JP")}`;
+  });
   const expensesSummary =
     Object.keys(byStatus).length === 0
       ? "新・経費（expenses）: 該当なし"
       : `新・経費（expenses）ステータス件数: ${Object.entries(byStatus)
           .map(([k, v]) => `${k}=${v}件`)
-          .join(", ")}`;
+          .join(", ")}。直近の申請（最大6件）: ${recentExpenseLines.join(" ／ ")}`;
+
+  const hrFromSettings = rawSettingsEarly?.hr_documents;
+  let settingsHrDocBlock = "";
+  if (Array.isArray(hrFromSettings)) {
+    settingsHrDocBlock = hrFromSettings
+      .map((item, i) => {
+        if (!item || typeof item !== "object") return "";
+        const o = item as Record<string, unknown>;
+        const title = o.title != null ? String(o.title) : `文書${i + 1}`;
+        const content = o.content != null ? String(o.content) : "";
+        return `【settings.${title}】\n${content}`;
+      })
+      .filter(Boolean)
+      .join("\n\n---\n\n");
+  } else if (typeof hrFromSettings === "string" && hrFromSettings.trim()) {
+    settingsHrDocBlock = `【companies.settings.hr_documents（テキスト）】\n${hrFromSettings.trim()}`;
+  }
 
   const { data: legacyPending } = await supabase
     .from("expense_claims")
@@ -142,10 +165,15 @@ export async function buildHrAiSystemPrompt(
       ? "管理本部の千葉さんに確認してください"
       : "貴社の人事・管理本部に確認してください";
 
+  const settingsSupplement =
+    settingsHrDocBlock.trim().length > 0
+      ? `\n\n【company_settings 由来の hr_documents（補足）】\n${settingsHrDocBlock}`
+      : "";
+
   return `あなたは${companyName}の専任AI人事アシスタントです。
 以下のことができます:
 1. 有給残日数・取得状況の確認と回答
-2. 雇用契約・就業規則の案内（下記「社内文書」に基づく。実際の契約・規程の優先）
+2. 雇用契約・就業規則の案内（下記「社内文書」および company_settings.hr_documents の補足に基づく。実際の契約・規程の優先）
 3. 評価制度の説明と評価を上げるためのアドバイス
 4. キャリア相談・進路相談
 5. 悩み相談（傾聴・アドバイス）
@@ -162,10 +190,11 @@ export async function buildHrAiSystemPrompt(
 - 経費（旧フォーム）: ${legacyLines}
 
 【社内文書（参照用・ダミー含む可能性あり）】
-${docBlocks || "（文書が未登録です。一般的な労働法知識で案内し、確約は避けてください）"}
+${docBlocks || "（文書が未登録です。一般的な労働法知識で案内し、確約は避けてください）"}${settingsSupplement}
 
 【厳守事項】
 - 個人情報・他従業員の情報は開示しない。ユーザー本人の文脈内に留める。
+- 答えられないこと・確約できないことは「${contactHint}」と案内する。
 - 法律・税務・確定した労務判断が必要な質問は、${contactHint}。
 - 文書と矛盾する場合は必ず人事確認を促す。
 応答は丁寧な日本語で、簡潔に。`;

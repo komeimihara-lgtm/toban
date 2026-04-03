@@ -1,5 +1,6 @@
 import { getProfile, getSessionUser } from "@/lib/api-auth";
 import { fetchCompanyContext } from "@/lib/company-context";
+import { resolveIsSalesTarget } from "@/lib/employee-sales-target";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -16,9 +17,15 @@ export async function GET() {
     if (!ctx) {
       return NextResponse.json({ error: "会社情報の取得に失敗しました" }, { status: 500 });
     }
+    const isSales = await resolveIsSalesTarget(
+      supabase,
+      user.id,
+      profile.is_sales_target,
+    );
     return NextResponse.json({
+      company_id: profile.company_id,
       ...ctx,
-      viewer: { is_sales_target: profile.is_sales_target },
+      viewer: { is_sales_target: isSales },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "error";

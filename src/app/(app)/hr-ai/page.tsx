@@ -1,21 +1,42 @@
+import { normalizeHrConversationHistory } from "@/lib/hr-ai-messages";
+import { HrAiClient } from "@/app/(app)/hr-ai/hr-ai-client";
+import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/env";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
-/** エントリは /hr-ai。本体は /my/hr-ai（クエリを引き継ぐ） */
-export default async function HrAiLegacyRedirectPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = await searchParams;
-  const q = new URLSearchParams();
-  for (const [key, val] of Object.entries(sp)) {
-    if (val == null) continue;
-    if (Array.isArray(val)) {
-      for (const v of val) q.append(key, v);
-    } else {
-      q.set(key, val);
-    }
+export const dynamic = "force-dynamic";
+
+export default async function HrAiPage() {
+  if (!isSupabaseConfigured()) {
+    return <p className="text-sm text-zinc-500">Supabase を設定してください。</p>;
   }
-  const suffix = q.toString() ? `?${q.toString()}` : "";
-  redirect(`/my/hr-ai${suffix}`);
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: conv } = await supabase
+    .from("hr_conversations")
+    .select("id, messages")
+    .eq("employee_id", user.id)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const convRow = conv as { id: string; messages: unknown } | null;
+  const initialMessages = convRow
+    ? normalizeHrConversationHistory(convRow.messages)
+    : [];
+
+  return (
+    <Suspense fallback={<p className="text-sm text-zinc-500">読み込み中…</p>}>
+      <HrAiClient
+        hrInitialConversationId={convRow?.id ?? null}
+        hrInitialMessages={initialMessages}
+      />
+    </Suspense>
+  );
 }

@@ -122,10 +122,14 @@ export function ExpenseApiForm() {
           setAuditLoading(true);
           try {
             const act = readActivityFields(fd);
+            const rideRaw = String(fd.get("ride_hour_local") ?? "").trim();
+            const rideN =
+              rideRaw === "" ? null : Math.max(0, Math.min(23, Math.floor(Number(rideRaw))));
             const res = await fetch("/api/expenses/audit", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
+                persist: false,
                 expense_data: {
                   type: TYPE_MAP[kind] ?? "expense",
                   category,
@@ -137,7 +141,8 @@ export function ExpenseApiForm() {
                   from_location: fd.get("from_location") || null,
                   to_location: fd.get("to_location") || null,
                   receipt_url: null,
-                  ride_hour_local: new Date().getHours(),
+                  ride_hour_local:
+                    rideN != null && Number.isFinite(rideN) ? rideN : null,
                   ...act,
                 },
               }),
@@ -195,6 +200,11 @@ export function ExpenseApiForm() {
     const fd = new FormData(form);
     try {
       const act = readActivityFields(fd);
+      const rideSubmitRaw = String(fd.get("ride_hour_local") ?? "").trim();
+      const rideSubmit =
+        rideSubmitRaw === ""
+          ? undefined
+          : Math.max(0, Math.min(23, Math.floor(Number(rideSubmitRaw))));
       const body = {
         type: TYPE_MAP[kind] ?? "expense",
         category: fd.get("category"),
@@ -206,6 +216,9 @@ export function ExpenseApiForm() {
         from_location: fd.get("from_location") || null,
         to_location: fd.get("to_location") || null,
         submit,
+        ...(rideSubmit != null && Number.isFinite(rideSubmit)
+          ? { ride_hour_local: rideSubmit }
+          : {}),
         ...(isSalesTarget &&
         isTravelishCategory(String(fd.get("category") ?? ""))
           ? act
@@ -320,7 +333,7 @@ export function ExpenseApiForm() {
           <button
             type="button"
             onClick={() => fileCameraRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
           >
             <Camera className="size-4" aria-hidden />
             カメラで撮影
@@ -328,7 +341,7 @@ export function ExpenseApiForm() {
           <button
             type="button"
             onClick={() => filePickRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
           >
             <Upload className="size-4" aria-hidden />
             ファイルを選択
@@ -442,6 +455,23 @@ export function ExpenseApiForm() {
             />
           </label>
         </div>
+
+        <label className="block text-sm">
+          <span className="font-medium">タクシー等の利用時刻（任意・0〜23）</span>
+          <input
+            name="ride_hour_local"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={23}
+            step={1}
+            placeholder="例: 14（未入力だと時刻に基づくタクシー審査は限定的）"
+            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 tabular-nums dark:border-zinc-700 dark:bg-zinc-900"
+          />
+          <span className="mt-1 block text-xs text-zinc-500">
+            22時以降は深夜帯としてタクシーを寛容判定します。日中の高額タクシーは注意事項になります。
+          </span>
+        </label>
 
         <label className="block text-sm">
           <span className="font-medium">参加者</span>
@@ -559,6 +589,35 @@ export function ExpenseApiForm() {
             {audit && !auditLoading ? (
               <>
                 <p className="mt-2 text-zinc-800 dark:text-zinc-200">{audit.summary}</p>
+                {audit.issues.length > 0 ? (
+                  <details className="mt-3 rounded-lg border border-zinc-200/80 bg-white/50 p-3 dark:border-zinc-600 dark:bg-zinc-900/40">
+                    <summary className="cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                      確認事項（{audit.issues.length} 件）
+                    </summary>
+                    <ul className="mt-2 space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                      {audit.issues.map((iss, i) => (
+                        <li key={`${iss.type}-${i}`}>
+                          <span
+                            className={
+                              iss.severity === "error"
+                                ? "text-red-700 dark:text-red-400"
+                                : iss.severity === "warning"
+                                  ? "text-amber-800 dark:text-amber-300"
+                                  : "text-zinc-600 dark:text-zinc-400"
+                            }
+                          >
+                            [{iss.severity}] {iss.message}
+                          </span>
+                          {iss.saving_amount != null && iss.saving_amount > 0 ? (
+                            <span className="ml-1 text-emerald-700 dark:text-emerald-400">
+                              （節約目安 ¥{iss.saving_amount.toLocaleString("ja-JP")}）
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
                 {audit.suggestions.length > 0 && (
                   <ul className="mt-2 list-disc space-y-1 pl-5 text-zinc-700 dark:text-zinc-300">
                     {audit.suggestions.map((s, i) => (

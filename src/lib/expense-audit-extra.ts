@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { fetchSalesTargetUserIds } from "@/lib/employee-sales-target";
 import {
   hasDealKeywords,
   parseDealCountFromPurpose,
@@ -57,56 +58,51 @@ export async function appendExtendedCategoryRules(
   const category = String(input.category ?? "");
   const paidDate = String(input.paid_date ?? "");
 
-  /* ---------- ホテル・宿泊 ---------- */
+  /* ---------- ホテル・宿泊（1泊単価レンジ） ---------- */
   if (isHotelCategory(category) && amount > 0) {
+    const purposeHasNightsHint = /\d+\s*泊|宿泊|連泊/i.test(purpose);
     let nights = parseNightsFromPurpose(purpose);
     if (nights == null) {
-      nights = Math.max(1, Math.round(amount / 7000));
-      if (!/\d+\s*泊|宿泊|連泊/i.test(purpose)) {
+      nights = Math.max(1, Math.round(amount / 8000));
+      if (!purposeHasNightsHint) {
         issues.push({
           type: "hotel_nights_missing",
           severity: "warning",
-          message:
-            "宿泊日数と出張目的を記載してください（確認事項）。審査では金額から泊数を推定しています。",
+          message: "宿泊日数と出張目的を記載してください（確認事項）。",
         });
       }
     }
-    const perNight = amount / Math.max(1, nights);
-    const refNightCap = 7000 * Math.max(1, nights);
-    const savingTo7kBand = Math.max(0, Math.round(amount - refNightCap));
-    if (perNight <= 7000) {
+    const n = Math.max(1, nights);
+    const perNight = amount / n;
+    const refBiz = 8000;
+    const savingToBizHotel = Math.max(0, Math.round(amount - refBiz * n));
+
+    if (perNight < 8000) {
       issues.push({
         type: "hotel_rate",
         severity: "info",
-        message: `1泊あたり約 ¥${Math.round(perNight).toLocaleString("ja-JP")} です。承認推奨（推奨レンジ・会社目安 ¥6,000〜¥7,000/泊）。`,
+        message: `1泊あたり約 ¥${Math.round(perNight).toLocaleString("ja-JP")} で承認推奨に見えます。`,
       });
-    } else if (perNight <= 8000) {
+    } else if (perNight < 15000) {
       issues.push({
-        type: "hotel_rate",
+        type: "hotel_rate_standard",
         severity: "info",
-        message:
-          "1泊あたりの単価は許容範囲内として承認推奨です（会社目安 ¥6,000〜¥7,000/泊。¥8,000超の場合は理由の記載を推奨）。",
+        message: `1泊あたり約 ¥${Math.round(perNight).toLocaleString("ja-JP")} です。標準的な宿泊費です。`,
       });
-    } else if (perNight <= 12000) {
+    } else if (perNight < 25000) {
       issues.push({
-        type: "hotel_rate_over_recommended",
+        type: "hotel_rate_somewhat_high",
         severity: "warning",
         message:
-          "推奨宿泊費（¥7,000前後、会社目安 ¥6,000〜¥7,000/泊）を超えています。出張規定を確認してください（確認事項）。",
-      });
-    } else if (perNight <= 20000) {
-      issues.push({
-        type: "hotel_rate_high",
-        severity: "warning",
-        message: `高額な宿泊費です。¥7,000台のビジネスホテルに変更した場合の目安: 約 ¥${savingTo7kBand.toLocaleString("ja-JP")} 節約できます（確認事項）。`,
-        saving_amount: savingTo7kBand,
+          "やや高額です。出張規定内か確認してください（確認事項）。",
+        saving_amount: savingToBizHotel > 0 ? savingToBizHotel : undefined,
       });
     } else {
       issues.push({
         type: "hotel_rate_excessive",
         severity: "warning",
-        message: `宿泊費が高額すぎます。会社推奨は¥7,000前後（¥6,000〜¥7,000）です。差額の自己負担を検討してください（確認事項）。¥7,000/泊基準との差額目安: 約 ¥${savingTo7kBand.toLocaleString("ja-JP")}。`,
-        saving_amount: savingTo7kBand,
+        message: `高額宿泊です。承認者確認を推奨します。近隣のビジネスホテル（目安1泊¥${refBiz.toLocaleString("ja-JP")}）に変更した場合の削減目安: 約 ¥${savingToBizHotel.toLocaleString("ja-JP")}（確認事項）。`,
+        saving_amount: savingToBizHotel,
       });
     }
 
@@ -118,7 +114,7 @@ export async function appendExtendedCategoryRules(
           type: "hotel_weekend",
           severity: "warning",
           message:
-            "週末の宿泊です。業務上の必要性を確認してください（確認事項）。",
+            "週末（土日）の宿泊です。業務上の必要性を確認してください（確認事項）。",
         });
       }
     } catch {
@@ -128,15 +124,20 @@ export async function appendExtendedCategoryRules(
     if (input.submitter_id && input.company_id && paidDate) {
       const t0 = addDaysIso(paidDate, -7);
       const t1 = addDaysIso(paidDate, 7);
-      const { count } = await supabase
+      const { data: nearRows } = await supabase
         .from("expenses")
-        .select("id", { count: "exact", head: true })
+        .select("category")
         .eq("submitter_id", input.submitter_id)
         .eq("company_id", input.company_id)
-        .in("category", ["交通費", "出張費（交通）"])
         .gte("paid_date", t0)
         .lte("paid_date", t1);
-      if ((count ?? 0) === 0) {
+      const hasTransport = (nearRows ?? []).some((r) => {
+        const c = (r as { category: string }).category;
+        return (
+          c === "交通費" || c.includes("交通") || c.includes("出張") || c.includes("タクシ")
+        );
+      });
+      if (!hasTransport) {
         issues.push({
           type: "hotel_no_transport",
           severity: "info",
@@ -147,24 +148,42 @@ export async function appendExtendedCategoryRules(
     }
   }
 
-  /* ---------- レンタカー ---------- */
+  /* ---------- レンタカー（同日のガソリン・高速を合算） ---------- */
   if (looksLikeRental(vendor, purpose) && amount > 0) {
     const dayM = purpose.match(/(\d+)\s*日/);
     const days = dayM ? Math.max(1, Number(dayM[1])) : 1;
-    const daily = amount / days;
+    let totalForDaily = amount;
+    let combinedNote = "";
+    if (input.submitter_id && input.company_id && paidDate) {
+      const { data: sdRows } = await supabase
+        .from("expenses")
+        .select("id, amount, purpose")
+        .eq("submitter_id", input.submitter_id)
+        .eq("company_id", input.company_id)
+        .eq("paid_date", paidDate);
+      for (const r of sdRows ?? []) {
+        const rid = (r as { id?: string }).id;
+        if (input.id && rid === input.id) continue;
+        const p = String((r as { purpose: string }).purpose ?? "");
+        if (/ガソリン|給油|燃料|高速|ＥＴＣ|ETC|通行料/i.test(p)) {
+          totalForDaily += Number((r as { amount: number }).amount);
+          combinedNote = "（同日のガソリン・高速等を合算した日額で評価）";
+        }
+      }
+    }
+    const daily = totalForDaily / days;
     if (daily < 8000) {
       issues.push({
         type: "rental_daily",
         severity: "info",
-        message: `日額約 ¥${Math.round(daily).toLocaleString("ja-JP")} であり承認観点では大きな懸念は少ない想定です。`,
+        message: `日額約 ¥${Math.round(daily).toLocaleString("ja-JP")} で承認推奨に見えます。${combinedNote}`,
       });
     } else {
-      const saving = Math.round(daily * 0.25 * days);
+      const saving = Math.max(3500, Math.round(daily * 0.22 * days));
       issues.push({
         type: "rental_daily_high",
         severity: "warning",
-        message:
-          "電車・バスでの移動との比較をしてください（確認事項）。レンタカー→電車＋タクシーに変える目安で数千円単位の削減が見込めるケースがあります。",
+        message: `日額約 ¥${Math.round(daily).toLocaleString("ja-JP")} です。電車・バスでの移動と比較してください（確認事項）。レンタカー→電車+タクシーに変えた場合の削減目安: 約 ¥${saving.toLocaleString("ja-JP")}。${combinedNote}`,
         saving_amount: saving,
       });
     }
@@ -174,7 +193,14 @@ export async function appendExtendedCategoryRules(
         type: "rental_urban",
         severity: "info",
         message:
-          "都市部では公共交通機関が効率的です。駐車場代を含めると割高になる場合があります（確認事項）。",
+          "目的地が都市部のため、公共交通機関が効率的です。駐車場代も含めると割高になる場合があります（確認事項）。",
+      });
+    } else if (/地方|郊外|県道|山間|離島|ロング/i.test(dest)) {
+      issues.push({
+        type: "rental_rural_ok",
+        severity: "info",
+        message:
+          "地方・郊外の移動ではレンタカーが合理的と判断しやすい水準です。",
       });
     }
 
@@ -183,7 +209,7 @@ export async function appendExtendedCategoryRules(
         type: "rental_gas",
         severity: "info",
         message:
-          "ガソリン代が別途ある場合はレンタカー料金と合算して妥当性を確認してください（確認事項）。",
+          "ガソリン代が別途申請されている場合は、レンタカー料金と合算して審査してください（確認事項）。",
       });
     }
     if (/高速|ＥＴＣ|ETC|通行料/i.test(purpose)) {
@@ -191,7 +217,7 @@ export async function appendExtendedCategoryRules(
         type: "rental_toll",
         severity: "info",
         message:
-          "高速道路代が別途ある場合は合算して移動コストを確認してください（確認事項）。",
+          "高速道路代が別途申請されている場合は合算して妥当性を確認してください（確認事項）。",
       });
     }
   }
@@ -204,14 +230,13 @@ export async function appendExtendedCategoryRules(
         issues.push({
           type: "meal_breakfast",
           severity: "info",
-          message: "朝食としての金額は許容レンジ内に見えます。",
+          message: "朝食 ¥1,500以下のため承認推奨に見えます。",
         });
       } else {
         issues.push({
           type: "meal_breakfast_high",
           severity: "warning",
-          message:
-            "朝食としては高額です。内訳・場所を記載してください（確認事項）。",
+          message: "朝食としては高額です（確認事項）。",
         });
       }
     } else if (slot === "lunch") {
@@ -219,14 +244,14 @@ export async function appendExtendedCategoryRules(
         issues.push({
           type: "meal_lunch",
           severity: "info",
-          message: "昼食（単独）として承認観点では大きな懸念は少ない想定です。",
+          message: "昼食（単独）¥2,000以下のため承認推奨に見えます。",
         });
       } else {
         issues.push({
           type: "meal_lunch_high",
           severity: "warning",
           message:
-            "昼食（単独）として社内規定の昼食補助範囲を超えている可能性があります（確認事項）。",
+            "社内規定の昼食補助範囲を超えています（確認事項）。",
         });
       }
     } else if (slot === "dinner") {
@@ -234,14 +259,14 @@ export async function appendExtendedCategoryRules(
         issues.push({
           type: "meal_dinner",
           severity: "info",
-          message: "夕食（接待なし・単独）として許容レンジに見えます。",
+          message: "夕食（接待なし・単独）¥3,000以下のため承認推奨に見えます。",
         });
       } else {
         issues.push({
           type: "meal_dinner_high",
           severity: "warning",
           message:
-            "個人の夕食費としては高額です。接待の場合は参加者を記載し接待交際費で申請してください（確認事項）。",
+            "個人の夕食費としては高額です。接待の場合は参加者を記載してください（確認事項）。",
         });
       }
     }
@@ -250,16 +275,19 @@ export async function appendExtendedCategoryRules(
         type: "meal_alcohol",
         severity: "warning",
         message:
-          "アルコール代が含まれる場合、会社規定を確認してください（確認事項）。",
+          "アルコールを含む可能性があります。アルコール代が含まれる場合、会社規定を確認してください（確認事項）。",
       });
     }
+    const lateByPurpose = /深夜|2[2-3]時以降|2[2-3]時\b|23時|24時|午後1[01]時/i.test(
+      purpose,
+    );
     const h = input.ride_hour_local;
-    if (h != null && h >= 22 && h <= 23) {
+    if (lateByPurpose || (h != null && h >= 22)) {
       issues.push({
         type: "meal_late",
-        severity: "info",
+        severity: "warning",
         message:
-          "深夜の飲食費です。業務上の必要性を記載してください（確認事項）。",
+          "深夜（22時以降）の飲食費です。業務上の必要性を記載してください（確認事項）。",
       });
     }
   }
@@ -270,7 +298,7 @@ export async function appendExtendedCategoryRules(
       issues.push({
         type: "supplies_low",
         severity: "info",
-        message: "少額消耗品として承認観点では大きな懸念は少ない想定です。",
+        message: "¥3,000未満の消耗品のため承認推奨に見えます。",
       });
     } else if (amount < 10000) {
       issues.push({
@@ -310,7 +338,7 @@ export async function appendExtendedCategoryRules(
         type: "supplies_food",
         severity: "info",
         message:
-          "食品・飲料は会議費または接待費として申請するケースが多いです。区分の見直しをご検討ください（確認事項）。",
+          "食品・飲料は会議費または接待費として申請してください（確認事項）。",
       });
     }
   }
@@ -321,7 +349,7 @@ export async function appendExtendedCategoryRules(
       issues.push({
         type: "training_low",
         severity: "info",
-        message: "少額の書籍・研修として承認観点では大きな懸念は少ない想定です。",
+        message: "¥5,000未満の書籍・研修のため承認推奨に見えます。",
       });
     } else if (amount < 30000) {
       issues.push({
@@ -338,12 +366,11 @@ export async function appendExtendedCategoryRules(
           "高額な研修費です。事前承認済みか確認してください（確認事項）。",
       });
     }
-    if (!/書籍|本|研修|セミナー|講座|eラーニング/i.test(purpose)) {
+    if (!/書籍|本|研修|セミナー|講座|eラーニング|タイトル|コース/i.test(purpose)) {
       issues.push({
         type: "training_name",
         severity: "warning",
-        message:
-          "書籍名または研修名を記載してください（確認事項）。",
+        message: "書籍名または研修名を記載してください（確認事項）。",
       });
     }
   }
@@ -354,21 +381,21 @@ export async function appendExtendedCategoryRules(
       issues.push({
         type: "comm_low",
         severity: "info",
-        message: "月額レンジとしては承認しやすい水準に見えます。",
+        message: "月額 ¥5,000以下のため承認推奨に見えます。",
       });
     } else if (amount <= 15000) {
       issues.push({
         type: "comm_mid",
         severity: "warning",
         message:
-          "業務用回線の契約内容を確認してください（確認事項）。",
+          "月額 ¥5,000〜¥15,000 帯です。業務用回線の契約内容を確認してください（確認事項）。",
       });
     } else {
       const saving = Math.round(amount * 0.2);
       issues.push({
         type: "comm_high",
         severity: "warning",
-        message: `高額な通信費です。プラン見直しで削減できる可能性があります（目安 ¥${saving.toLocaleString("ja-JP")}/月）（確認事項）。`,
+        message: `月額 ¥15,000超の高額な通信費です。プラン見直しで削減できる可能性があります（目安 ¥${saving.toLocaleString("ja-JP")}/月）（確認事項）。`,
         saving_amount: saving,
       });
     }
@@ -377,7 +404,7 @@ export async function appendExtendedCategoryRules(
         type: "comm_personal",
         severity: "info",
         message:
-          "個人回線の場合、業務使用割合（例: 50%）を記載してください（確認事項）。",
+          "個人スマホの通信費と見えます。個人回線の場合、業務使用割合（例: 50%）を記載してください（確認事項）。",
       });
     }
   }
@@ -388,7 +415,8 @@ export async function appendExtendedCategoryRules(
       issues.push({
         type: "ad_mid",
         severity: "info",
-        message: "広告宣伝費として内容の補足があると承認がスムーズです。",
+        message:
+          "¥50,000未満の広告宣伝費です。媒体・目的の補足があると確認しやすいです（確認推奨）。",
       });
     } else {
       issues.push({
@@ -398,7 +426,7 @@ export async function appendExtendedCategoryRules(
           "高額な広告費です。効果測定の指標を記載してください（確認事項）。",
       });
     }
-    if (!/媒体|キャンペーン|CM|バナー|SNS/i.test(purpose)) {
+    if (!/媒体|キャンペーン|CM|バナー|SNS|Facebook|Instagram|Google/i.test(purpose)) {
       issues.push({
         type: "ad_detail",
         severity: "warning",
@@ -444,8 +472,7 @@ export async function appendCompositeRules(
     issues.push({
       type: "same_day_high_total",
       severity: "warning",
-      message:
-        `同日に高額申請が複数あります（合計目安 ¥${Math.round(sum).toLocaleString("ja-JP")}）。まとめて事前承認を取ることを推奨します（確認事項）。`,
+      message: `同一日に¥50,000以上の複数申請があります（合計目安 ¥${Math.round(sum).toLocaleString("ja-JP")}）。まとめて事前承認を取ることを推奨します（確認事項）。`,
     });
   }
 
@@ -465,15 +492,15 @@ export async function appendCompositeRules(
   }
 
   if (input.created_at) {
-    const pd = new Date(`${paidDate}T00:00:00`);
+    const pd = new Date(`${paidDate}T12:00:00`);
     const cr = new Date(input.created_at);
-    const diff = Math.abs((cr.getTime() - pd.getTime()) / (86400000));
-    if (diff >= 30) {
+    const daysAfterPay = (cr.getTime() - pd.getTime()) / 86400000;
+    if (daysAfterPay >= 30) {
       issues.push({
         type: "late_application",
-        severity: "info",
+        severity: "warning",
         message:
-          "支払いから申請まで時間が経過している可能性があります。速やかな申請をお願いします（確認事項）。",
+          "申請日と支払日の差が30日以上です。支払いから申請まで時間が経過しています。速やかな申請をお願いします（確認事項）。",
       });
     }
   }
@@ -516,15 +543,79 @@ export async function appendCompositeRules(
         run = 1;
       }
     }
-    if (best >= 3 && isTravelTransport(input.category)) {
+    const cat = input.category;
+    const travelStreakApplies =
+      isTravelTransport(cat) ||
+      isHotelCategory(cat) ||
+      /飲食|食事|会議費|接待|交際/i.test(cat);
+    if (best >= 3 && travelStreakApplies) {
       issues.push({
         type: "consecutive_travel",
         severity: "info",
         message:
-          "連続する日付で交通・宿泊・出張区分の申請があります。宿泊費・交通費・飲食費を合算して妥当性を確認してください（確認事項）。",
+          "連続する出張（3日以上）に関係する申請があります。宿泊費・交通費・飲食費を合算して妥当性を確認してください（確認事項）。",
       });
     }
   }
+}
+
+function isTransportCatAudit(c: string) {
+  return c === "交通費" || c.includes("交通");
+}
+
+/** 自社の他営業（同一月）の「交通費 ÷ 推定商談件数」の平均（申請者自身は除く） */
+async function peerAvgTransportCostPerDeal(
+  supabase: SupabaseClient,
+  companyId: string,
+  excludeUserId: string,
+  y: number,
+  mo: number,
+): Promise<number> {
+  const peers = (await fetchSalesTargetUserIds(supabase, companyId)).filter(
+    (id) => id !== excludeUserId,
+  );
+  if (peers.length === 0) return 0;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const end = new Date(y, mo, 0).getDate();
+  const startD = `${y}-${pad(mo)}-01`;
+  const endD = `${y}-${pad(mo)}-${String(end).padStart(2, "0")}`;
+  const ratios: number[] = [];
+
+  for (const sid of peers) {
+    const { data: tr } = await supabase
+      .from("expenses")
+      .select("amount, purpose, category")
+      .eq("submitter_id", sid)
+      .eq("company_id", companyId)
+      .gte("paid_date", startD)
+      .lte("paid_date", endD);
+    let transportSum = 0;
+    let sumPurpose = 0;
+    for (const r of tr ?? []) {
+      const c = (r as { category: string }).category;
+      if (isTransportCatAudit(c)) transportSum += Number((r as { amount: number }).amount);
+      const pc = parseDealCountFromPurpose(String((r as { purpose: string }).purpose));
+      if (pc != null) sumPurpose += pc;
+    }
+    const { data: arRows } = await supabase
+      .from("activity_reports")
+      .select("meeting_count, visit_count")
+      .eq("employee_id", sid)
+      .eq("company_id", companyId)
+      .gte("report_date", startD)
+      .lte("report_date", endD);
+    let arM = 0;
+    let arV = 0;
+    for (const rep of arRows ?? []) {
+      arM += Number((rep as { meeting_count: number }).meeting_count ?? 0);
+      arV += Number((rep as { visit_count: number }).visit_count ?? 0);
+    }
+    const td = Math.max(1, sumPurpose, arM + arV);
+    if (transportSum > 0) ratios.push(transportSum / td);
+  }
+
+  if (ratios.length === 0) return 0;
+  return ratios.reduce((a, b) => a + b, 0) / ratios.length;
 }
 
 export async function appendSalesLinkedRules(
@@ -558,7 +649,8 @@ export async function appendSalesLinkedRules(
       type: "sales_deal_parse",
       severity: "info",
       message:
-        "商談・訪問の記載はありますが件数が読み取れませんでした。件数を明記すると審査がスムーズです（確認事項）。",
+        "商談・訪問の記載はありますが件数が読み取れませんでした。件数を明記するか、商談情報欄に入力してください（AI 補助確認推奨）。",
+      needs_ai_parse: true,
     });
   }
 
@@ -602,7 +694,7 @@ export async function appendSalesLinkedRules(
           type: "sales_1night_zero",
           severity: "error",
           message:
-            "宿泊を伴う出張の場合、商談件数（複数推奨）を記載してください（確認事項）。",
+            "宿泊を伴う出張の場合、商談件数（3件以上推奨）を記載してください（確認事項）。",
         });
       }
     } else if (n >= 2) {
@@ -611,7 +703,7 @@ export async function appendSalesLinkedRules(
           type: "sales_multinight_ok",
           severity: "info",
           message:
-            "複数泊出張に対し商談件数が複数あり効率面は良好に見えます。",
+            "複数泊出張に対し商談件数が3件以上あり、成果連動の観点では承認推奨に見えます。",
         });
       } else if (dealCount >= 1) {
         issues.push({
@@ -648,15 +740,15 @@ export async function appendSalesLinkedRules(
         .gte("paid_date", `${y}-${pad(mo)}-01`)
         .lte("paid_date", `${y}-${pad(mo)}-${String(end).padStart(2, "0")}`);
       let transportSum = 0;
-      let dealSum = 0;
+      let sumPurposeDeals = 0;
       for (const r of tr ?? []) {
         const c = (r as { category: string }).category;
-        if (c === "交通費" || c.includes("交通")) {
+        if (isTransportCatAudit(c)) {
           transportSum += Number((r as { amount: number }).amount);
         }
         const p = String((r as { purpose: string }).purpose);
         const pc = parseDealCountFromPurpose(p);
-        if (pc != null) dealSum += pc;
+        if (pc != null) sumPurposeDeals += pc;
       }
       const { data: reps } = await supabase
         .from("activity_reports")
@@ -665,15 +757,17 @@ export async function appendSalesLinkedRules(
         .eq("company_id", companyId)
         .gte("report_date", `${y}-${pad(mo)}-01`)
         .lte("report_date", `${y}-${pad(mo)}-${String(end).padStart(2, "0")}`);
-      let arDeals = 0;
+      let arMeet = 0;
+      let arVisit = 0;
       for (const rep of reps ?? []) {
-        arDeals +=
-          Number((rep as { meeting_count: number }).meeting_count ?? 0) +
-          Number((rep as { visit_count: number }).visit_count ?? 0);
+        arMeet += Number((rep as { meeting_count: number }).meeting_count ?? 0);
+        arVisit += Number((rep as { visit_count: number }).visit_count ?? 0);
       }
-      const totalDeals = Math.max(1, dealSum + arDeals);
+      const arActivity = arMeet + arVisit;
+      const totalDealsTransport = Math.max(1, sumPurposeDeals, arActivity);
+      const totalDealsLodging = Math.max(1, sumPurposeDeals, arMeet, arVisit);
       if (transportSum >= 30000) {
-        const per = transportSum / totalDeals;
+        const per = transportSum / totalDealsTransport;
         if (per <= 10000) {
           issues.push({
             type: "sales_month_transport_eff_ok",
@@ -695,6 +789,21 @@ export async function appendSalesLinkedRules(
               "商談1件あたりの移動コストが高額に見えます。オンライン商談の活用を検討してください（確認事項）。",
           });
         }
+
+        const teamAvg = await peerAvgTransportCostPerDeal(
+          supabase,
+          companyId,
+          submitterId,
+          y,
+          mo,
+        );
+        if (teamAvg > 0 && per > teamAvg * 1.12) {
+          issues.push({
+            type: "sales_vs_team_transport",
+            severity: "info",
+            message: `今月の商談1件あたりの移動コストは ¥${Math.round(per).toLocaleString("ja-JP")} です。チーム平均 ¥${Math.round(teamAvg).toLocaleString("ja-JP")} と比較してやや高めです（確認事項）。`,
+          });
+        }
       }
 
       let lodgingSum = 0;
@@ -703,13 +812,13 @@ export async function appendSalesLinkedRules(
         if (c.includes("宿泊")) lodgingSum += Number((r as { amount: number }).amount);
       }
       if (lodgingSum >= 50000) {
-        if (totalDeals >= 5) {
+        if (totalDealsLodging >= 5) {
           issues.push({
             type: "sales_lodging_eff_ok",
             severity: "info",
             message: "月間宿泊費に対し商談・訪問の件数は十分に見えます。",
           });
-        } else if (totalDeals >= 3) {
+        } else if (totalDealsLodging >= 3) {
           issues.push({
             type: "sales_lodging_eff_mid",
             severity: "warning",
@@ -721,7 +830,7 @@ export async function appendSalesLinkedRules(
             type: "sales_lodging_eff_bad",
             severity: "warning",
             message:
-              "宿泊を伴う出張が多い割に商談件数が少ない状態です。スケジューリングの改善をご検討ください（確認事項）。",
+              "宿泊を伴う出張が多い割に商談件数が少ない状態です。商談のスケジューリングを改善してください（確認事項）。",
           });
         }
       }
