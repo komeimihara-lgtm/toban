@@ -47,7 +47,17 @@ export default async function MyAttendancePage({
   const monthStartIso = `${y}-${pad(m)}-01T00:00:00+09:00`;
   const monthEndIso = `${nextY}-${pad(nextM)}-01T00:00:00+09:00`;
 
-  const { data: monthRows, error } = await supabase
+  /** GPS 列が未マイグレーションの DB でも打刻 UI を表示できるよう、失敗時は最小列で再試行 */
+  let rows: {
+    id: string;
+    punch_type: string;
+    punched_at: string;
+    latitude: number | null;
+    longitude: number | null;
+  }[] = [];
+  let punchFetchWarning: string | null = null;
+
+  const fullSelect = await supabase
     .from("attendance_punches")
     .select("id, punch_type, punched_at, latitude, longitude")
     .eq("user_id", user.id)
@@ -55,27 +65,46 @@ export default async function MyAttendancePage({
     .lt("punched_at", monthEndIso)
     .order("punched_at", { ascending: true });
 
-  if (error) {
-    return (
-      <p className="text-sm text-red-600">
-        打刻データの取得に失敗しました。マイグレーション（006_attendance_punch_extend 等）を確認してください。
-      </p>
-    );
-  }
+  if (!fullSelect.error && fullSelect.data) {
+    rows = fullSelect.data as typeof rows;
+  } else {
+    const minimal = await supabase
+      .from("attendance_punches")
+      .select("id, punch_type, punched_at")
+      .eq("user_id", user.id)
+      .gte("punched_at", monthStartIso)
+      .lt("punched_at", monthEndIso)
+      .order("punched_at", { ascending: true });
 
-  const rows = monthRows ?? [];
+    if (!minimal.error && minimal.data) {
+      rows = (minimal.data as { id: string; punch_type: string; punched_at: string }[]).map(
+        (r) => ({ ...r, latitude: null, longitude: null }),
+      );
+      punchFetchWarning =
+        "位置情報列（緯度・経度）が未適用のため、履歴は表示されますが地図連携はありません。マイグレーション 006_attendance_punch_extend を適用してください。";
+    } else {
+      punchFetchWarning =
+        "打刻履歴をデータベースから読み込めませんでした。この画面からの新規打刻はお試しください。解消しない場合は Supabase の attendance_punches テーブルと RLS を確認してください。";
+    }
+  }
   const todayKey = now.toLocaleDateString("en-CA", { timeZone: "Asia/Tokyo" });
   const todayPunches = rows.filter((r) => jstDateKey(r.punched_at) === todayKey);
   const summary = summarizePunchesInRange(rows, { now });
 
   return (
-    <div className="mx-auto max-w-3xl space-y-10">
+    <div className="mx-auto max-w-3xl space-y-10 text-foreground">
+      {punchFetchWarning ? (
+        <div
+          className="rounded-lg border border-amber-500/50 bg-amber-950/40 px-4 py-3 text-sm text-amber-100"
+          role="alert"
+        >
+          {punchFetchWarning}
+        </div>
+      ) : null}
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            勤怠
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">勤怠</h1>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
             打刻・月次カレンダー・打刻修正申請（このページから利用できます）
           </p>
         </div>
