@@ -18,24 +18,24 @@ export function LargePunchActionTiles({
   onClockOut,
 }: Props) {
   const tileBase =
-    "touch-manipulation select-none flex min-h-40 w-full flex-col items-center justify-center gap-2 rounded-2xl px-3 py-5 text-center shadow-md transition hover:brightness-105 active:scale-[0.98] active:brightness-95 disabled:pointer-events-none disabled:opacity-50 sm:min-h-44 sm:gap-2.5 sm:py-6";
+    "touch-manipulation select-none flex h-48 w-full flex-col items-center justify-center gap-3 rounded-2xl px-4 py-6 text-center shadow-md transition hover:brightness-105 active:scale-[0.98] active:brightness-95 disabled:pointer-events-none disabled:opacity-50";
 
   return (
-    <div className="grid w-full grid-cols-2 gap-3 sm:gap-4">
+    <div className="grid w-full grid-cols-2 gap-4">
       <button
         type="button"
         disabled={pending}
         onClick={onClockIn}
         aria-label="出勤を打刻"
-        className={`${tileBase} bg-zinc-200 text-zinc-900 hover:bg-zinc-100 dark:bg-zinc-300 dark:text-zinc-950 dark:hover:bg-zinc-200`}
+        className={`${tileBase} bg-gray-100 text-zinc-900 hover:bg-gray-50 dark:bg-zinc-300 dark:text-zinc-950 dark:hover:bg-zinc-200`}
       >
         <Sun
-          className="size-12 shrink-0 sm:size-16"
+          className="h-16 w-16 shrink-0"
           strokeWidth={1.65}
           aria-hidden
         />
-        <span className="text-2xl font-bold tracking-tight sm:text-3xl">出勤</span>
-        <span className="max-w-[11rem] text-[11px] font-normal leading-tight text-zinc-700 dark:text-zinc-800 sm:text-xs">
+        <span className="text-2xl font-bold tracking-tight">出勤</span>
+        <span className="text-sm font-normal text-zinc-700 dark:text-zinc-800">
           今日もよろしくお願いします
         </span>
       </button>
@@ -44,15 +44,15 @@ export function LargePunchActionTiles({
         disabled={pending}
         onClick={onClockOut}
         aria-label="退勤を打刻"
-        className={`${tileBase} bg-amber-400 text-amber-950 hover:bg-amber-300 dark:bg-amber-400 dark:text-amber-950 dark:hover:bg-amber-300`}
+        className={`${tileBase} bg-yellow-400 text-amber-950 hover:bg-yellow-300 dark:bg-yellow-400 dark:text-amber-950 dark:hover:bg-yellow-300`}
       >
         <MoonStar
-          className="size-12 shrink-0 sm:size-16"
+          className="h-16 w-16 shrink-0"
           strokeWidth={1.65}
           aria-hidden
         />
-        <span className="text-2xl font-bold tracking-tight sm:text-3xl">退勤</span>
-        <span className="max-w-[11rem] text-[11px] font-normal leading-tight text-amber-950/90 sm:text-xs">
+        <span className="text-2xl font-bold tracking-tight">退勤</span>
+        <span className="text-sm font-normal text-amber-950/90">
           お疲れさまでした
         </span>
       </button>
