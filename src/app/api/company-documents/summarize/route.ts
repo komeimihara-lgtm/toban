@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     }
 
     const profile = await getProfile(supabase, user.id);
-    if (!profile || !["owner", "approver"].includes(profile.role)) {
+    if (!profile || !["owner", "director"].includes(profile.role)) {
       return NextResponse.json({ error: "権限がありません" }, { status: 403 });
     }
 

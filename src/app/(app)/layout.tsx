@@ -95,6 +95,7 @@ export default async function AppGroupLayout({
   let showCheckSheetApproval = false;
   let dashboardHref = "/my";
   let expensesListHref = "/my/expenses";
+  let showCompanyDocumentsAdminNav = false;
 
   if (isSupabaseConfigured()) {
     try {
@@ -129,6 +130,7 @@ export default async function AppGroupLayout({
           (profile as { role?: string } | null)?.role ??
           "staff";
         showAdminSection = role === "owner" || role === "director" || role === "approver" || role === "sr";
+        showCompanyDocumentsAdminNav = role === "owner" || role === "director";
         const isLeaderRole = role === "leader";
         showCheckSheetApproval = isLeaderRole;
         if (showAdminSection) {
@@ -190,6 +192,7 @@ export default async function AppGroupLayout({
         incentiveDraftBadgeCount={incentiveDraftBadgeCount}
         dashboardHref={dashboardHref}
         expensesListHref={expensesListHref}
+        showCompanyDocumentsAdminNav={showCompanyDocumentsAdminNav}
       />
       <main className="print-full text-foreground min-h-0 min-w-0 flex-1 overflow-auto p-6 md:p-10">
         {children}

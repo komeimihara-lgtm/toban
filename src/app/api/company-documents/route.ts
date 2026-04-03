@@ -24,14 +24,14 @@ export async function GET() {
   }
 }
 
-/** ドキュメントアップロード（owner/approverのみ） */
+/** ドキュメントアップロード（owner / director のみ） */
 export async function POST(req: Request) {
   try {
     const { user, supabase } = await getSessionUser();
     if (!user) return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
 
     const profile = await getProfile(supabase, user.id);
-    if (!profile || !["owner", "approver"].includes(profile.role)) {
+    if (!profile || !["owner", "director"].includes(profile.role)) {
       return NextResponse.json({ error: "権限がありません" }, { status: 403 });
     }
 
@@ -69,14 +69,14 @@ export async function POST(req: Request) {
   }
 }
 
-/** ドキュメント削除（owner/approverのみ） */
+/** ドキュメント削除（owner / director のみ） */
 export async function DELETE(req: Request) {
   try {
     const { user, supabase } = await getSessionUser();
     if (!user) return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
 
     const profile = await getProfile(supabase, user.id);
-    if (!profile || !["owner", "approver"].includes(profile.role)) {
+    if (!profile || !["owner", "director"].includes(profile.role)) {
       return NextResponse.json({ error: "権限がありません" }, { status: 403 });
     }
 

@@ -16,6 +16,7 @@ import {
   FileText,
   Home,
   LayoutDashboard,
+  ScrollText,
   Settings,
   SlidersHorizontal,
   Sparkles,
@@ -42,6 +43,8 @@ export type AppSidebarProps = {
   dashboardHref: string;
   /** 全社一覧 `/expenses` or 個人 `/my/expenses` */
   expensesListHref: string;
+  /** owner / director のみ（就業規則PDF・AI学習の管理） */
+  showCompanyDocumentsAdminNav?: boolean;
 };
 
 function NavLink({
@@ -140,6 +143,7 @@ export function AppSidebar({
   incentiveDraftBadgeCount = 0,
   dashboardHref,
   expensesListHref,
+  showCompanyDocumentsAdminNav = false,
 }: AppSidebarProps) {
   const navRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
@@ -253,6 +257,14 @@ export function AppSidebar({
               icon={SlidersHorizontal}
               pathPrefixes={["/settings/auto-approval"]}
             />
+            {showCompanyDocumentsAdminNav ? (
+              <NavLink
+                href="/settings/documents"
+                label="就業規則管理"
+                icon={ScrollText}
+                pathPrefixes={["/settings/documents"]}
+              />
+            ) : null}
             <NavLink
               href="/settings"
               label="設定"
@@ -260,6 +272,7 @@ export function AppSidebar({
               pathPrefixes={["/settings"]}
               excludePrefixes={[
                 "/settings/auto-approval",
+                "/settings/documents",
                 "/settings/export",
                 "/settings/tenant",
               ]}
@@ -331,7 +344,7 @@ export function AppSidebar({
         />
         <NavLink
           href="/my/rules"
-          label="就業規則"
+          label="就業規則・社内規定"
           icon={BookOpen}
           pathPrefixes={["/my/rules"]}
         />
