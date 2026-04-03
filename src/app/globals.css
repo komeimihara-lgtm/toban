@@ -24,8 +24,8 @@
 html.dark {
   --background: #0d1526;
   --background-sidebar: #111d35;
-  --card: #162040;
-  --border: #1e3058;
+  --card: #1a2d50;
+  --border: #243860;
   --foreground: #f0f4ff;
   --muted-foreground: #94a3b8;
   --accent: #2563eb;
@@ -34,7 +34,7 @@ html.dark {
   --warning: #f59e0b;
   --error: #ef4444;
   --surface-sidebar: #111d35;
-  --sidebar-border: #1e3058;
+  --sidebar-border: #243860;
   --sidebar-muted: #cbd5e1;
   --sidebar-text: #ffffff;
   --radius: 14px;
