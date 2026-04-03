@@ -57,6 +57,8 @@ const PAYMENT_STATUSES = [
   { value: "paid", label: "全額入金" },
 ] as const;
 
+const DEAL_PAYMENT_METHODS = ["現金・振込", "カード", "ローン", "その他"] as const;
+
 type EditPayload = {
   salon_name: string;
   machine_type: string;
@@ -844,6 +846,21 @@ export function DealsAdminClient() {
                   onChange={(e) => setForm((f) => ({ ...f, salon_name: e.target.value }))}
                 />
               </label>
+              <div>
+                <label className="text-sm text-zinc-400">支払い方法</label>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {DEAL_PAYMENT_METHODS.map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, payment_method: method }))}
+                      className={`rounded-xl border py-3 text-sm font-medium transition ${form.payment_method === method ? "border-blue-500 bg-blue-600/20 text-blue-300" : "border-zinc-600 bg-zinc-800/50 text-zinc-300 hover:border-zinc-400"}`}
+                    >
+                      {method}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <label className="block">
                 <span className="text-xs text-zinc-500">機械種別</span>
                 <select
@@ -935,14 +952,6 @@ export function DealsAdminClient() {
                   </ul>
                 )}
               </div>
-              <label className="block">
-                <span className="text-xs text-zinc-500">支払い方法</span>
-                <input
-                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
-                  value={form.payment_method}
-                  onChange={(e) => setForm((f) => ({ ...f, payment_method: e.target.value }))}
-                />
-              </label>
               <label className="block">
                 <span className="text-xs text-zinc-500">レナード入金日</span>
                 <input

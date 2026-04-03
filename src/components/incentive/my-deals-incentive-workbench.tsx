@@ -53,6 +53,8 @@ function pad2(m: number) {
   return String(m).padStart(2, "0");
 }
 
+const DEAL_PAYMENT_METHODS = ["現金・振込", "カード", "ローン", "その他"] as const;
+
 export function MyDealsIncentiveWorkbench(props: {
   userId: string;
   userName: string | null;
@@ -749,6 +751,21 @@ export function MyDealsIncentiveWorkbench(props: {
                   onChange={(e) => setForm((f) => ({ ...f, salon_name: e.target.value }))}
                 />
               </label>
+              <div>
+                <label className="text-sm text-zinc-400">支払い方法</label>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {DEAL_PAYMENT_METHODS.map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, payment_method: method }))}
+                      className={`rounded-xl border py-3 text-sm font-medium transition ${form.payment_method === method ? "border-blue-500 bg-blue-600/20 text-blue-300" : "border-zinc-600 bg-zinc-800/50 text-zinc-300 hover:border-zinc-400"}`}
+                    >
+                      {method}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <label className="block">
                   <span className="text-xs text-zinc-500">販売価格（税込）</span>
@@ -866,14 +883,6 @@ export function MyDealsIncentiveWorkbench(props: {
               ) : (
                 <p className="text-xs text-zinc-500">販売価格・実質原価を入力すると試算を表示します。</p>
               )}
-              <label className="block">
-                <span className="text-xs text-zinc-500">支払い方法</span>
-                <input
-                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
-                  value={form.payment_method}
-                  onChange={(e) => setForm((f) => ({ ...f, payment_method: e.target.value }))}
-                />
-              </label>
               <label className="block">
                 <span className="text-xs text-zinc-500">レナード入金日</span>
                 <input
