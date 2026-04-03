@@ -7,7 +7,6 @@ export async function saveProfileSettingsAction(
   _prev: unknown,
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string }> {
-  const displayName = String(formData.get("full_name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
   const emergencyContact = String(formData.get("emergency_contact") ?? "").trim();
@@ -20,15 +19,14 @@ export async function saveProfileSettingsAction(
   if (!user) return { ok: false, message: "ログインが必要です" };
 
   const { error } = await supabase
-    .from("profiles")
+    .from("employees")
     .update({
-      full_name: displayName || null,
       phone: phone || null,
       address: address || null,
       emergency_contact: emergencyContact || null,
       line_user_id: lineUserId || null,
     })
-    .eq("id", user.id);
+    .eq("auth_user_id", user.id);
 
   if (error) return { ok: false, message: error.message };
   revalidatePath("/my/profile");

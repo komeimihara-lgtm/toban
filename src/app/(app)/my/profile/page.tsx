@@ -58,15 +58,15 @@ export default function MyProfilePage() {
       }
       setEmail(user.email ?? "");
 
-      const { data: profile } = await supabase
-        .from("profiles")
+      const { data: emp } = await supabase
+        .from("employees")
         .select(
           "full_name, phone, address, emergency_contact, line_user_id, department, job_title, department_id",
         )
-        .eq("id", user.id)
+        .eq("auth_user_id", user.id)
         .maybeSingle();
 
-      const p = profile as {
+      const p = emp as {
         full_name?: string | null;
         phone?: string | null;
         address?: string | null;
