@@ -16,10 +16,7 @@ export async function GET(request: Request) {
 
   const freeeCompanyId = process.env.FREEE_COMPANY_ID?.trim();
   if (!freeeCompanyId) {
-    return Response.json(
-      { ok: false, error: "FREEE_COMPANY_ID が未設定です" },
-      { status: 503 },
-    );
+    return Response.json({ ok: false, preparing: true }, { status: 503 });
   }
 
   const { data: profile } = await supabase

@@ -44,6 +44,8 @@ type PayslipApiErr = {
   error?: string;
   needs_oauth?: boolean;
   needs_mapping?: boolean;
+  /** FREEE_COMPANY_ID 未設定など（利用者向けは「準備中」表示） */
+  preparing?: boolean;
 };
 
 function formatYen(n: number) {
@@ -124,9 +126,6 @@ export function PayslipPortal() {
           <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
             給与明細・みなし残業
           </h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            freee 人事労務と連携して表示します。ブラウザの「印刷」からPDF保存できます。
-          </p>
         </div>
         <div className="no-print flex flex-wrap items-center gap-2">
           <button
@@ -200,11 +199,21 @@ export function PayslipPortal() {
         </div>
       )}
 
-      {!loading && err && !err.needs_oauth && !err.needs_mapping && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-          {err.error ?? "エラーが発生しました"}
-        </p>
+      {!loading && err?.preparing && (
+        <div className="rounded-xl bg-zinc-900/50 p-8 text-center mt-8">
+          <p className="text-sm text-zinc-400">給与明細は準備中です。</p>
+        </div>
       )}
+
+      {!loading &&
+        err &&
+        !err.needs_oauth &&
+        !err.needs_mapping &&
+        !err.preparing && (
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+            {err.error ?? "エラーが発生しました"}
+          </p>
+        )}
 
       {data && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_1fr]">
