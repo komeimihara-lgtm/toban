@@ -5,6 +5,7 @@ import {
   getItems,
   getMaxScore,
   getMultiplier,
+  getMultiplierTable,
   SCORE_OPTIONS,
   SHEET_LABEL,
   type SheetType,
@@ -52,6 +53,7 @@ export function CheckSheetClient({
   const total = selfScores.reduce<number>((sum, s) => sum + (s ?? 0), 0);
   const multiplier = getMultiplier(sheetType, total);
   const allAnswered = selfScores.every((s) => s !== null);
+  const multiplierTable = getMultiplierTable(sheetType);
 
   // カテゴリごとにグルーピング
   const categories: { name: string; indices: number[] }[] = [];
@@ -93,13 +95,14 @@ export function CheckSheetClient({
 
   return (
     <>
-      <div className="flex items-center gap-3">
+      {/* ヘッダー */}
+      <div className="flex flex-wrap items-center gap-3">
         <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
           {SHEET_LABEL[sheetType]}
         </span>
-        <span className="text-xs text-zinc-500">{year}年{month}月</span>
+        <span className="text-sm font-medium">{year}年{month}月</span>
         {sheet && (
-          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
             sheet.status === "reviewed"
               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
               : sheet.status === "submitted"
@@ -112,29 +115,89 @@ export function CheckSheetClient({
       </div>
 
       {/* 評価基準 */}
-      <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-        <span className="font-medium">評価基準：</span>
-        {SCORE_OPTIONS.map((o) => (
-          <span key={o.value} className="ml-3">
-            <span className="font-bold">{o.label}</span>
-            <span className="text-zinc-500"> {o.desc}</span>
-          </span>
-        ))}
+      <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+        <p className="mb-2 text-xs font-semibold">評価基準</p>
+        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
+          {SCORE_OPTIONS.map((o) => (
+            <div key={o.value} className="flex items-center gap-2 text-xs">
+              <span className={`flex h-6 w-8 shrink-0 items-center justify-center rounded font-bold ${
+                o.value > 0
+                  ? "bg-accent/10 text-accent"
+                  : "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+              }`}>
+                {o.label}
+              </span>
+              <span className="text-zinc-600 dark:text-zinc-400">{o.desc}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* リアルタイム合計・倍率（上部サマリー） */}
+      <div className="grid grid-cols-2 gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">自己評価</p>
+          <p className="mt-0.5 text-2xl font-bold tabular-nums">
+            {total}
+            <span className="text-sm font-normal text-zinc-400"> / {maxScore}</span>
+          </p>
+          <p className={`text-sm font-bold tabular-nums ${
+            multiplier > 1.0 ? "text-emerald-600 dark:text-emerald-400"
+            : multiplier < 1.0 ? "text-red-600 dark:text-red-400" : "text-zinc-600 dark:text-zinc-400"
+          }`}>
+            ×{multiplier.toFixed(1)}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">上長評価</p>
+          {managerTotal != null ? (
+            <>
+              <p className="mt-0.5 text-2xl font-bold tabular-nums">
+                {managerTotal}
+                <span className="text-sm font-normal text-zinc-400"> / {maxScore}</span>
+              </p>
+              <p className={`text-sm font-bold tabular-nums ${
+                managerMultiplier! > 1.0 ? "text-emerald-600 dark:text-emerald-400"
+                : managerMultiplier! < 1.0 ? "text-red-600 dark:text-red-400" : "text-zinc-600 dark:text-zinc-400"
+              }`}>
+                ×{managerMultiplier!.toFixed(1)}
+              </p>
+            </>
+          ) : (
+            <p className="mt-0.5 text-sm text-zinc-300 dark:text-zinc-600">未評価</p>
+          )}
+        </div>
       </div>
 
       {/* カテゴリごとの評価セクション */}
       {categories.map((cat) => (
-        <section key={cat.name} className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-          <h2 className="text-sm font-bold text-accent">{cat.name}</h2>
-          <div className="mt-3 space-y-3">
+        <section key={cat.name} className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <div className="border-b border-zinc-200 bg-accent/5 px-4 py-2.5 dark:border-zinc-800 dark:bg-accent/10">
+            <h2 className="text-sm font-bold text-accent">【{cat.name}】</h2>
+          </div>
+
+          {/* 2列ヘッダー */}
+          <div className="hidden border-b border-zinc-100 bg-zinc-50/50 px-4 py-1.5 dark:border-zinc-800 dark:bg-zinc-900/30 sm:grid sm:grid-cols-[1fr_auto_auto] sm:gap-4">
+            <span className="text-[10px] font-medium text-zinc-400">評価項目</span>
+            <span className="w-[176px] text-center text-[10px] font-medium text-zinc-400">自己評価</span>
+            <span className="w-[44px] text-center text-[10px] font-medium text-zinc-400">上長</span>
+          </div>
+
+          <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
             {cat.indices.map((idx) => {
               const ci = items[idx];
               const mEntry = sheet?.manager_check?.find((c) => c.item === ci.item);
               return (
-                <div key={idx} className="space-y-1.5">
-                  <p className="text-sm leading-snug">{ci.item}</p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="w-12 text-xs text-zinc-500">自己:</span>
+                <div key={idx} className="px-4 py-3 sm:grid sm:grid-cols-[1fr_auto_auto] sm:items-center sm:gap-4">
+                  {/* 項目テキスト */}
+                  <p className="mb-2 text-sm leading-relaxed sm:mb-0">
+                    <span className="mr-1 inline-block min-w-[1.25rem] text-xs tabular-nums text-zinc-400">{idx + 1}.</span>
+                    {ci.item}
+                  </p>
+
+                  {/* 自己評価ボタン */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-medium text-zinc-400 sm:hidden">自己</span>
                     <div className="flex gap-1">
                       {SCORE_OPTIONS.map((o) => (
                         <button
@@ -149,26 +212,32 @@ export function CheckSheetClient({
                           className={`flex h-8 w-10 items-center justify-center rounded-lg text-xs font-bold transition-colors ${
                             selfScores[idx] === o.value
                               ? o.value > 0
-                                ? "bg-accent text-white"
-                                : "bg-red-500 text-white"
-                              : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                                ? "bg-accent text-white shadow-sm"
+                                : "bg-red-500 text-white shadow-sm"
+                              : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
                           } disabled:cursor-default`}
                         >
                           {o.label}
                         </button>
                       ))}
                     </div>
-                    {mEntry && (
-                      <>
-                        <span className="ml-4 w-12 text-xs text-zinc-500">上司:</span>
-                        <span className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
-                          mEntry.score > 0
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                        }`}>
-                          {mEntry.score > 0 ? "+" : ""}{mEntry.score}
-                        </span>
-                      </>
+                  </div>
+
+                  {/* 上長評価 */}
+                  <div className="mt-2 flex items-center gap-2 sm:mt-0">
+                    <span className="text-[10px] font-medium text-zinc-400 sm:hidden">上長</span>
+                    {mEntry ? (
+                      <span className={`flex h-8 w-10 items-center justify-center rounded-lg text-xs font-bold ${
+                        mEntry.score > 0
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                          : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                      }`}>
+                        {mEntry.score > 0 ? "+" : ""}{mEntry.score}
+                      </span>
+                    ) : (
+                      <span className="flex h-8 w-10 items-center justify-center rounded-lg bg-zinc-50 text-xs text-zinc-300 dark:bg-zinc-900 dark:text-zinc-600">
+                        —
+                      </span>
                     )}
                   </div>
                 </div>
@@ -178,54 +247,64 @@ export function CheckSheetClient({
         </section>
       ))}
 
-      {/* 合計・倍率 */}
-      <section className="rounded-xl border-2 border-accent/30 bg-accent/5 p-5 dark:border-accent/20 dark:bg-accent/5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* 倍率スコア表 + 提出 */}
+      <section className="rounded-xl border-2 border-accent/30 bg-accent/5 p-5 dark:border-accent/20">
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-zinc-500">自己評価 合計</p>
+            <p className="text-xs font-medium text-zinc-500">自己評価 合計</p>
             <p className="text-3xl font-bold tabular-nums">
               {total}
               <span className="text-base font-normal text-zinc-500"> / {maxScore}</span>
             </p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-zinc-500">インセンティブ倍率</p>
-            <p className={`text-3xl font-bold tabular-nums ${
+            <p className={`mt-1 text-lg font-bold tabular-nums ${
               multiplier > 1.0 ? "text-emerald-600 dark:text-emerald-400"
-              : multiplier < 1.0 ? "text-red-600 dark:text-red-400"
-              : ""
+              : multiplier < 1.0 ? "text-red-600 dark:text-red-400" : ""
             }`}>
-              ×{multiplier.toFixed(1)}
+              倍率 ×{multiplier.toFixed(1)}
             </p>
           </div>
-          {managerTotal != null && (
-            <>
-              <div>
-                <p className="text-xs text-zinc-500">上司評価 合計</p>
-                <p className="text-2xl font-bold tabular-nums">
+          <div>
+            <p className="text-xs font-medium text-zinc-500">上長評価 合計</p>
+            {managerTotal != null ? (
+              <>
+                <p className="text-3xl font-bold tabular-nums">
                   {managerTotal}
                   <span className="text-base font-normal text-zinc-500"> / {maxScore}</span>
                 </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-zinc-500">上司倍率</p>
-                <p className={`text-2xl font-bold tabular-nums ${
+                <p className={`mt-1 text-lg font-bold tabular-nums ${
                   managerMultiplier! > 1.0 ? "text-emerald-600 dark:text-emerald-400"
-                  : managerMultiplier! < 1.0 ? "text-red-600 dark:text-red-400"
-                  : ""
+                  : managerMultiplier! < 1.0 ? "text-red-600 dark:text-red-400" : ""
                 }`}>
-                  ×{managerMultiplier!.toFixed(1)}
+                  倍率 ×{managerMultiplier!.toFixed(1)}
                 </p>
-              </div>
-            </>
-          )}
+              </>
+            ) : (
+              <p className="mt-1 text-sm text-zinc-400">未評価</p>
+            )}
+          </div>
         </div>
+
+        {/* 倍率スコア表 */}
+        <div className="mt-4 rounded-lg border border-zinc-200/50 bg-white/60 p-3 dark:border-zinc-700/50 dark:bg-zinc-900/40">
+          <p className="mb-1.5 text-[10px] font-semibold text-zinc-500">倍率スコア表（{items.length}項目・最大{maxScore}点）</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+            {multiplierTable.map((r, i) => (
+              <span key={i} className={`text-xs tabular-nums ${
+                multiplier === r.multiplier ? "font-bold text-accent" : "text-zinc-500"
+              }`}>
+                {r.range} → ×{r.multiplier.toFixed(1)}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* 提出ボタン */}
         {!isSubmitted && (
           <div className="mt-4 flex justify-end">
             <button
               onClick={submitCheck}
               disabled={saving || !allAnswered}
-              className="rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50"
+              className="rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-accent/90 disabled:opacity-50"
             >
               {saving ? "提出中..." : !allAnswered ? "全項目を入力してください" : "提出する"}
             </button>
@@ -233,6 +312,7 @@ export function CheckSheetClient({
         )}
       </section>
 
+      {/* トースト */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white shadow-lg dark:bg-zinc-100 dark:text-zinc-900">
           {toast}

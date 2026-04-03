@@ -7,6 +7,59 @@ function yearMonthKey() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function jstMonthBounds() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+  }).formatToParts(now);
+  const y = Number(parts.find((p) => p.type === "year")?.value);
+  const m = Number(parts.find((p) => p.type === "month")?.value);
+  const lastDay = new Date(y, m, 0).getDate();
+  const mm = String(m).padStart(2, "0");
+  const startIso = new Date(`${y}-${mm}-01T00:00:00+09:00`).toISOString();
+  const endIso = new Date(
+    `${y}-${mm}-${String(lastDay).padStart(2, "0")}T23:59:59.999+09:00`,
+  ).toISOString();
+  return { startIso, endIso, label: `${y}年${m}月` };
+}
+
+function attendanceSummaryFromPunches(
+  rows: { punched_at: string; punch_type: string }[],
+  monthLabel: string,
+): string {
+  if (!rows.length) {
+    return `${monthLabel}の打刻: なし`;
+  }
+  type Entry = { t: number; type: string };
+  const byDay = new Map<string, Entry[]>();
+  for (const r of rows) {
+    const t = new Date(r.punched_at).getTime();
+    if (Number.isNaN(t)) continue;
+    const day = new Date(r.punched_at).toLocaleDateString("en-CA", {
+      timeZone: "Asia/Tokyo",
+    });
+    const list = byDay.get(day) ?? [];
+    list.push({ t, type: r.punch_type });
+    byDay.set(day, list);
+  }
+  let totalMin = 0;
+  let daysWithSpan = 0;
+  for (const [, list] of byDay) {
+    list.sort((a, b) => a.t - b.t);
+    const firstIn = list.find((x) => x.type === "clock_in");
+    const lastOut = [...list].reverse().find((x) => x.type === "clock_out");
+    if (firstIn && lastOut && lastOut.t > firstIn.t) {
+      totalMin += (lastOut.t - firstIn.t) / 60000;
+      daysWithSpan += 1;
+    }
+  }
+  const totalH = totalMin / 60;
+  const overtimeApprox = Math.max(0, totalH - 8 * daysWithSpan);
+  return `${monthLabel}: 出勤日数（打刻のある日）${byDay.size}日、総労働時間（初出勤〜最終退勤の概算）${totalH.toFixed(1)}時間、残業概算（8h×出退ペアがある日数を控除）${overtimeApprox.toFixed(1)}時間`;
+}
+
 function roleLabel(role: string) {
   if (role === "owner") return "オーナー／経営";
   if (role === "director") return "取締役";
@@ -23,13 +76,16 @@ export async function buildHrAiSystemPrompt(
   const { data: profile } = await supabase
     .from("employees")
     .select(
-      "id, company_id, name, role, department_id, is_sales_target, is_service_target, departments ( name )",
+      "id, company_id, name, role, department_id, is_sales_target, is_service_target, is_contract, is_part_time, created_at, departments ( name )",
     )
     .eq("auth_user_id", userId)
     .maybeSingle();
 
   const p = profile as (ProfileRow & {
     departments?: { name: string } | null;
+    is_contract?: boolean | null;
+    is_part_time?: boolean | null;
+    created_at?: string | null;
   }) | null;
   if (!p) return null;
 
@@ -52,6 +108,77 @@ export async function buildHrAiSystemPrompt(
     next_accrual_date?: string | null;
     next_accrual_days?: number | null;
   } | null;
+
+  const { data: grantRows } = await supabase
+    .from("paid_leave_grants")
+    .select("grant_date, days_granted, days_remaining, grant_reason, expires_at")
+    .eq("employee_id", userId)
+    .order("grant_date", { ascending: false })
+    .limit(8);
+
+  const grantsLines = (grantRows ?? []).map((g) => {
+    const x = g as {
+      grant_date: string;
+      days_granted: number;
+      days_remaining: number;
+      grant_reason: string;
+      expires_at?: string | null;
+    };
+    return `${x.grant_date} 付与${x.days_granted}日・残${x.days_remaining}日（${x.grant_reason}）`;
+  });
+
+  const todayJst = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tokyo" });
+  const futureGrant = (grantRows ?? []).find((g) => {
+    const gd = (g as { grant_date: string }).grant_date;
+    return gd > todayJst;
+  }) as { grant_date: string } | undefined;
+  const nextGrantFromGrants = futureGrant?.grant_date ?? "—";
+
+  const { data: contractRow } = await supabase
+    .from("employment_contracts")
+    .select(
+      "base_salary, deemed_overtime_hours, deemed_overtime_amount, commute_allowance_monthly, commute_route, work_hours_per_day, work_days_per_week, hire_date, start_date",
+    )
+    .eq("employee_id", p.id)
+    .maybeSingle();
+  const contract = contractRow as {
+    base_salary?: number | null;
+    deemed_overtime_hours?: number | null;
+    deemed_overtime_amount?: number | null;
+    commute_allowance_monthly?: number | null;
+    commute_route?: string | null;
+    work_hours_per_day?: number | null;
+    work_days_per_week?: number | null;
+    hire_date?: string | null;
+    start_date?: string | null;
+  } | null;
+
+  const { startIso, endIso, label: attendanceMonthLabel } = jstMonthBounds();
+  const { data: punchRows } = await supabase
+    .from("attendance_punches")
+    .select("punched_at, punch_type")
+    .eq("user_id", userId)
+    .gte("punched_at", startIso)
+    .lte("punched_at", endIso)
+    .order("punched_at", { ascending: true });
+  const attendanceLine = attendanceSummaryFromPunches(
+    (punchRows ?? []) as { punched_at: string; punch_type: string }[],
+    attendanceMonthLabel,
+  );
+
+  const joinedHint =
+    contract?.start_date ??
+    contract?.hire_date ??
+    p.created_at?.slice(0, 10) ??
+    "—";
+  const contractPart = contract
+    ? [
+        `基本給（月）: ${contract.base_salary != null ? `${Number(contract.base_salary).toLocaleString("ja-JP")}円` : "—"}`,
+        `みなし残業: ${contract.deemed_overtime_hours ?? "—"}時間 / ${contract.deemed_overtime_amount != null ? `${Number(contract.deemed_overtime_amount).toLocaleString("ja-JP")}円` : "—"}`,
+        `通勤手当: ${contract.commute_allowance_monthly != null ? `${Number(contract.commute_allowance_monthly).toLocaleString("ja-JP")}円` : "—"}（経路: ${contract.commute_route?.trim() || "—"}）`,
+        `所定: ${contract.work_hours_per_day ?? "—"}時間/日・${contract.work_days_per_week ?? "—"}日/週`,
+      ].join("、")
+    : "雇用契約レコードなし（未登録の可能性）";
 
   let incentiveLine = "（インセンティブ対象外、または未設定）";
   if (isIncentiveEligible(p)) {
@@ -167,13 +294,19 @@ export async function buildHrAiSystemPrompt(
     .eq("company_id", p.company_id)
     .order("created_at", { ascending: false });
 
-  const companyDocBlocks = (companyDocs ?? [])
-    .filter((d) => (d as { ai_summary: string | null }).ai_summary)
-    .map((d) => {
-      const row = d as { name: string; document_type: string; ai_summary: string };
-      return `【就業規則: ${row.name}】\n${row.ai_summary}`;
-    })
-    .join("\n\n---\n\n");
+  const docsWithSummary = (companyDocs ?? []).filter((d) => {
+    const s = (d as { ai_summary?: string | null }).ai_summary;
+    return s != null && String(s).trim().length > 0;
+  }) as { name: string; ai_summary: string }[];
+
+  const rulesFromPdf =
+    docsWithSummary.length > 0
+      ? `## 会社の就業規則・社内規定
+以下は${companyName}の就業規則です。従業員からの質問には必ずこの規則に基づいて回答してください。
+規則に記載のない事項は「就業規則に明記されていませんが、一般的には〜」と補足してください。
+
+${docsWithSummary.map((d) => `### ${d.name}\n${d.ai_summary}`).join("\n\n")}`
+      : "";
 
   const deptName = p.departments?.name ?? "未所属";
   const employeeName = p.name?.trim() ?? "（氏名未登録）";
@@ -188,9 +321,7 @@ export async function buildHrAiSystemPrompt(
       : "";
 
   const rulesDocSupplement =
-    companyDocBlocks.trim().length > 0
-      ? `\n\n【就業規則ドキュメント（PDF要約）】\n以下は会社の就業規則です。質問には必ずこの規則に基づいて回答してください。\n${companyDocBlocks}`
-      : "";
+    rulesFromPdf.trim().length > 0 ? `\n\n${rulesFromPdf}` : "";
 
   return `あなたは${companyName}の専任AI人事アシスタントです。
 以下のことができます:
@@ -206,7 +337,12 @@ export async function buildHrAiSystemPrompt(
 - 氏名: ${employeeName}
 - 部署: ${deptName}
 - ロール: ${roleLabel(p.role)}
-- 有給残: ${leave?.days_remaining != null ? `${leave.days_remaining} 日` : "不明"}（次回付与日 ${leave?.next_accrual_date ?? "—"}${leave?.next_accrual_days != null ? `、付与日数 ${leave.next_accrual_days}` : ""}）
+- 入社日（契約の入社日・雇用開始、なければ人事レコード作成日）: ${joinedHint}
+- 雇用区分: 契約社員相当=${p.is_contract ? "はい" : "いいえ"}、短時間勤務=${p.is_part_time ? "はい" : "いいえ"}
+- 雇用契約（employment_contracts）: ${contractPart}
+- 有給残（paid_leave_balances）: ${leave?.days_remaining != null ? `${leave.days_remaining} 日` : "不明"}（次回付与目安 ${leave?.next_accrual_date ?? "—"}${leave?.next_accrual_days != null ? `、付与日数 ${leave.next_accrual_days}` : ""}）
+- 有給付与履歴（paid_leave_grants・抜粋）: ${grantsLines.length ? grantsLines.join(" ／ ") : "なし"}（表中の将来付与日の一例: ${nextGrantFromGrants}）
+- 今月の勤怠（attendance_punches・概算）: ${attendanceLine}
 - 今月のインセンティブ: ${incentiveLine}
 - 経費: ${expensesSummary}
 - 経費（旧フォーム）: ${legacyLines}

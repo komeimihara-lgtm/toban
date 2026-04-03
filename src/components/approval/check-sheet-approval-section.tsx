@@ -70,7 +70,7 @@ export function CheckSheetApprovalSection({
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">チェックシート評価</h2>
+      <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">黄金ルール評価表</h2>
       {sheets.length === 0 ? (
         <p className="text-sm text-zinc-500">評価待ちはありません</p>
       ) : (
@@ -98,8 +98,9 @@ export function CheckSheetApprovalSection({
             }, 0);
 
             return (
-              <li key={s.id} className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-                <div className="flex items-center justify-between">
+              <li key={s.id} className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
+                {/* ヘッダー */}
+                <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
                   <div>
                     <p className="text-sm font-medium">{empName || "—"}</p>
                     <p className="text-xs text-zinc-500">{s.year}年{s.month}月 · {SHEET_LABEL[sheetType]}</p>
@@ -110,35 +111,54 @@ export function CheckSheetApprovalSection({
                   </div>
                 </div>
 
-                <div className="mt-3 space-y-3">
+                {/* 項目 */}
+                <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
                   {categories.map((cat) => (
                     <div key={cat.name}>
-                      <p className="text-xs font-bold text-accent">{cat.name}</p>
+                      <div className="bg-accent/5 px-4 py-1.5 dark:bg-accent/10">
+                        <p className="text-xs font-bold text-accent">【{cat.name}】</p>
+                      </div>
                       {cat.indices.map((idx) => {
                         const ci = items[idx];
                         const selfEntry = s.self_check?.find((c) => c.item === ci.item);
                         const selfVal = selfEntry?.score ?? 0;
                         const mgrVal = getScore(s.id, idx, selfVal);
                         return (
-                          <div key={idx} className="mt-1.5 space-y-1">
-                            <p className="text-xs leading-snug text-zinc-700 dark:text-zinc-300">{ci.item}</p>
-                            <div className="flex items-center gap-2">
-                              <span className="w-16 text-[10px] text-zinc-500">自己: {selfVal > 0 ? "+" : ""}{selfVal}</span>
-                              <span className="text-[10px] text-zinc-500">上司:</span>
-                              <div className="flex gap-0.5">
-                                {SCORE_OPTIONS.map((o) => (
-                                  <button
-                                    key={o.value}
-                                    onClick={() => setScore(s.id, idx, o.value)}
-                                    className={`flex h-6 w-8 items-center justify-center rounded text-[10px] font-bold ${
-                                      mgrVal === o.value
-                                        ? o.value > 0 ? "bg-accent text-white" : "bg-red-500 text-white"
-                                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400"
-                                    }`}
-                                  >
-                                    {o.label}
-                                  </button>
-                                ))}
+                          <div key={idx} className="px-4 py-2.5">
+                            <p className="mb-1.5 text-xs leading-relaxed text-zinc-700 dark:text-zinc-300">
+                              <span className="mr-1 text-zinc-400">{idx + 1}.</span>
+                              {ci.item}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-3">
+                              {/* 自己評価（読み取り専用） */}
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-8 text-[10px] font-medium text-zinc-400">自己</span>
+                                <span className={`flex h-6 w-8 items-center justify-center rounded text-[10px] font-bold ${
+                                  selfVal > 0
+                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                    : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                                }`}>
+                                  {selfVal > 0 ? "+" : ""}{selfVal}
+                                </span>
+                              </div>
+                              {/* 上司評価ボタン */}
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-8 text-[10px] font-medium text-zinc-400">上司</span>
+                                <div className="flex gap-0.5">
+                                  {SCORE_OPTIONS.map((o) => (
+                                    <button
+                                      key={o.value}
+                                      onClick={() => setScore(s.id, idx, o.value)}
+                                      className={`flex h-6 w-8 items-center justify-center rounded text-[10px] font-bold transition-colors ${
+                                        mgrVal === o.value
+                                          ? o.value > 0 ? "bg-accent text-white" : "bg-red-500 text-white"
+                                          : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400"
+                                      }`}
+                                    >
+                                      {o.label}
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -148,11 +168,16 @@ export function CheckSheetApprovalSection({
                   ))}
                 </div>
 
-                <div className="mt-3 flex justify-end">
+                {/* 提出ボタン */}
+                <div className="flex items-center justify-between border-t border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                  <div className="text-xs text-zinc-500">
+                    上司評価合計: <span className="font-bold text-zinc-800 dark:text-zinc-200">{mgrTotal}</span>/{maxScore}
+                    （×{getMultiplier(sheetType, mgrTotal).toFixed(1)}）
+                  </div>
                   <button
                     onClick={() => submitManagerCheck(s.id, empName)}
                     disabled={loading === s.id}
-                    className="rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent/90 disabled:opacity-50"
+                    className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50"
                   >
                     {loading === s.id ? "保存中..." : "上司評価を保存"}
                   </button>

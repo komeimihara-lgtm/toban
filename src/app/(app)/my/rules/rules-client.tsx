@@ -35,11 +35,48 @@ export function RulesClient({
   const [uploadName, setUploadName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [summarizingIds, setSummarizingIds] = useState<Set<string>>(() => new Set());
   const fileRef = useRef<HTMLInputElement>(null);
 
-  function showToast(msg: string) {
+  function showToast(msg: string, ms = 3000) {
     setToast(msg);
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), ms);
+  }
+
+  async function runSummarize(documentId: string): Promise<boolean> {
+    setSummarizingIds((prev) => new Set(prev).add(documentId));
+    try {
+      const res = await fetch("/api/company-documents/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ document_id: documentId }),
+      });
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        ai_summary?: string;
+      };
+      if (!res.ok) {
+        showToast(j.error ?? "AI要約に失敗しました");
+        return false;
+      }
+      const summary = j.ai_summary ?? "";
+      setDocs((prev) =>
+        prev.map((d) =>
+          d.id === documentId ? { ...d, ai_summary: summary || null } : d,
+        ),
+      );
+      showToast("AI学習完了", 4000);
+      return true;
+    } catch {
+      showToast("AI要約に失敗しました");
+      return false;
+    } finally {
+      setSummarizingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(documentId);
+        return next;
+      });
+    }
   }
 
   async function openPdf(doc: Doc) {
@@ -115,7 +152,8 @@ export function RulesClient({
           return;
         }
         const { document: newDoc } = await res.json();
-        uploaded.push({ ...newDoc, ai_summary: null } as Doc);
+        const u = { ...newDoc, ai_summary: null } as Doc;
+        uploaded.push(u);
       }
       setDocs((prev) => [...uploaded, ...prev]);
       setUploadName("");
@@ -126,6 +164,11 @@ export function RulesClient({
           ? `アップロードしました（${uploaded.length}件）`
           : "アップロードしました",
       );
+      for (const u of uploaded) {
+        if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+          await runSummarize(u.id);
+        }
+      }
     } catch {
       showToast("アップロードに失敗しました");
     } finally {
@@ -159,6 +202,12 @@ export function RulesClient({
   return (
     <>
       {/* アップロードフォーム（owner/approverのみ） */}
+      {summarizingIds.size > 0 ? (
+        <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-900 dark:text-blue-100">
+          AI要約を生成中…（Claude が PDF を読み取っています。完了までお待ちください）
+        </div>
+      ) : null}
+
       {canUpload && (
         <div className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
           <h2 className="text-sm font-medium text-zinc-500">ドキュメントをアップロード</h2>
@@ -257,27 +306,52 @@ export function RulesClient({
         ) : (
           <ul className="mt-3 divide-y divide-zinc-100 dark:divide-zinc-800">
             {docs.map((doc) => (
-              <li key={doc.id} className="flex items-center justify-between gap-3 py-3">
+              <li key={doc.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div className="min-w-0 flex-1">
-                  <button
-                    onClick={() => openPdf(doc)}
-                    disabled={loading === doc.id}
-                    className="text-left text-sm font-medium text-accent underline-offset-2 hover:underline disabled:opacity-50"
-                  >
-                    {loading === doc.id ? "読み込み中..." : doc.name}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openPdf(doc)}
+                      disabled={loading === doc.id}
+                      className="text-left text-sm font-medium text-accent underline-offset-2 hover:underline disabled:opacity-50"
+                    >
+                      {loading === doc.id ? "読み込み中..." : doc.name}
+                    </button>
+                    {doc.ai_summary?.trim() ? (
+                      <span className="rounded-full bg-emerald-600/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                        ✅ AI学習済み
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-[10px] font-semibold text-zinc-600 dark:bg-zinc-400">
+                        ⏳ AI未学習
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-zinc-400">
                     {new Date(doc.created_at).toLocaleDateString("ja-JP")}
                   </p>
                 </div>
-                {canUpload && (
-                  <button
-                    onClick={() => handleDelete(doc.id)}
-                    className="shrink-0 text-xs text-red-500 hover:text-red-700"
-                  >
-                    削除
-                  </button>
-                )}
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  {canUpload && !doc.ai_summary?.trim() ? (
+                    <button
+                      type="button"
+                      onClick={() => void runSummarize(doc.id)}
+                      disabled={summarizingIds.has(doc.id)}
+                      className="rounded-lg border border-zinc-400 px-2 py-1 text-xs font-medium text-zinc-800 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-500 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                    >
+                      {summarizingIds.has(doc.id) ? "処理中…" : "AI学習させる"}
+                    </button>
+                  ) : null}
+                  {canUpload && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(doc.id)}
+                      className="text-xs text-red-500 hover:text-red-700"
+                    >
+                      削除
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

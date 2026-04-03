@@ -47,7 +47,7 @@ const MEMBER_ITEMS: CheckItem[] = [
   { category: "規律", item: "全ての業務に対して、時間厳守・提出期限厳守ができたか？" },
 ];
 
-// --- リーダー・幹部用（20項目）---
+// --- リーダー・幹部用（20項目＋自己管理1項目）---
 const LEADER_ITEMS: CheckItem[] = [
   { category: "プラス思考", item: "目的・使命感を常に失うことなく体現し、チームの活気を高める行動であったか？" },
   { category: "プラス思考", item: "会社の想い、ビジョン、方針、重点取り組みを常に全メンバーに伝え、理解を得たか？" },
@@ -69,6 +69,7 @@ const LEADER_ITEMS: CheckItem[] = [
   { category: "規律", item: "提出物は期限を守り、漏れなく提出ができたか？またメンバーにその大切さを伝えたか？" },
   { category: "規律", item: "全ての業務に対して5分前行動にて時間厳守ができたか？またメンバーにその大切さを伝えたか？" },
   { category: "規律", item: "規律・ルール厳守・KDIの徹底をリーダーが厳しく管理を行なったか？" },
+  { category: "自己管理", item: "自己管理の最優先として常に万全な体調の維持、健康管理に努めたか？" },
 ];
 
 export function getItems(type: SheetType): CheckItem[] {
@@ -92,5 +93,24 @@ export function getMultiplier(type: SheetType, total: number): number {
 }
 
 export function getMaxScore(type: SheetType): number {
-  return type === "leader" ? 40 : 36;
+  return getItems(type).length * 2;
+}
+
+export function getMultiplierTable(type: SheetType): { range: string; multiplier: number }[] {
+  if (type === "leader") {
+    return [
+      { range: "12未満", multiplier: 0.8 },
+      { range: "12〜19", multiplier: 0.9 },
+      { range: "20〜27", multiplier: 1.0 },
+      { range: "28〜35", multiplier: 1.1 },
+      { range: "36以上", multiplier: 1.2 },
+    ];
+  }
+  return [
+    { range: "10未満", multiplier: 0.8 },
+    { range: "10〜17", multiplier: 0.9 },
+    { range: "18〜28", multiplier: 1.0 },
+    { range: "29〜33", multiplier: 1.1 },
+    { range: "34以上", multiplier: 1.2 },
+  ];
 }
