@@ -13,6 +13,18 @@
 
 ---
 
+## 追加された機能（最新実装の要点）
+
+| 領域 | パス・内容 |
+|------|------------|
+| **社用車（設備）予約** | `/my/vehicles` … 全員が予約・閲覧。`/settings/vehicles` … **owner / director のみ**（車両マスタの追加・編集・無効化）。DB: `vehicles`, `vehicle_reservations`（**039**） |
+| **自己管理** | `/my/self-management` … 月間目標・黄金ルール評価表・成長履歴への**自己管理ハブ**（各機能への集約ページ。**未実装時は** `/my/goals`・`/my/check-sheet`・`/my/growth` を直接利用） |
+| **就業規則** | `/my/rules` … **閲覧のみ**（PDF・署名URL）。`/settings/documents` … **owner / director のみ**（アップロード・AI要約・削除） |
+| **黄金ルール評価表** | `/my/check-sheet` … DB `check_sheets`。種別は氏名により自動判定（`sheet-definitions.ts`）: **メンバー用** / **営業メンバー用**（川津・飯田・小笠原） / **リーダー・幹部用**。承認側は `/approval` のチェックシート枠 |
+| **月間目標・KPI・査定** | `/my/goals` … `monthly_goals`（theme, kpis jsonb, 承認フロー, AI評価）。成長: `/my/growth`。査定: `performance_reviews`（マイグレーション 031 等） |
+
+---
+
 ## ビジネスコンセプト
 レナード株式会社の社内HR管理システム。
 将来的にSaaS販売予定。
@@ -24,11 +36,17 @@ AIマッチング採用（月給5%継続課金）でマネタイズ。
 ## デザインシステム
 実装の正は `src/app/globals.css`。ダークは **ログイン画面**（`src/app/login/page.tsx`）と同一トーン。
 
+### カラー設計（確定版・ダークの核）
+- **background**: `#0c1222`（`--background`）
+- **background-sidebar**: `#0f172a`（`--background-sidebar` / `--surface-sidebar`）
+- **card**: `#162033`（`--card`）
+- **accent**: `#2563eb`（`--accent`。アクティブ寄りは `--sidebar-active-bg: #1d4ed8`）
+
 ### ライト（:root）
 - 背景 `#ffffff`、サイドバー/カードは `#f1f5f9` 系など（ファイル参照）
 
 ### ダーク（html.dark）
-- **body 背景**: `linear-gradient(to bottom, #020617, #0c1222, #0f172a)`（slate-950 → #0c1222 → slate-900）
+- **body 背景**: `linear-gradient(to bottom, #020617, #0c1222, #0f172a)`（slate-950 → 上記 background → slate-900）
 - **--background**: `#0c1222`
 - **--background-sidebar / --surface-sidebar**: `#0f172a`
 - **--card**: `#162033`
@@ -39,16 +57,35 @@ AIマッチング採用（月給5%継続課金）でマネタイズ。
 
 ---
 
-## ロール・権限
-- owner: 三原孔明（全権限）
-- director / approver / sr: 管理メニュー・承認など（`showAdminSection` は owner / director / approver / sr）
-- staff: 一般社員（自分のデータ中心）
-- **就業規則PDFの登録・AI学習・削除**: **owner / director のみ**（`/settings/documents`、API・RLS 同様）。approver はマイページで閲覧のみ（`/my/rules`）
-- employees の `auth_user_id` で role を取得
+## ロール体系（DB: employees.role）
+| role | 想定担当 | 主な権限・表示 |
+|------|----------|----------------|
+| **owner** | 三原孔明 | 全権限 |
+| **director** | 三原彩 | 管理メニュー。給与・退職リスク等 **salary/retention 系の閲覧**（`isSalaryAllowed` / `isRetentionAllowed`）。就業規則**管理**（`/settings/documents`） |
+| **approver** | 千葉亜矢子 | 経費・有給など**第1承認**、管理ダッシュ表示。**給与明細・契約等は非表示**（スタッフ同等の給与 UI 制約を意図した運用） |
+| **leader** | 五島久美子 | **チェックシート（黄金ルール）評価のみ**（承認ページの評価枠。sidebar は `showCheckSheetApproval` 等で調整） |
+| **sr** | 社労士（社外アカウント想定） | 給与・雇用契約の閲覧。管理セクション表示 |
+| **staff** | 一般社員 | 自分のデータ中心 |
+
+- 管理サイドバー（一覧が広いナビ）: **owner / director / approver / sr**（`showAdminSection`）
+- **就業規則 PDF の登録・AI 学習・削除**: **owner / director のみ**（`/settings/documents`、API・Storage RLS 同様）
+- employees の `auth_user_id`（または一部レガシーで `user_id`）で role を取得
+
+### 評価担当（manager_id 想定・組織ルール）
+メンバーの上長評価・チェックシートまわりで参照する担当イメージ（実装は `employees.manager_id` 等で紐付け）:
+
+| 評価者 | 管下 |
+|--------|------|
+| **中村 和彦** | サービス部メンバー **5 名**（高橋・田村・橋本・小山・吉田 等、定義に従う） |
+| **大岩 龍喜** | 営業 **3 名**（川津・小笠原・飯田） |
+| **五島 久美子** | 名古屋 **2 名**（藤野・稲垣） |
+| **三原 彩** | 管理本部 **3 名**（千葉・松田・三原彩自身を除く構成など、定義に従う） |
+| **三原 孔明** | **中村・大岩・五島・後藤**（幹部ライン） |
 
 ---
 
-## DBテーブル
+## DBテーブル・マイグレーション
+- **マイグレーション**: `supabase/migrations` は **`039_vehicle_reservations.sql` まで** コミット済み。**本番・開発 DB では 039 まで適用済み**を前提にドキュメントを更新する（新環境は CLI で一括適用）
 - profilesテーブルは存在しない（全てemployeesテーブルを使用）
 - auth_user_id = auth.uid() で照合
 - phone, address, emergency_contact, job_title, line_user_id はemployeesテーブル
@@ -56,7 +93,9 @@ AIマッチング採用（月給5%継続課金）でマネタイズ。
 - **deals**: `payment_method`（text。UIは「現金・振込」「カード」「ローン」「その他」）
 - **company_documents**: 就業規則PDF、`ai_summary`（Claude要約）、Storage `company-documents`
 - **monthly_goals**: 月間目標・KPI（`theme`, `kpis` jsonb, `result_input` 等）
-- **vehicles / vehicle_reservations**: 社用車・予約（039）
+- **vehicles / vehicle_reservations**: 社用車・予約（**039**）
+- **check_sheets**: 黄金ルール評価（ self_check / manager_check jsonb 等）
+- **performance_reviews**: 査定（期間・スコア・AIサマリー等、031 付近）
 
 ---
 
@@ -72,18 +111,19 @@ AIマッチング採用（月給5%継続課金）でマネタイズ。
 1. ホーム /my
 2. 勤怠 /my/attendance
 3. 経費申請 /my/expenses
-4. 給与明細 /my/payslip
+4. 給与明細 /my/payslip（**approver は運用上フィルタ可**・要件に合わせ非表示）
 5. 有給・休暇 /my/leave
-6. インセンティブ申請 /my/incentive（対象者のみ）
-7. AI相談窓口 /hr-ai
-8. 月間目標 /my/goals
-9. チェックシート /my/check-sheet
-10. 成長履歴 /my/growth
-11. 就業規則・社内規定 /my/rules（**閲覧のみ**。PDF一覧・プレビュー）
-12. 契約内容 /my/contract
-13. 社用車・予約 /my/vehicles（実装済みの場合）
-14. プロフィール設定 /my/profile
-15. 入社手続き /onboarding（onboarding_tasksにpendingがある場合）
+6. 社用車予約 /my/vehicles
+7. インセンティブ申請 /my/incentive（対象者のみ）
+8. AI相談窓口 /hr-ai
+9. **自己管理** `/my/self-management`（目標・評価表・成長のハブ。未実装時は以下個別へ）
+10. 月間目標 /my/goals
+11. 黄金ルール評価表（チェックシート）/my/check-sheet
+12. 成長履歴 /my/growth
+13. 就業規則・社内規定 /my/rules（**閲覧のみ**）
+14. 契約内容 /my/contract
+15. プロフィール設定 /my/profile
+16. 入社手続き /onboarding（条件付き）
 
 管理（owner / director / approver / sr）:
 1. 管理ダッシュボード /
@@ -95,9 +135,10 @@ AIマッチング採用（月給5%継続課金）でマネタイズ。
 7. 入退社手続き /onboarding/admin
 8. 自動承認ルール /settings/auto-approval
 9. **就業規則管理 /settings/documents**（**owner / director のみ**）
-10. 設定 /settings
-11. 設定管理 /settings/tenant
-12. 月次データ出力 /settings/export
+10. **車両管理 /settings/vehicles**（**owner / director のみ**）
+11. 設定 /settings
+12. 設定管理 /settings/tenant
+13. 月次データ出力 /settings/export
 
 ---
 
@@ -128,14 +169,25 @@ AIマッチング採用（月給5%継続課金）でマネタイズ。
 ### /my/payslip（給与明細）
 - 説明文は最小。`FREEE_COMPANY_ID` 未設定時は「給与明細は準備中です。」（詳細エラーを出さない）
 
+### /my/self-management（自己管理）
+- 月間目標・黄金ルール評価表・成長履歴への**入口**（カード／リンクのハブ）。ルート未作成環境では `/my/goals`・`/my/check-sheet`・`/my/growth` を利用
+
 ### /my/vehicles（社用車）
-- `vehicles` / `vehicle_reservations`（039）。会社単位で閲覧・予約。API: `/api/vehicles`, `/api/vehicle-reservations`
+- `vehicles` / `vehicle_reservations`（**039**）。全員が予約。API: `/api/vehicles`, `/api/vehicle-reservations`, `/api/vehicle-reservations/[id]`
+
+### /settings/vehicles（車両管理）
+- **owner / director のみ**。社用車マスタの CRUD（`VehicleAdminClient`）
 
 ### /my/rules（就業規則・社内規定）
 - **閲覧のみ**（PDF一覧・署名URLプレビュー）。アップロード・削除・AI学習は不可
 
 ### /settings/documents（就業規則管理）
 - **owner / director のみ**。PDFアップロード、**AI学習**（`/api/company-documents/summarize`）、削除、学習済みバッジ
+
+### /my/goals・査定連携
+- **月間目標・KPI**: `monthly_goals`（提出・承認・結果入力・Claude による AI 評価 `/api/goals/evaluate`）
+- **成長履歴** `/my/growth`: `monthly_goals` / `check_sheets` の履歴表示
+- **査定** `performance_reviews`: 期間・総合スコア・レビューコメント等（管理・入力画面は拡張可能）
 
 ### /my/incentive（インセンティブ申請）
 タブ1「案件登録」:
@@ -236,22 +288,24 @@ AIマッチング採用（月給5%継続課金）でマネタイズ。
 
 ---
 
-## 社員一覧・権限
-三原 孔明 / mihara@lenard.jp / 代表取締役 / owner
-千葉 亜矢子 / a.chiba@lenard.jp / 管理本部 / approver
-三原 彩 / aya@lenard.jp / 管理本部 / approver
+## 社員一覧・権限（ロールは運用で DB に反映すること）
+三原 孔明 / mihara@lenard.jp / 代表取締役 / **owner**
+千葉 亜矢子 / a.chiba@lenard.jp / 管理本部 / **approver**（給与・契約は原則不要表示）
+三原 彩 / aya@lenard.jp / 管理本部 / **director**（給与・退職リスク閲覧・就業規則管理）
 松田 剛 / matsuda@lenard.jp / 管理本部 / staff
-中村 和彦 / nakamura@lenard.jp / サービス部 / staff（is_service_target=true）
+中村 和彦 / nakamura@lenard.jp / サービス部 / staff（is_service_target=true・**サービス部評価担当**）
 橋本 賢一 / hashimoto@lenard.jp / サービス部 / staff（is_service_target=true）
 田村 優平 / y.tamura@lenard.jp / サービス部 / staff（is_service_target=true）
 髙橋 紀樹 / n.takahashi@lenard.jp / サービス部 / staff（is_service_target=true）
 小山 智子 / t.koyama@lenard.jp / サービス部 / staff
 吉田 浩 / h.yoshida@lenard.jp / サービス部 / staff
-五島 久美子 / goshima@lenard.jp / 名古屋支社 / staff
+五島 久美子 / goshima@lenard.jp / 名古屋支社 / **leader**（黄金ルール評価・名古屋2名の上長イメージ）
 藤野 由美佳 / fujino@lenard.jp / 名古屋支社 / staff
 稲垣 祐佳 / inagaki@lenard.jp / 名古屋支社 / staff
 川津 大輝 / kawazu@lenard.jp / 営業部 / staff（is_sales_target=true）
-大岩 宏隆 / oiwa@lenard.jp / 福岡営業部 / staff（is_sales_target=true）
+大岩 宏隆（龍喜表記あり） / oiwa@lenard.jp / 福岡営業部 / staff（is_sales_target=true・**営業3名の評価担当**）
 小笠原 啓太 / ogasawara@lenard.jp / 福岡営業部 / staff（is_sales_target=true）
 飯田 有里 / iida@lenard.jp / 福岡営業部 / staff（is_sales_target=true）
 後藤 / goto@lenard.jp / 本部長（契約） / staff（全対象外）
+
+※ **sr**（社労士）は別アカウントで付与する想定。メールは運用で追記。
