@@ -38,14 +38,30 @@ export default async function MyIncentivePage() {
   }
 
   const p = profile as ProfileRow;
-  if (!isIncentiveEligible(p)) {
+
+  /** AppSidebar と同じ条件: employees 行があればそのフラグを優先、なければ profiles */
+  const { data: empIncentive } = await supabase
+    .from("employees")
+    .select("is_sales_target, is_service_target")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const incentiveEligible = empIncentive
+    ? Boolean(
+        (empIncentive as { is_sales_target?: boolean }).is_sales_target ||
+          (empIncentive as { is_service_target?: boolean }).is_service_target,
+      )
+    : isIncentiveEligible(p);
+
+  if (!incentiveEligible) {
     return (
       <div className="mx-auto max-w-lg rounded-xl border border-zinc-200 bg-zinc-50 px-6 py-8 text-center dark:border-zinc-800 dark:bg-zinc-950/50">
         <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
           あなたはインセンティブ対象外です
         </p>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          営業・サービス対象（is_sales_target / is_service_target）のいずれかが有効な社員のみこの画面を利用できます。
+          営業・サービス対象（employees または profiles の is_sales_target /
+          is_service_target）のいずれかが有効な場合のみこの画面を利用できます。
         </p>
       </div>
     );
