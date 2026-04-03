@@ -16,7 +16,7 @@ export type RetentionSeverity = "high" | "medium" | "low";
 export type StaffProfile = {
   id: string;
   company_id: string;
-  full_name: string | null;
+  name: string | null;
   is_sales_target: boolean;
 };
 
@@ -213,8 +213,8 @@ async function notifyOwnersLine(
   text: string,
 ) {
   const { data: owners } = await admin
-    .from("profiles")
-    .select("line_user_id, full_name")
+    .from("employees")
+    .select("line_user_id, name")
     .eq("role", "owner")
     .not("line_user_id", "is", null);
 
@@ -260,8 +260,8 @@ export async function runRetentionAnalysis(): Promise<{
   const prevEndYmd = format(prevEnd, "yyyy-MM-dd");
 
   const { data: staff, error: staffErr } = await admin
-    .from("profiles")
-    .select("id, full_name, company_id, is_sales_target")
+    .from("employees")
+    .select("id, name, company_id, is_sales_target")
     .eq("role", "staff");
 
   if (staffErr || !staff?.length) {
@@ -401,7 +401,7 @@ export async function runRetentionAnalysis(): Promise<{
     const id = emp.id;
     const companyId = emp.company_id;
     if (!companyId) continue;
-    const name = emp.full_name?.trim() ?? "（氏名未設定）";
+    const name = emp.name?.trim() ?? "（氏名未設定）";
     const leaves = leavesByUser.get(id) ?? [];
     const punches = punchesByUser.get(id) ?? [];
 

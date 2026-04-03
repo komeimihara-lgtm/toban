@@ -153,8 +153,8 @@ export async function syncAllProfilesPayslipAndDeemed(
   month: number,
 ): Promise<StaffSyncResult[]> {
   const { data: profiles, error: listErr } = await admin
-    .from("profiles")
-    .select("id, freee_employee_id, full_name")
+    .from("employees")
+    .select("id, freee_employee_id, name")
     .not("freee_employee_id", "is", null);
 
   if (listErr) {
@@ -166,7 +166,7 @@ export async function syncAllProfilesPayslipAndDeemed(
   for (const row of profiles ?? []) {
     const uid = (row as { id: string }).id;
     const empId = Number((row as { freee_employee_id: number }).freee_employee_id);
-    const name = (row as { full_name: string | null }).full_name;
+    const name = (row as { name: string | null }).name;
     if (!Number.isFinite(empId)) {
       results.push({ user_id: uid, name, error: "freee_employee_id が不正" });
       continue;

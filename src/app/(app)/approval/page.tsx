@@ -82,17 +82,17 @@ export default async function ApprovalPage({
       (pendingLeave ?? []).map((x) => (x as { user_id: string }).user_id),
     ),
   ];
-  const { data: leaveProfiles } =
+  const { data: leaveEmps } =
     leaveUids.length > 0
       ? await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", leaveUids)
-      : { data: [] as { id: string; full_name: string | null }[] };
+          .from("employees")
+          .select("auth_user_id, name")
+          .in("auth_user_id", leaveUids)
+      : { data: [] as { auth_user_id: string; name: string | null }[] };
   const leaveNameBy = new Map(
-    (leaveProfiles ?? []).map((p) => {
-      const r = p as { id: string; full_name: string | null };
-      return [r.id, r.full_name?.trim() || "（無名）"] as const;
+    (leaveEmps ?? []).map((p) => {
+      const r = p as { auth_user_id: string; name: string | null };
+      return [r.auth_user_id, r.name?.trim() || "（無名）"] as const;
     }),
   );
 

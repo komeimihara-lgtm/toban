@@ -45,8 +45,8 @@ export async function POST(req: Request) {
     }
 
     const { data: people, error: pe } = await admin
-      .from("profiles")
-      .select("id, full_name, is_sales_target, is_service_target, is_contract, department_id")
+      .from("employees")
+      .select("id, name, is_sales_target, is_service_target, is_contract, department_id")
       .eq("company_id", companyId)
       .eq("department_id", departmentId)
       .eq("is_contract", false);
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
     for (const p of people ?? []) {
       const row = p as {
         id: string;
-        full_name: string | null;
+        name: string | null;
         is_sales_target: boolean;
         is_service_target: boolean;
       };
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
         month,
         department_id: departmentId,
         employee_id: row.id,
-        employee_name: row.full_name,
+        employee_name: row.name,
         sales_amount: sales,
         rate,
         incentive_amount: incentiveAmount,

@@ -23,14 +23,14 @@ export default async function EmployeeRetentionDetailPage({
     redirect("/my");
   }
   const { data: me } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", user.id)
-    .single();
+    .from("employees")
+    .select("name")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   const { data: target } = await supabase
-    .from("profiles")
-    .select("id, full_name")
+    .from("employees")
+    .select("id, name")
     .eq("id", id)
     .maybeSingle();
   if (!target) notFound();
@@ -64,7 +64,7 @@ export default async function EmployeeRetentionDetailPage({
       .limit(80),
   ]);
 
-  const name = (target as { full_name?: string | null }).full_name?.trim() ?? "従業員";
+  const name = (target as { name?: string | null }).name?.trim() ?? "従業員";
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">

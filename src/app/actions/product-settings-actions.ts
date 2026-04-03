@@ -12,10 +12,10 @@ async function adminSupabase() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("role, company_id")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
   const pr = profile as { role?: string; company_id?: string } | null;
   if (!isAdminRole(pr?.role ?? "") || !pr?.company_id) {
     redirect("/my");

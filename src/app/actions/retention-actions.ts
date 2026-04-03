@@ -16,10 +16,10 @@ export async function resolveRetentionAlertAction(formData: FormData): Promise<v
   if (!user) return;
 
   const { data: me } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("role")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   if (!isAdminRole((me as { role?: string })?.role ?? "")) return;
 

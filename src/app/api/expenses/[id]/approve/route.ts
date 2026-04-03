@@ -89,7 +89,7 @@ export async function POST(
         target_id: id,
         action: "step1_approve",
         actor_id: user.id,
-        actor_name: profile.full_name,
+        actor_name: profile.name,
       });
       if (logErr) {
         return NextResponse.json({ error: logErr.message }, { status: 500 });
@@ -107,14 +107,14 @@ export async function POST(
         );
         const companyName = (co as { name?: string } | null)?.name;
         const { data: subMeta } = await admin
-          .from("profiles")
-          .select("full_name")
-          .eq("id", row.submitter_id)
+          .from("employees")
+          .select("name")
+          .eq("auth_user_id", row.submitter_id)
           .maybeSingle();
-        const applicantName = (subMeta as { full_name: string | null } | null)
-          ?.full_name;
+        const applicantName = (subMeta as { name: string | null } | null)
+          ?.name;
         const { data: owners } = await admin
-          .from("profiles")
+          .from("employees")
           .select("id, line_user_id")
           .eq("role", "owner")
           .eq("company_id", profile.company_id);
@@ -182,7 +182,7 @@ export async function POST(
       target_id: id,
       action: "step2_approve",
       actor_id: user.id,
-      actor_name: profile.full_name,
+      actor_name: profile.name,
     });
     if (log2) {
       return NextResponse.json({ error: log2.message }, { status: 500 });
@@ -200,12 +200,12 @@ export async function POST(
       );
       const companyName = (co as { name?: string } | null)?.name;
       const { data: sub } = await admin
-        .from("profiles")
-        .select("line_user_id, full_name")
-        .eq("id", row.submitter_id)
+        .from("employees")
+        .select("line_user_id, name")
+        .eq("auth_user_id", row.submitter_id)
         .maybeSingle();
       const line = (sub as { line_user_id: string | null } | null)?.line_user_id ?? null;
-      const submitterName = (sub as { full_name: string | null } | null)?.full_name;
+      const submitterName = (sub as { name: string | null } | null)?.name;
       const lineMsg = `経費申請が承認されました（${row.category} ¥${Number(row.amount).toLocaleString("ja-JP")}）`;
       if (usesLineChannel(settings) && line) {
         await enqueueNotification({

@@ -150,10 +150,10 @@ export async function POST(req: Request) {
     const { data: salesProfilesRaw } =
       salesIdList.length > 0
         ? await supabase
-            .from("profiles")
-            .select("id, full_name")
-            .in("id", salesIdList)
-        : { data: [] as { id: string; full_name: string | null }[] };
+            .from("employees")
+            .select("auth_user_id, name")
+            .in("auth_user_id", salesIdList)
+        : { data: [] as { auth_user_id: string; name: string | null }[] };
 
     const salesProfiles = salesProfilesRaw ?? [];
 
@@ -340,8 +340,8 @@ export async function POST(req: Request) {
     const staffEffList: StaffEff[] = [];
     const salesNameById = new Map<string, string | null>();
     for (const p of salesProfiles ?? []) {
-      const row = p as { id: string; full_name: string | null };
-      salesNameById.set(row.id, row.full_name);
+      const row = p as { auth_user_id: string; name: string | null };
+      salesNameById.set(row.auth_user_id, row.name);
     }
     for (const sid of salesIds) {
       const fullName = salesNameById.get(sid) ?? null;

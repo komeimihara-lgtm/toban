@@ -79,7 +79,7 @@ export async function POST(req: Request, ctx: Ctx) {
       target_id: id,
       action: logAction,
       actor_id: user.id,
-      actor_name: profile.full_name,
+      actor_name: profile.name,
       reason: reason,
     });
 

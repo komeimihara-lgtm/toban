@@ -184,7 +184,7 @@ export async function POST(req: Request) {
         type,
         status,
         submitter_id: user.id,
-        submitter_name: profile.full_name,
+        submitter_name: profile.name,
         department_id: profile.department_id,
         category,
         amount,
@@ -256,11 +256,11 @@ export async function POST(req: Request) {
             (co as { settings?: unknown } | null)?.settings,
           );
           const { data: approvers } = await admin
-            .from("profiles")
-            .select("line_user_id, full_name")
+            .from("employees")
+            .select("line_user_id, name")
             .eq("role", "approver")
             .eq("company_id", profile.company_id);
-          const msg = `経費申請の第1承認待ち: ${profile.full_name ?? "申請者"} / ¥${amount.toLocaleString("ja-JP")}`;
+          const msg = `経費申請の第1承認待ち: ${profile.name ?? "申請者"} / ¥${amount.toLocaleString("ja-JP")}`;
           for (const row of approvers ?? []) {
             const ln = (row as { line_user_id: string | null }).line_user_id;
             if (usesLineChannel(settings) && ln) {

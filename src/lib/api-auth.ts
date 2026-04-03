@@ -5,7 +5,7 @@ export type AuthProfile = {
   id: string;
   company_id: string;
   role: string;
-  full_name: string | null;
+  name: string | null;
   line_user_id: string | null;
   department_id: string | null;
   is_sales_target: boolean;
@@ -37,11 +37,11 @@ export async function getProfile(
   userId: string,
 ): Promise<AuthProfile | null> {
   const { data, error } = await supabase
-    .from("profiles")
+    .from("employees")
     .select(
-      "id, company_id, role, full_name, line_user_id, department_id, is_sales_target",
+      "id, company_id, role, name, line_user_id, department_id, is_sales_target",
     )
-    .eq("id", userId)
+    .eq("auth_user_id", userId)
     .maybeSingle();
   if (error || !data) return null;
   const row = data as AuthProfile;

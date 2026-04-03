@@ -82,7 +82,7 @@ export async function POST(
       target_id: id,
       action: "reject",
       actor_id: user.id,
-      actor_name: profile.full_name,
+      actor_name: profile.name,
       reason,
     });
     if (logE) {
@@ -101,12 +101,12 @@ export async function POST(
       );
       const companyName = (co as { name?: string } | null)?.name;
       const { data: sub } = await admin
-        .from("profiles")
-        .select("line_user_id, full_name")
-        .eq("id", row.submitter_id)
+        .from("employees")
+        .select("line_user_id, name")
+        .eq("auth_user_id", row.submitter_id)
         .maybeSingle();
       const line = (sub as { line_user_id: string | null } | null)?.line_user_id ?? null;
-      const subName = (sub as { full_name: string | null } | null)?.full_name;
+      const subName = (sub as { name: string | null } | null)?.name;
       const lineMsg = `経費が差戻されました: ${reason}`;
       if (usesLineChannel(settings) && line) {
         await enqueueNotification({

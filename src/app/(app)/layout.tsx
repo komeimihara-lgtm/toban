@@ -103,17 +103,11 @@ export default async function AppGroupLayout({
       } = await supabase.auth.getUser();
 
       if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select(
-            "full_name, role, company_id, is_sales_target, is_service_target",
-          )
-          .eq("id", user.id)
-          .maybeSingle();
-
         const emp = await fetchEmployeeRowForAuthUser(supabase, user.id);
 
-        const cid = (profile as { company_id?: string } | null)?.company_id;
+        const profile = emp as { name?: string; role?: string; company_id?: string; is_sales_target?: boolean; is_service_target?: boolean } | null;
+
+        const cid = (emp as { company_id?: string } | null)?.company_id;
         if (cid) {
           const { data: co } = await supabase
             .from("companies")
@@ -124,7 +118,7 @@ export default async function AppGroupLayout({
         }
 
         const name =
-          (profile as { full_name?: string | null } | null)?.full_name?.trim() ||
+          (profile as { name?: string | null } | null)?.name?.trim() ||
           user.email ||
           user.id.slice(0, 8);
         userLabel = name;

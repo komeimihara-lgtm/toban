@@ -73,8 +73,8 @@ export async function GET(request: Request) {
   const month = now.getMonth() + 1;
 
   const { data: profiles, error: listErr } = await admin
-    .from("profiles")
-    .select("id, freee_employee_id, full_name")
+    .from("employees")
+    .select("auth_user_id, freee_employee_id, name")
     .not("freee_employee_id", "is", null);
 
   if (listErr) {
@@ -89,7 +89,7 @@ export async function GET(request: Request) {
   }[] = [];
 
   for (const row of profiles ?? []) {
-    const uid = (row as { id: string }).id;
+    const uid = (row as { auth_user_id: string }).auth_user_id;
     const empId = (row as { freee_employee_id: number }).freee_employee_id;
 
     try {

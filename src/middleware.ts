@@ -83,12 +83,7 @@ export async function middleware(request: NextRequest) {
       if (empByUser) {
         role = (empByUser as { role?: string }).role ?? "staff";
       } else {
-        const { data: pr } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .maybeSingle();
-        role = (pr as { role?: string } | null)?.role ?? "staff";
+        role = "staff";
       }
     }
     const dest = isAdminRole(role) ? "/" : "/my";

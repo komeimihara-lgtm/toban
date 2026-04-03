@@ -160,8 +160,8 @@ export async function checkAndGrantPaidLeave(
     granted += 1;
 
     const { data: prof } = await admin
-      .from("profiles")
-      .select("line_user_id, full_name")
+      .from("employees")
+      .select("line_user_id, name")
       .eq("id", params.employeeId)
       .maybeSingle();
 
@@ -169,7 +169,7 @@ export async function checkAndGrantPaidLeave(
       company_id: params.companyId,
       employee_id: params.employeeId,
       line_user_id: (prof as { line_user_id?: string | null })?.line_user_id ?? null,
-      full_name: (prof as { full_name?: string | null })?.full_name ?? null,
+      full_name: (prof as { name?: string | null })?.name ?? null,
       grant_date: grantYmd,
       days_granted: delta,
     });

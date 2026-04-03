@@ -5,9 +5,9 @@ export async function getProfileSalesTargetFlag(
   userId: string,
 ): Promise<boolean> {
   const { data } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("is_sales_target")
-    .eq("id", userId)
+    .eq("auth_user_id", userId)
     .maybeSingle();
   return Boolean((data as { is_sales_target?: boolean } | null)?.is_sales_target);
 }
@@ -44,7 +44,7 @@ export async function fetchSalesTargetUserIds(
   if (fromEmp.length > 0) return [...new Set(fromEmp)];
 
   const { data: profs } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("id")
     .eq("company_id", companyId)
     .eq("is_sales_target", true);

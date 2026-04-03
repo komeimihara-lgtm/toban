@@ -1,8 +1,8 @@
-/** DB: public.profiles（auth.users.id と同一の id） */
+/** DB: public.employees */
 export type ProfileRow = {
   id: string;
   company_id: string;
-  full_name: string | null;
+  name: string | null;
   role: "owner" | "approver" | "staff";
   is_sales_target: boolean;
   is_service_target: boolean;

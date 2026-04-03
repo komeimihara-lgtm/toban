@@ -23,9 +23,9 @@ export async function GET(request: Request) {
   }
 
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("freee_employee_id")
-    .eq("id", user.id)
+    .eq("auth_user_id", user.id)
     .maybeSingle();
 
   const freeeEmpId = profile?.freee_employee_id as number | null | undefined;

@@ -21,7 +21,7 @@ async function notifyAdminsInterviewCompletedLine(employeeName: string) {
     return;
   }
   const { data: owners } = await admin
-    .from("profiles")
+    .from("employees")
     .select("line_user_id")
     .eq("role", "owner")
     .not("line_user_id", "is", null);
@@ -36,7 +36,7 @@ async function notifyAdminsInterviewCompletedEmail(
   admin: ReturnType<typeof createAdminClient>,
   employeeName: string,
 ) {
-  const { data: owners } = await admin.from("profiles").select("id").eq("role", "owner");
+  const { data: owners } = await admin.from("employees").select("id").eq("role", "owner");
   for (const o of owners ?? []) {
     const oid = (o as { id: string }).id;
     const email = await getAuthUserEmail(admin, oid);
@@ -59,10 +59,10 @@ export async function recommendAiInterviewFromRetentionAction(
   if (!user) return;
 
   const { data: me } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("role")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
   if (!isAdminRole((me as { role?: string })?.role ?? "")) return;
 
   const { data: pending } = await supabase
@@ -86,12 +86,12 @@ export async function recommendAiInterviewFromRetentionAction(
   }
 
   const { data: empProf } = await supabase
-    .from("profiles")
-    .select("full_name, line_user_id")
+    .from("employees")
+    .select("name, line_user_id")
     .eq("id", employeeId)
     .maybeSingle();
   const empName =
-    (empProf as { full_name?: string | null } | null)?.full_name?.trim() ?? "従業員";
+    (empProf as { name?: string | null } | null)?.name?.trim() ?? "従業員";
   const lineUid = (empProf as { line_user_id?: string | null } | null)?.line_user_id?.trim();
 
   if (lineUid) {
@@ -209,12 +209,12 @@ export async function completeAiInterview(requestId: string): Promise<{
   }
 
   const { data: prof } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", user.id)
+    .from("employees")
+    .select("name")
+    .eq("auth_user_id", user.id)
     .maybeSingle();
   const name =
-    (prof as { full_name?: string | null } | null)?.full_name?.trim() ||
+    (prof as { name?: string | null } | null)?.name?.trim() ||
     user.email ||
     "従業員";
 

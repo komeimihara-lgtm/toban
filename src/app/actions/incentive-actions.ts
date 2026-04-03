@@ -79,10 +79,10 @@ export async function saveIncentiveDraft(
   }
 
   const { data: profile, error: profileErr } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("id, is_sales_target, is_service_target, role")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   if (profileErr || !profile) {
     return { ok: false, message: "プロフィールが見つかりません。" };
@@ -203,10 +203,10 @@ export async function submitIncentiveSales(
   }
 
   const { data: profile, error: profileErr } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("id, is_sales_target, is_service_target, role")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   if (profileErr || !profile) {
     return { ok: false, message: "プロフィールが見つかりません。" };
@@ -322,10 +322,10 @@ export async function saveSimpleIncentiveDraft(
   }
 
   const { data: profile, error: profileErr } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("id, is_sales_target, is_service_target")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   if (profileErr || !profile) {
     return { ok: false, message: "プロフィールが見つかりません。" };
@@ -420,10 +420,10 @@ export async function submitSimpleIncentive(
   }
 
   const { data: profile, error: profileErr } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("id, is_sales_target, is_service_target")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   if (profileErr || !profile) {
     return { ok: false, message: "プロフィールが見つかりません。" };

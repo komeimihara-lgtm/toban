@@ -23,8 +23,8 @@ export async function notifyApproversDealSubmitted(input: {
     if (!usesLineChannel(settings)) return;
 
     const { data: admins } = await admin
-      .from("profiles")
-      .select("line_user_id, full_name, role")
+      .from("employees")
+      .select("line_user_id, name, role")
       .eq("company_id", input.company_id)
       .in("role", ["owner", "approver"]);
 
@@ -66,7 +66,7 @@ export async function notifySubmitterDealDecision(input: {
     if (!usesLineChannel(settings)) return;
 
     const { data: sub } = await admin
-      .from("profiles")
+      .from("employees")
       .select("line_user_id")
       .eq("id", input.submitter_id)
       .maybeSingle();

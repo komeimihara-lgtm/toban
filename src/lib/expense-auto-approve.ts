@@ -82,7 +82,7 @@ export async function tryAutoApproveExpense(
 
   const now = new Date().toISOString();
   const { data: owner } = await admin
-    .from("profiles")
+    .from("employees")
     .select("id")
     .eq("company_id", exp.company_id)
     .eq("role", "owner")
@@ -130,13 +130,13 @@ export async function tryAutoApproveExpense(
     );
     const companyName = (co as { name?: string } | null)?.name;
     const { data: sub } = await admin
-      .from("profiles")
-      .select("line_user_id, full_name")
+      .from("employees")
+      .select("line_user_id, name")
       .eq("id", exp.submitter_id)
       .maybeSingle();
     const line =
       (sub as { line_user_id: string | null } | null)?.line_user_id ?? null;
-    const submitterName = (sub as { full_name: string | null } | null)?.full_name;
+    const submitterName = (sub as { name: string | null } | null)?.name;
     const lineMsg = `経費が自動承認されました（${exp.category} ¥${Number(exp.amount).toLocaleString("ja-JP")}）`;
     if (usesLineChannel(settings) && line) {
       await enqueueNotification({

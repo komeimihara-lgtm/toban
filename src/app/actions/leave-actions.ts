@@ -28,9 +28,9 @@ export async function submitLeaveRequestAction(formData: FormData) {
   }
 
   const { data: pr } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("company_id")
-    .eq("id", user.id)
+    .eq("auth_user_id", user.id)
     .maybeSingle();
   const companyId = (pr as { company_id?: string } | null)?.company_id;
   if (!companyId) {

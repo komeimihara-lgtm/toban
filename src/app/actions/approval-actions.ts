@@ -11,10 +11,10 @@ async function ensureAdmin() {
   } = await supabase.auth.getUser();
   if (!user) return { supabase, ok: false as const };
   const { data: p } = await supabase
-    .from("profiles")
-    .select("role, full_name, id")
-    .eq("id", user.id)
-    .single();
+    .from("employees")
+    .select("role, name, id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
   if (!isAdminRole((p as { role?: string })?.role ?? "")) {
     return { supabase, ok: false as const };
   }

@@ -68,13 +68,13 @@ export async function GET(req: Request) {
     }
 
     const { data: allNames } = await supabase
-      .from("profiles")
-      .select("id, full_name")
+      .from("employees")
+      .select("auth_user_id, name")
       .eq("company_id", companyId);
     const nameById = new Map<string, string | null>();
     for (const r of allNames ?? []) {
-      const row = r as { id: string; full_name: string | null };
-      nameById.set(row.id, row.full_name);
+      const row = r as { auth_user_id: string; name: string | null };
+      nameById.set(row.auth_user_id, row.name);
     }
 
     const headers = new Headers();

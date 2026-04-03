@@ -20,9 +20,9 @@ export async function GET() {
   }
 
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("role")
-    .eq("id", user.id)
+    .eq("auth_user_id", user.id)
     .maybeSingle();
   if (!isAdminRole((profile as { role?: string } | null)?.role ?? "")) {
     return Response.json({ ok: false, error: "forbidden" }, { status: 403 });
@@ -71,9 +71,9 @@ export async function POST(request: Request) {
   }
 
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("role")
-    .eq("id", user.id)
+    .eq("auth_user_id", user.id)
     .maybeSingle();
   if (!isAdminRole((profile as { role?: string } | null)?.role ?? "")) {
     return Response.json({ ok: false, error: "forbidden" }, { status: 403 });

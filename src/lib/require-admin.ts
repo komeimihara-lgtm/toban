@@ -23,12 +23,7 @@ export async function resolveUserRole(
     .maybeSingle();
   if (byUser) return (byUser as { role?: string }).role ?? "staff";
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
-  return (profile as { role?: string } | null)?.role ?? "staff";
+  return "staff";
 }
 
 export async function checkAdminRole(

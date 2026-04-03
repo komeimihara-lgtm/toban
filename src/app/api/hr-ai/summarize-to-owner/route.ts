@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "プロフィールが一致しません" }, { status: 403 });
     }
 
-    const employeeName = profile.full_name?.trim() || "（氏名未登録）";
+    const employeeName = profile.name?.trim() || "（氏名未登録）";
     const { data: dept } = profile.department_id
       ? await supabase
           .from("departments")
@@ -129,8 +129,8 @@ export async function POST(req: Request) {
     const lineOk = usesLineChannel(settings);
 
     const { data: owners } = await admin
-      .from("profiles")
-      .select("line_user_id, full_name")
+      .from("employees")
+      .select("line_user_id, name")
       .eq("company_id", r.company_id)
       .eq("role", "owner");
 

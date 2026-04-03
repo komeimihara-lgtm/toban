@@ -106,15 +106,15 @@ export async function POST(
 
   let applicantName: string | null = null;
   const { data: ap } = await supabase
-    .from("profiles")
-    .select("full_name, line_user_id")
-    .eq("id", corr.employee_id)
+    .from("employees")
+    .select("name, line_user_id")
+    .eq("auth_user_id", corr.employee_id)
     .maybeSingle();
   const applicant = ap as {
-    full_name: string | null;
+    name: string | null;
     line_user_id: string | null;
   } | null;
-  applicantName = applicant?.full_name ?? null;
+  applicantName = applicant?.name ?? null;
 
   let companyName: string | null = null;
   const admin = createAdminClient();

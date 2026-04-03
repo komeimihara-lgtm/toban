@@ -20,10 +20,10 @@ export async function saveAutoApprovalRulesAction(patches: AutoRulePatch[]) {
   }
 
   const { data: pr } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("role, company_id")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
   const role = (pr as { role?: string } | null)?.role;
   const companyId = (pr as { company_id?: string } | null)?.company_id;
   if (role !== "owner" || !companyId) {

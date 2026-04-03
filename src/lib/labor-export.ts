@@ -46,7 +46,7 @@ function parseDealServices(raw: unknown): DealServiceLine[] {
 
 type ProfileRow = {
   id: string;
-  full_name: string | null;
+  name: string | null;
   department_id: string | null;
 };
 
@@ -60,10 +60,10 @@ export async function buildAttendanceWorkbook(
   const { startIso, endIso, daysInMonth } = monthRangeUtc(year, month);
 
   const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, full_name, department_id")
+    .from("employees")
+    .select("id, name, department_id")
     .eq("company_id", companyId)
-    .order("full_name", { ascending: true });
+    .order("name", { ascending: true });
 
   const staff = (profiles ?? []) as ProfileRow[];
 
@@ -162,7 +162,7 @@ export async function buildAttendanceWorkbook(
     }
     const plDays = leaveDaysInMonth(p.id);
     summaryRows.push([
-      p.full_name ?? "",
+      p.name ?? "",
       nameByDept.get(p.department_id ?? "") ?? "",
       workDays,
       0,
@@ -183,7 +183,7 @@ export async function buildAttendanceWorkbook(
           : 0;
       const netMin = netWorkMinutesFromDay(grossMin);
       dayRows.push([
-        p.full_name ?? "",
+        p.name ?? "",
         ds,
         inTs ? tokyoHm(inTs) : "",
         outTs ? tokyoHm(outTs) : "",
@@ -198,7 +198,7 @@ export async function buildAttendanceWorkbook(
     const uid = String((lr as { user_id: string }).user_id);
     const prof = staff.find((x) => x.id === uid);
     leaveRows.push([
-      prof?.full_name ?? uid,
+      prof?.name ?? uid,
       String((lr as { start_date: string }).start_date),
       kindLabel[String((lr as { kind: string }).kind)] ?? String((lr as { kind: string }).kind),
       String((lr as { reason: string | null }).reason ?? ""),
@@ -418,8 +418,8 @@ export async function buildIncentiveWorkbook(
   }
 
   const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, full_name, department_id")
+    .from("employees")
+    .select("id, name, department_id")
     .eq("company_id", companyId);
 
   const summaryRows: (string | number)[][] = [
@@ -440,7 +440,7 @@ export async function buildIncentiveWorkbook(
     const total = a.appoSum + a.closerSum;
     if (total <= 0 && a.appoN === 0 && a.closerN === 0) continue;
     summaryRows.push([
-      p.full_name ?? p.id,
+      p.name ?? p.id,
       nameByDept.get(p.department_id ?? "") ?? "",
       a.appoN,
       a.appoSum,

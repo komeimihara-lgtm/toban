@@ -205,9 +205,9 @@ export async function AdminDashboard() {
     ).length;
 
   const { data: team } = await supabase
-    .from("profiles")
-    .select("id, full_name, role")
-    .order("full_name", { ascending: true });
+    .from("employees")
+    .select("id, name, role")
+    .order("name", { ascending: true });
 
   const { start: dayStart, end: dayEnd } = jstTodayBounds();
   const memberIds = (team ?? []).map((m) => (m as { id: string }).id);
@@ -248,8 +248,8 @@ export async function AdminDashboard() {
 
   const nameById = new Map<string, string>();
   for (const m of team ?? []) {
-    const r = m as { id: string; full_name: string | null };
-    nameById.set(r.id, r.full_name?.trim() || "（無名）");
+    const r = m as { id: string; name: string | null };
+    nameById.set(r.id, r.name?.trim() || "（無名）");
   }
 
   const sevOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -261,11 +261,11 @@ export async function AdminDashboard() {
 
   const staffAttendance = (team ?? [])
     .map((m) => {
-      const row = m as { id: string; full_name: string | null; role: string };
+      const row = m as { id: string; name: string | null; role: string };
       const st = todayPunchStatus(punchesByUser.get(row.id) ?? []);
       return {
         id: row.id,
-        name: row.full_name?.trim() || "（無名）",
+        name: row.name?.trim() || "（無名）",
         roleKey: row.role,
         ...st,
       };

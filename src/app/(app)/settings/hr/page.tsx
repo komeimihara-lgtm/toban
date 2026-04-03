@@ -13,12 +13,12 @@ export default async function SettingsHrPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
+  const { data: emp } = await supabase
+    .from("employees")
     .select("company_id")
-    .eq("id", user.id)
+    .eq("auth_user_id", user.id)
     .maybeSingle();
-  const companyId = (profile as { company_id?: string } | null)?.company_id;
+  const companyId = (emp as { company_id?: string } | null)?.company_id;
   const role = await resolveUserRole(supabase, user.id);
   if (!isAdminRole(role) || !companyId) {
     redirect("/my");
@@ -30,12 +30,12 @@ export default async function SettingsHrPage() {
     .eq("company_id", companyId)
     .order("name");
   const { data: employees } = await supabase
-    .from("profiles")
+    .from("employees")
     .select(
-      "id, full_name, role, department_id, is_sales_target, is_service_target, is_contract, is_part_time",
+      "id, name, role, department_id, is_sales_target, is_service_target, is_contract, is_part_time",
     )
     .eq("company_id", companyId)
-    .order("full_name", { ascending: true });
+    .order("name", { ascending: true });
 
   const deptName = new Map(
     (departments ?? []).map((d) => [(d as { id: string }).id, (d as { name: string }).name]),
@@ -100,7 +100,7 @@ export default async function SettingsHrPage() {
               {(employees ?? []).map((e) => {
                 const row = e as {
                   id: string;
-                  full_name: string | null;
+                  name: string | null;
                   role: string;
                   department_id: string | null;
                   is_sales_target: boolean;
@@ -108,7 +108,7 @@ export default async function SettingsHrPage() {
                 };
                 return (
                   <tr key={row.id} className="border-b border-zinc-100 dark:border-zinc-800/80">
-                    <td className="py-2 pr-2">{row.full_name ?? "—"}</td>
+                    <td className="py-2 pr-2">{row.name ?? "—"}</td>
                     <td className="py-2 pr-2">{row.role}</td>
                     <td className="py-2 pr-2">
                       {row.department_id ? (deptName.get(row.department_id) ?? "—") : "—"}

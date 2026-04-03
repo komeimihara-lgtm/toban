@@ -21,12 +21,12 @@ export default async function SettingsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
+  const { data: emp } = await supabase
+    .from("employees")
     .select("company_id")
-    .eq("id", user.id)
-    .single();
-  const companyId = (profile as { company_id?: string } | null)?.company_id;
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  const companyId = (emp as { company_id?: string } | null)?.company_id;
   const role = await resolveUserRole(supabase, user.id);
   if (!isAdminRole(role) || !companyId) redirect("/my");
 

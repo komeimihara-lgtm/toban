@@ -19,11 +19,11 @@ export async function buildHrAiSystemPrompt(
   userId: string,
 ): Promise<string | null> {
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("employees")
     .select(
-      "id, company_id, full_name, role, department_id, is_sales_target, is_service_target, departments ( name )",
+      "id, company_id, name, role, department_id, is_sales_target, is_service_target, departments ( name )",
     )
-    .eq("id", userId)
+    .eq("auth_user_id", userId)
     .maybeSingle();
 
   const p = profile as (ProfileRow & {
@@ -159,7 +159,7 @@ export async function buildHrAiSystemPrompt(
     .join("\n\n---\n\n");
 
   const deptName = p.departments?.name ?? "未所属";
-  const employeeName = p.full_name?.trim() ?? "（氏名未登録）";
+  const employeeName = p.name?.trim() ?? "（氏名未登録）";
   const contactHint =
     p.company_id === DEFAULT_COMPANY_ID
       ? "管理本部の千葉さんに確認してください"

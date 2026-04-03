@@ -117,9 +117,9 @@ export async function POST(req: Request) {
   }
 
   const { data: tp } = await admin
-    .from("profiles")
+    .from("employees")
     .select("company_id, is_sales_target, is_service_target")
-    .eq("id", targetUserId)
+    .eq("auth_user_id", targetUserId)
     .maybeSingle();
   const tRow = tp as {
     company_id: string;

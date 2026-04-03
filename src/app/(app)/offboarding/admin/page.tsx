@@ -13,12 +13,12 @@ export default async function OffboardingAdminPage() {
   if (!user) redirect("/login");
 
   if (!(await checkAdminRole(supabase, user.id))) redirect("/my");
-  const { data: profile } = await supabase
-    .from("profiles")
+  const { data: empMe } = await supabase
+    .from("employees")
     .select("company_id")
-    .eq("id", user.id)
-    .single();
-  const companyId = (profile as { company_id?: string } | null)?.company_id;
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  const companyId = (empMe as { company_id?: string } | null)?.company_id;
   if (!companyId) redirect("/my");
 
   const { data: obEmps } = await supabase
@@ -42,16 +42,16 @@ export default async function OffboardingAdminPage() {
     ot = (data ?? []) as typeof ot;
   }
 
-  let profs: { id: string; full_name: string | null }[] = [];
+  let empNames: { auth_user_id: string; name: string | null }[] = [];
   if (uids.length > 0) {
     const { data } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", uids);
-    profs = (data ?? []) as typeof profs;
+      .from("employees")
+      .select("auth_user_id, name")
+      .in("auth_user_id", uids);
+    empNames = (data ?? []) as typeof empNames;
   }
 
-  const nameBy = new Map(profs.map((p) => [p.id, p.full_name]));
+  const nameBy = new Map(empNames.map((p) => [p.auth_user_id, p.name]));
   const stats = new Map<string, { total: number; done: number }>();
   for (const t of ot) {
     const cur = stats.get(t.employee_record_id) ?? { total: 0, done: 0 };
@@ -91,15 +91,15 @@ export default async function OffboardingAdminPage() {
     .limit(100);
 
   const candUids = (activeEmps ?? []).map((x) => (x as { user_id: string }).user_id);
-  let candProfs: { id: string; full_name: string | null }[] = [];
+  let candEmps: { auth_user_id: string; name: string | null }[] = [];
   if (candUids.length > 0) {
     const { data } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", candUids);
-    candProfs = (data ?? []) as typeof candProfs;
+      .from("employees")
+      .select("auth_user_id, name")
+      .in("auth_user_id", candUids);
+    candEmps = (data ?? []) as typeof candEmps;
   }
-  const candName = new Map(candProfs.map((p) => [p.id, p.full_name]));
+  const candName = new Map(candEmps.map((p) => [p.auth_user_id, p.name]));
 
   const candidateEmployees = (activeEmps ?? []).map((e) => {
     const er = e as { id: string; user_id: string };

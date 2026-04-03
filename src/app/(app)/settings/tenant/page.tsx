@@ -14,12 +14,12 @@ export default async function SettingsTenantPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
+  const { data: emp } = await supabase
+    .from("employees")
     .select("role, company_id")
-    .eq("id", user.id)
+    .eq("auth_user_id", user.id)
     .maybeSingle();
-  const pr = profile as { role?: string; company_id?: string } | null;
+  const pr = emp as { role?: string; company_id?: string } | null;
   if (pr?.role !== "owner" || !pr.company_id) {
     redirect("/settings");
   }

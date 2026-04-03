@@ -34,12 +34,12 @@ export async function GET(req: Request) {
 
     const ids = [...new Set((rates ?? []).map((r) => (r as { user_id: string }).user_id))];
     const { data: names } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+      .from("employees")
+      .select("auth_user_id, name")
+      .in("auth_user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
 
     const nameById = new Map(
-      (names ?? []).map((n) => [(n as { id: string }).id, (n as { full_name: string | null }).full_name]),
+      (names ?? []).map((n) => [(n as { auth_user_id: string }).auth_user_id, (n as { name: string | null }).name]),
     );
 
     const result = (rates ?? []).map((r) => {

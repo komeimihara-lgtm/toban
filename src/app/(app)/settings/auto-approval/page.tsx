@@ -17,12 +17,12 @@ export default async function AutoApprovalSettingsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
+  const { data: emp } = await supabase
+    .from("employees")
     .select("role, company_id")
-    .eq("id", user.id)
-    .single();
-  const pr = profile as { role?: string; company_id?: string } | null;
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  const pr = emp as { role?: string; company_id?: string } | null;
   const role = pr?.role ?? "staff";
   const companyId = pr?.company_id;
   if (role !== "owner" || !companyId) {

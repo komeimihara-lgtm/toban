@@ -59,7 +59,7 @@ export async function POST(req: Request) {
         target_id: row.id,
         action: "deal_approve",
         actor_id: user.id,
-        actor_name: profile.full_name,
+        actor_name: profile.name,
       });
 
       await notifySubmitterDealDecision({

@@ -24,10 +24,10 @@ export default async function MyIncentivePage() {
   if (!user) redirect("/login");
 
   const { data: profile, error: profileErr } = await supabase
-    .from("profiles")
-    .select("id, full_name, role, is_sales_target, is_service_target")
-    .eq("id", user.id)
-    .single();
+    .from("employees")
+    .select("id, name, role, is_sales_target, is_service_target")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   if (profileErr || !profile) {
     return (
@@ -81,7 +81,7 @@ export default async function MyIncentivePage() {
 
       <MyDealsIncentiveWorkbench
         userId={user.id}
-        userName={p.full_name}
+        userName={p.name}
         showSubmitFromForm={!isAdminRole(p.role)}
       />
     </div>

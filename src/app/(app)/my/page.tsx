@@ -51,12 +51,12 @@ export default async function MyHomePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
+  const { data: empProfile } = await supabase
+    .from("employees")
     .select("*")
-    .eq("id", user.id)
+    .eq("auth_user_id", user.id)
     .maybeSingle();
-  const p = profile as ProfileRow | null;
+  const p = empProfile as ProfileRow | null;
 
   const dayStart = startOfDay(new Date()).toISOString();
   const { data: todayPunchesRaw } = await supabase

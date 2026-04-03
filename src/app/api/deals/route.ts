@@ -99,12 +99,12 @@ export async function GET(req: Request) {
     }
 
     const { data: names } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", empIds.size ? [...empIds] : ["00000000-0000-0000-0000-000000000000"]);
+      .from("employees")
+      .select("auth_user_id, name")
+      .in("auth_user_id", empIds.size ? [...empIds] : ["00000000-0000-0000-0000-000000000000"]);
 
     const nameById = new Map(
-      (names ?? []).map((n) => [(n as { id: string }).id, (n as { full_name: string | null }).full_name]),
+      (names ?? []).map((n) => [(n as { auth_user_id: string }).auth_user_id, (n as { name: string | null }).name]),
     );
 
     return NextResponse.json({ deals: attachNames((deals ?? []) as Record<string, unknown>[], nameById) });

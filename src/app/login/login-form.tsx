@@ -56,12 +56,12 @@ export function LoginForm() {
       return;
     }
 
-    const { data: pr } = await supabase
-      .from("profiles")
+    const { data: empRow } = await supabase
+      .from("employees")
       .select("role")
-      .eq("id", user.id)
+      .eq("auth_user_id", user.id)
       .maybeSingle();
-    const role = (pr as { role?: string } | null)?.role ?? "staff";
+    const role = (empRow as { role?: string } | null)?.role ?? "staff";
 
     let dest = isAdminRole(role) ? "/dashboard" : "/my";
     if (nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//")) {

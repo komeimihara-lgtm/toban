@@ -35,14 +35,14 @@ export async function POST(req: Request) {
   }
 
   const { data: tp } = await supabase
-    .from("profiles")
-    .select("company_id, line_user_id, full_name")
-    .eq("id", target)
+    .from("employees")
+    .select("company_id, line_user_id, name")
+    .eq("auth_user_id", target)
     .maybeSingle();
   const row = tp as {
     company_id: string;
     line_user_id: string | null;
-    full_name: string | null;
+    name: string | null;
   } | null;
   if (!row || row.company_id !== profile.company_id) {
     return NextResponse.json({ error: "ユーザーが見つかりません" }, { status: 404 });
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     (co as { settings?: unknown } | null)?.settings,
   );
 
-  const name = row.full_name?.trim() || "ご担当者";
+  const name = row.name?.trim() || "ご担当者";
   const lineMsg = `【LENARD HR】${name} 様\n入社手続きに未完了のタスクがあります。アプリの「入社手続き」からご確認ください。`;
 
   try {

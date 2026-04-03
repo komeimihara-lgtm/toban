@@ -13,12 +13,12 @@ export default async function OnboardingAdminPage() {
   if (!user) redirect("/login");
 
   if (!(await checkAdminRole(supabase, user.id))) redirect("/my");
-  const { data: profile } = await supabase
-    .from("profiles")
+  const { data: emp } = await supabase
+    .from("employees")
     .select("company_id")
-    .eq("id", user.id)
-    .single();
-  const companyId = (profile as { company_id?: string } | null)?.company_id;
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  const companyId = (emp as { company_id?: string } | null)?.company_id;
   if (!companyId) redirect("/my");
 
   const { data: emps } = await supabase
@@ -41,19 +41,19 @@ export default async function OnboardingAdminPage() {
     tasks = data as typeof tasks;
   }
 
-  let profs: { id: string; full_name: string | null }[] | null = [];
+  let empNames: { auth_user_id: string; name: string | null }[] | null = [];
   if (userIds.length > 0) {
     const { data } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", userIds);
-    profs = data as typeof profs;
+      .from("employees")
+      .select("auth_user_id, name")
+      .in("auth_user_id", userIds);
+    empNames = data as typeof empNames;
   }
 
   const nameByUser = new Map<string, string | null>();
-  for (const p of profs ?? ([] as { id: string; full_name: string | null }[])) {
-    const row = p as { id: string; full_name: string | null };
-    nameByUser.set(row.id, row.full_name);
+  for (const p of empNames ?? ([] as { auth_user_id: string; name: string | null }[])) {
+    const row = p as { auth_user_id: string; name: string | null };
+    nameByUser.set(row.auth_user_id, row.name);
   }
 
   const stats = new Map<string, { total: number; done: number }>();

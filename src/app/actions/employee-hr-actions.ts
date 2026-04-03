@@ -22,10 +22,10 @@ async function requireAdmin(): Promise<AdminCtx> {
     return { supabase, user: null, companyId: null, ok: false };
   }
   const { data: me } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("role, company_id")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
   const role = (me as { role?: string })?.role ?? "staff";
   const companyId = (me as { company_id?: string })?.company_id ?? null;
   if (!isAdminRole(role) || !companyId) {

@@ -12,10 +12,10 @@ export async function GET(req: Request) {
   }
 
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("company_id")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
   const companyId = (profile as { company_id?: string } | null)?.company_id;
   if (!companyId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -28,9 +28,9 @@ export async function GET(req: Request) {
   }
 
   const { data: me } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("role")
-    .eq("id", user.id)
+    .eq("auth_user_id", user.id)
     .maybeSingle();
   const includeInactive =
     url.searchParams.get("include_inactive") === "1" &&
@@ -64,10 +64,10 @@ export async function POST(req: Request) {
   }
 
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("role, company_id")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   const pr = profile as { role?: string; company_id?: string } | null;
   if (!isAdminRole(pr?.role ?? "") || !pr?.company_id) {
@@ -117,10 +117,10 @@ export async function PATCH(req: Request) {
   }
 
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("employees")
     .select("role, company_id")
-    .eq("id", user.id)
-    .single();
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
 
   const pr = profile as { role?: string; company_id?: string } | null;
   if (!isAdminRole(pr?.role ?? "") || !pr?.company_id) {

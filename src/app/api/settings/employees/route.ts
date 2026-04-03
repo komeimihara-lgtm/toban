@@ -16,9 +16,9 @@ export async function GET() {
 
     const admin = createAdminClient();
     const { data, error } = await admin
-      .from("profiles")
+      .from("employees")
       .select(
-        "id, full_name, role, department_id, is_sales_target, is_service_target, is_contract, is_part_time, line_user_id",
+        "id, name, role, department_id, is_sales_target, is_service_target, is_contract, is_part_time, line_user_id",
       )
       .eq("company_id", profile.company_id);
     if (error) {
@@ -27,7 +27,7 @@ export async function GET() {
 
     const rows = (data ?? []).map((r: Record<string, unknown>) => ({
       id: r.id,
-      name: r.full_name,
+      name: r.name,
       role: r.role,
       department_id: r.department_id,
       is_sales_target: r.is_sales_target,
@@ -85,7 +85,7 @@ export async function PATCH(req: Request) {
 
     const admin = createAdminClient();
     const { data: targetProf, error: tgtErr } = await admin
-      .from("profiles")
+      .from("employees")
       .select("company_id")
       .eq("id", targetId)
       .maybeSingle();
@@ -96,27 +96,9 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "他社のユーザーは更新できません" }, { status: 403 });
     }
 
-    const { error } = await admin.from("profiles").update(patch).eq("id", targetId);
+    const { error } = await admin.from("employees").update(patch).eq("id", targetId);
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    const empPatch: Record<string, unknown> = {};
-    if (typeof body.is_sales_target === "boolean") {
-      empPatch.is_sales_target = body.is_sales_target;
-    }
-    if (typeof body.is_service_target === "boolean") {
-      empPatch.is_service_target = body.is_service_target;
-    }
-    if (Object.keys(empPatch).length > 0) {
-      const { error: empErr } = await admin
-        .from("employees")
-        .update(empPatch)
-        .eq("user_id", targetId)
-        .eq("company_id", me.company_id);
-      if (empErr) {
-        return NextResponse.json({ error: empErr.message }, { status: 500 });
-      }
     }
 
     return NextResponse.json({ ok: true });
