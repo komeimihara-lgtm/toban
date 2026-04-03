@@ -50,8 +50,7 @@ export function AttendancePunchPageClient({
   const [now, setNow] = useState(() => new Date());
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
-  const [geoStatus, setGeoStatus] = useState<string>("未取得");
-  const [geoAddress, setGeoAddress] = useState<string | null>(null);
+  const [geoStatus, setGeoStatus] = useState<string>("📍 取得中…");
   const [lastGeo, setLastGeo] = useState<PunchGeo | null>(null);
 
   useEffect(() => {
@@ -59,14 +58,38 @@ export function AttendancePunchPageClient({
     return () => clearInterval(id);
   }, []);
 
+  // マウント時に自動でGPS取得
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setLastGeo({ latitude, longitude, accuracyMeters: pos.coords.accuracy });
+        try {
+          const res = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=ja`,
+          );
+          const data = await res.json();
+          const locality =
+            data.locality || data.city || data.principalSubdivision || "取得済";
+          setGeoStatus(`📍 ${locality}`);
+        } catch {
+          setGeoStatus("📍 取得済");
+        }
+      },
+      () => {
+        setGeoStatus("📍 位置情報オフ");
+      },
+      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
+    );
+  }, []);
+
   const requestGeo = useCallback((): Promise<PunchGeo | null> => {
     return new Promise((resolve) => {
       if (typeof navigator === "undefined" || !navigator.geolocation) {
-        setGeoStatus("この環境では位置情報を利用できません");
-        resolve(null);
+        resolve(lastGeo);
         return;
       }
-      setGeoStatus("位置を取得中…");
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const g: PunchGeo = {
@@ -77,31 +100,13 @@ export function AttendancePunchPageClient({
               : null,
           };
           setLastGeo(g);
-          setGeoStatus(
-            `取得済（±${Math.round(pos.coords.accuracy ?? 0)}m 付近）`,
-          );
-          fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&localityLanguage=ja`,
-          )
-            .then((r) => r.json())
-            .then((data) => {
-              const city =
-                data.city || data.locality || data.principalSubdivision || "";
-              if (city) setGeoAddress(city);
-            })
-            .catch(() => {
-              /* ignore */
-            });
           resolve(g);
         },
-        () => {
-          setGeoStatus("位置情報が利用できませんでした（打刻のみ実行できます）");
-          resolve(null);
-        },
-        { enableHighAccuracy: true, timeout: 12_000, maximumAge: 30_000 },
+        () => resolve(lastGeo),
+        { enableHighAccuracy: true, timeout: 8_000, maximumAge: 60_000 },
       );
     });
-  }, []);
+  }, [lastGeo]);
 
   const onPunch = (type: AttendancePunchType) => {
     setMsg(null);
@@ -160,13 +165,11 @@ export function AttendancePunchPageClient({
     return out;
   }, [todayPunches, now]);
 
-  const geoLine = geoAddress ?? geoStatus;
-
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
         <div className="mb-3 flex items-center justify-between gap-2">
-          <p className="min-w-0 truncate text-xs text-zinc-500">📍 {geoLine}</p>
+          <p className="min-w-0 truncate text-xs text-zinc-500">{geoStatus}</p>
           <p className="shrink-0 text-xl font-bold tabular-nums text-zinc-50">
             {now.toLocaleTimeString("ja-JP", {
               hour: "2-digit",
