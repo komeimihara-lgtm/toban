@@ -11,7 +11,6 @@ import {
 } from "@/lib/attendance-summary";
 import type { AttendancePunchType } from "@/types";
 import { LargePunchActionTiles } from "@/components/attendance/large-punch-tiles";
-import { MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 
@@ -81,7 +80,6 @@ export function AttendancePunchPageClient({
           setGeoStatus(
             `取得済（±${Math.round(pos.coords.accuracy ?? 0)}m 付近）`,
           );
-          // 逆ジオコーディングで市区町村を取得
           fetch(
             `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&localityLanguage=ja`,
           )
@@ -118,7 +116,6 @@ export function AttendancePunchPageClient({
       router.refresh();
     });
   };
-
 
   const timelineRows = useMemo((): TimelineRow[] => {
     const clockOnly = todayPunches.filter(
@@ -163,12 +160,14 @@ export function AttendancePunchPageClient({
     return out;
   }, [todayPunches, now]);
 
+  const geoLine = geoAddress ?? geoStatus;
+
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <header className="flex flex-wrap items-start justify-end gap-4">
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-right tabular-nums dark:border-zinc-800 dark:bg-zinc-900/40">
-          <p className="text-xs font-medium text-zinc-500">現在時刻（ブラウザ）</p>
-          <p className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+    <div className="mx-auto max-w-3xl space-y-4">
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate text-xs text-zinc-500">📍 {geoLine}</p>
+          <p className="shrink-0 text-xl font-bold tabular-nums text-zinc-50">
             {now.toLocaleTimeString("ja-JP", {
               hour: "2-digit",
               minute: "2-digit",
@@ -176,46 +175,18 @@ export function AttendancePunchPageClient({
               timeZone: "Asia/Tokyo",
             })}
           </p>
-          <p className="mt-1 text-xs text-zinc-500">
-            {now.toLocaleDateString("ja-JP", {
-              timeZone: "Asia/Tokyo",
-              weekday: "short",
-              year: "numeric",
-              month: "numeric",
-              day: "numeric",
-            })}
-          </p>
         </div>
-      </header>
+        <LargePunchActionTiles
+          pending={pending}
+          onClockIn={() => onPunch("clock_in")}
+          onClockOut={() => onPunch("clock_out")}
+        />
+      </div>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-          打刻
-        </h2>
-        <div className="mt-4">
-          <LargePunchActionTiles
-            pending={pending}
-            onClockIn={() => onPunch("clock_in")}
-            onClockOut={() => onPunch("clock_out")}
-          />
-        </div>
+      {msg ? <p className="text-sm text-emerald-400">{msg}</p> : null}
 
-        <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
-          <MapPin className="size-3.5 shrink-0" aria-hidden />
-          <span>{geoAddress ?? geoStatus}</span>
-        </div>
-
-        {msg ? (
-          <p className="mt-3 text-sm text-emerald-800 dark:text-emerald-300">{msg}</p>
-        ) : null}
-
-      </section>
-
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-sm font-semibold">本日のタイムライン</h2>
-        <p className="mt-1 text-xs text-zinc-500">
-          自動で休憩時間を控除します
-        </p>
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+        <h2 className="text-sm font-semibold text-zinc-50">本日のタイムライン</h2>
         <ul className="mt-3 space-y-2">
           {timelineRows.length === 0 ? (
             <li className="text-sm text-zinc-500">本日の打刻はまだありません</li>
@@ -224,9 +195,9 @@ export function AttendancePunchPageClient({
               row.kind === "auto_break" ? (
                 <li
                   key={row.id}
-                  className="flex flex-wrap items-baseline justify-between gap-2 border-b border-zinc-100 pb-2 text-sm last:border-0 dark:border-zinc-800"
+                  className="flex flex-wrap items-baseline justify-between gap-2 border-b border-zinc-800 pb-2 text-sm last:border-0"
                 >
-                  <span className="font-medium text-sky-800 dark:text-sky-300">
+                  <span className="font-medium text-sky-300">
                     休憩（自動）{row.minutes}分
                   </span>
                   <span className="text-xs text-zinc-500">労基法準拠の控除</span>
@@ -234,12 +205,12 @@ export function AttendancePunchPageClient({
               ) : (
                 <li
                   key={row.id}
-                  className="flex flex-wrap items-baseline justify-between gap-2 border-b border-zinc-100 pb-2 text-sm last:border-0 dark:border-zinc-800"
+                  className="flex flex-wrap items-baseline justify-between gap-2 border-b border-zinc-800 pb-2 text-sm last:border-0"
                 >
-                  <span className="font-medium text-zinc-800 dark:text-zinc-200">
+                  <span className="font-medium text-zinc-200">
                     {punchTypeLabel(row.punchType)}
                   </span>
-                  <span className="text-lg font-semibold tabular-nums text-zinc-600 dark:text-zinc-400">
+                  <span className="text-lg font-semibold tabular-nums text-zinc-400">
                     {new Date(row.punchedAt).toLocaleString("ja-JP", {
                       timeZone: "Asia/Tokyo",
                       hour: "2-digit",
@@ -254,25 +225,24 @@ export function AttendancePunchPageClient({
         </ul>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-sm font-semibold">今月の勤務サマリー</h2>
-        <p className="mt-1 text-xs text-zinc-500">
-          総労働時間は休憩控除（-1時間）後の実労働時間です
-        </p>
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+        <h2 className="text-sm font-semibold text-zinc-50">今月の勤務サマリー</h2>
         <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">
+          <div className="rounded-lg bg-zinc-900/80 p-3">
             <dt className="text-xs text-zinc-500">出勤日数</dt>
-            <dd className="mt-1 text-lg font-semibold tabular-nums">{workDays} 日</dd>
+            <dd className="mt-1 text-lg font-semibold tabular-nums text-zinc-50">
+              {workDays} 日
+            </dd>
           </div>
-          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">
-            <dt className="text-xs text-zinc-500">総労働時間（自動休憩控除後）</dt>
-            <dd className="mt-1 text-lg font-semibold tabular-nums">
+          <div className="rounded-lg bg-zinc-900/80 p-3">
+            <dt className="text-xs text-zinc-500">総労働時間</dt>
+            <dd className="mt-1 text-lg font-semibold tabular-nums text-zinc-50">
               {formatHoursMinutes(totalWorkMinutes)}
             </dd>
           </div>
-          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">
+          <div className="rounded-lg bg-zinc-900/80 p-3">
             <dt className="text-xs text-zinc-500">残業時間（概算）</dt>
-            <dd className="mt-1 text-lg font-semibold tabular-nums text-amber-800 dark:text-amber-300">
+            <dd className="mt-1 text-lg font-semibold tabular-nums text-amber-400">
               {formatHoursMinutes(overtimeMinutes)}
             </dd>
           </div>

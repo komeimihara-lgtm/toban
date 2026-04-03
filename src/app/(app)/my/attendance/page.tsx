@@ -91,7 +91,7 @@ export default async function MyAttendancePage({
   const summary = summarizePunchesInRange(rows, { now });
 
   return (
-    <div className="mx-auto max-w-3xl space-y-10 text-foreground">
+    <div className="mx-auto max-w-3xl space-y-4 text-foreground">
       {punchFetchWarning ? (
         <div
           className="rounded-lg border border-amber-500/50 bg-amber-950/40 px-4 py-3 text-sm text-amber-100"
@@ -100,12 +100,9 @@ export default async function MyAttendancePage({
           {punchFetchWarning}
         </div>
       ) : null}
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">勤怠</h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
-            打刻・月次カレンダー・打刻修正申請（このページから利用できます）
-          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
