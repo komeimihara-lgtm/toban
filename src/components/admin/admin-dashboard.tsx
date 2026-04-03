@@ -152,7 +152,7 @@ export async function AdminDashboard() {
       .from("expenses")
       .select("id, receipt_url")
       .in("status", ["step1_pending", "step2_pending", "approved"])
-      .limit(800),
+      .limit(2000),
     supabase
       .from("employees")
       .select("id, name, role")
