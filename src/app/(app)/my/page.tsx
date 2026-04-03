@@ -60,39 +60,70 @@ export default async function MyHomePage() {
     .maybeSingle();
   const p = empProfile as ProfileRow | null;
 
+  const nowYm = new Date();
+  const yMonth = nowYm.getFullYear();
+  const mMonth = nowYm.getMonth() + 1;
   const dayStart = startOfDay(new Date()).toISOString();
-  const { data: todayPunchesRaw } = await supabase
-    .from("attendance_punches")
-    .select("punch_type, punched_at")
-    .eq("user_id", user.id)
-    .gte("punched_at", dayStart)
-    .order("punched_at", { ascending: true });
+  const monthStartIso = new Date(yMonth, mMonth - 1, 1).toISOString();
+  const nextMonthStartIso = new Date(yMonth, mMonth, 1).toISOString();
+
+  const [
+    { data: todayPunchesRaw },
+    { data: leaveBal },
+    { data: monthlyGoalRow },
+    { data: pendingExpRows },
+    { data: payslipThisMonth },
+    { data: interviewReq },
+  ] = await Promise.all([
+    supabase
+      .from("attendance_punches")
+      .select("punch_type, punched_at")
+      .eq("user_id", user.id)
+      .gte("punched_at", dayStart)
+      .order("punched_at", { ascending: true }),
+    supabase
+      .from("paid_leave_balances")
+      .select("days_remaining, next_accrual_date, next_accrual_days")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    p?.id
+      ? supabase
+          .from("monthly_goals")
+          .select("*")
+          .eq("employee_id", p.id)
+          .eq("year", yMonth)
+          .eq("month", mMonth)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("expenses")
+      .select("amount, status")
+      .eq("submitter_id", user.id)
+      .in("status", ["step1_pending", "step2_pending"])
+      .gte("created_at", monthStartIso)
+      .lt("created_at", nextMonthStartIso),
+    supabase
+      .from("payslip_cache")
+      .select("year, month, net_payment, pay_date")
+      .eq("app_user_id", user.id)
+      .eq("year", yMonth)
+      .eq("month", mMonth)
+      .maybeSingle(),
+    supabase
+      .from("ai_interview_requests")
+      .select("id")
+      .eq("employee_id", user.id)
+      .eq("status", "pending")
+      .order("requested_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   const todayPunches = (todayPunchesRaw ?? []) as {
     punch_type: string;
     punched_at: string;
   }[];
   const punchStatus = todayPunchStatus(todayPunches);
-
-  const { data: leaveBal } = await supabase
-    .from("paid_leave_balances")
-    .select("days_remaining, next_accrual_date, next_accrual_days")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  const nowYm = new Date();
-  const yMonth = nowYm.getFullYear();
-  const mMonth = nowYm.getMonth() + 1;
-
-  const { data: monthlyGoalRow } = p?.id
-    ? await supabase
-        .from("monthly_goals")
-        .select("*")
-        .eq("employee_id", p.id)
-        .eq("year", yMonth)
-        .eq("month", mMonth)
-        .maybeSingle()
-    : { data: null };
 
   type MonthlyGoalKpi = {
     name?: string;
@@ -128,31 +159,12 @@ export default async function MyHomePage() {
       };
     }) ?? [];
 
-  const monthStartIso = new Date(yMonth, mMonth - 1, 1).toISOString();
-  const nextMonthStartIso = new Date(yMonth, mMonth, 1).toISOString();
-
-  const { data: pendingExpRows } = await supabase
-    .from("expenses")
-    .select("amount, status")
-    .eq("submitter_id", user.id)
-    .in("status", ["step1_pending", "step2_pending"])
-    .gte("created_at", monthStartIso)
-    .lt("created_at", nextMonthStartIso);
-
   const pendingList = pendingExpRows ?? [];
   const pendingCount = pendingList.length;
   const pendingSum = pendingList.reduce(
     (a, e) => a + Number((e as { amount: number }).amount),
     0,
   );
-
-  const { data: payslipThisMonth } = await supabase
-    .from("payslip_cache")
-    .select("year, month, net_payment, pay_date")
-    .eq("app_user_id", user.id)
-    .eq("year", yMonth)
-    .eq("month", mMonth)
-    .maybeSingle();
 
   let psRow = payslipThisMonth as {
     year: number;
@@ -175,15 +187,6 @@ export default async function MyHomePage() {
     payslipIsCurrentMonth = false;
   }
 
-  const { data: interviewReq } = await supabase
-    .from("ai_interview_requests")
-    .select("id")
-    .eq("employee_id", user.id)
-    .eq("status", "pending")
-    .order("requested_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
   type TodayReservation = {
     id: string;
     vehicle_name: string;
@@ -198,22 +201,7 @@ export default async function MyHomePage() {
   let myBranch = "東京本社";
 
   if (p?.id) {
-    // 支社判定: department名から推定
     const deptId = (empProfile as { department_id?: string | null })?.department_id;
-    if (deptId) {
-      const { data: deptRow } = await supabase
-        .from("departments")
-        .select("name")
-        .eq("id", deptId)
-        .maybeSingle();
-      const deptName = (deptRow as { name?: string } | null)?.name ?? "";
-      if (deptName.includes("名古屋")) myBranch = "名古屋支社";
-      else if (deptName.includes("福岡")) myBranch = "福岡支社";
-    } else {
-      const dept = (empProfile as { department?: string | null })?.department ?? "";
-      if (dept.includes("名古屋")) myBranch = "名古屋支社";
-      else if (dept.includes("福岡")) myBranch = "福岡支社";
-    }
 
     const jpDateStr = requestAt.toLocaleDateString("sv-SE", {
       timeZone: "Asia/Tokyo",
@@ -233,14 +221,32 @@ export default async function MyHomePage() {
       hour12: false,
     };
 
-    // 自分の本日予約
-    const { data: resvRows } = await supabase
-      .from("vehicle_reservations")
-      .select("id, start_at, end_at, destination, vehicles(name)")
-      .eq("employee_id", p.id)
-      .gt("end_at", dayStartJst.toISOString())
-      .lt("start_at", dayEndExclusiveJst.toISOString())
-      .order("start_at", { ascending: true });
+    const [{ data: deptRow }, { data: resvRows }] = await Promise.all([
+      deptId
+        ? supabase
+            .from("departments")
+            .select("name")
+            .eq("id", deptId)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("vehicle_reservations")
+        .select("id, start_at, end_at, destination, vehicles(name)")
+        .eq("employee_id", p.id)
+        .gt("end_at", dayStartJst.toISOString())
+        .lt("start_at", dayEndExclusiveJst.toISOString())
+        .order("start_at", { ascending: true }),
+    ]);
+
+    if (deptId) {
+      const deptName = (deptRow as { name?: string } | null)?.name ?? "";
+      if (deptName.includes("名古屋")) myBranch = "名古屋支社";
+      else if (deptName.includes("福岡")) myBranch = "福岡支社";
+    } else {
+      const dept = (empProfile as { department?: string | null })?.department ?? "";
+      if (dept.includes("名古屋")) myBranch = "名古屋支社";
+      else if (dept.includes("福岡")) myBranch = "福岡支社";
+    }
 
     todayReservations = (resvRows ?? []).map((row) => {
       const vRaw = row.vehicles as
@@ -302,18 +308,66 @@ export default async function MyHomePage() {
     }
   }
 
+  function pad2(n: number) {
+    return String(n).padStart(2, "0");
+  }
+  const thirtyDaysAgo = new Date(
+    requestAt.getTime() - 30 * 86400000,
+  ).toISOString();
+  const monthPunchStart = `${yMonth}-${pad2(mMonth)}-01T00:00:00+09:00`;
+  const nextM = mMonth === 12 ? 1 : mMonth + 1;
+  const nextY = mMonth === 12 ? yMonth + 1 : yMonth;
+  const monthPunchEnd = `${nextY}-${pad2(nextM)}-01T00:00:00+09:00`;
+
+  const incentiveDealsPromise =
+    p && elig(p)
+      ? supabase
+          .from("deals")
+          .select(
+            "appo_incentive, closer_incentive, submit_status, appo_employee_id, closer_employee_id",
+          )
+          .eq("year", yMonth)
+          .eq("month", mMonth)
+          .or(`appo_employee_id.eq.${user.id},closer_employee_id.eq.${user.id}`)
+      : Promise.resolve({ data: [] as unknown[] });
+
+  const [{ data: expNews }, { data: dealNews }, { data: grantNews }, { data: monthPunchRows }, { data: incentiveDealRows }] =
+    await Promise.all([
+      supabase
+        .from("expenses")
+        .select("id, status, updated_at, purpose, category")
+        .eq("submitter_id", user.id)
+        .in("status", ["approved", "rejected"])
+        .order("updated_at", { ascending: false })
+        .limit(20),
+      supabase
+        .from("deals")
+        .select("id, submit_status, updated_at, salon_name, machine_type")
+        .or(`appo_employee_id.eq.${user.id},closer_employee_id.eq.${user.id}`)
+        .in("submit_status", ["approved", "rejected"])
+        .order("updated_at", { ascending: false })
+        .limit(20),
+      supabase
+        .from("paid_leave_grants")
+        .select("grant_date, days_granted, grant_reason, created_at")
+        .eq("employee_id", user.id)
+        .gte("created_at", thirtyDaysAgo)
+        .order("created_at", { ascending: false })
+        .limit(15),
+      supabase
+        .from("attendance_punches")
+        .select("punch_type, punched_at")
+        .eq("user_id", user.id)
+        .gte("punched_at", monthPunchStart)
+        .lt("punched_at", monthPunchEnd)
+        .order("punched_at", { ascending: true }),
+      incentiveDealsPromise,
+    ]);
+
   let incentivePreview: string | null = null;
   if (p && elig(p)) {
-    const { data: dealRows } = await supabase
-      .from("deals")
-      .select(
-        "appo_incentive, closer_incentive, submit_status, appo_employee_id, closer_employee_id",
-      )
-      .eq("year", yMonth)
-      .eq("month", mMonth)
-      .or(`appo_employee_id.eq.${user.id},closer_employee_id.eq.${user.id}`);
     let sum = 0;
-    for (const raw of dealRows ?? []) {
+    for (const raw of incentiveDealRows ?? []) {
       const d = raw as {
         appo_incentive: number;
         closer_incentive: number;
@@ -334,13 +388,6 @@ export default async function MyHomePage() {
 
   type NoticeRow = { at: string; text: string; href: string };
   const noticeRows: NoticeRow[] = [];
-  const { data: expNews } = await supabase
-    .from("expenses")
-    .select("id, status, updated_at, purpose, category")
-    .eq("submitter_id", user.id)
-    .in("status", ["approved", "rejected"])
-    .order("updated_at", { ascending: false })
-    .limit(20);
   for (const raw of expNews ?? []) {
     const er = raw as {
       status: string;
@@ -363,23 +410,6 @@ export default async function MyHomePage() {
       });
     }
   }
-  const { data: dealNews } = await supabase
-    .from("deals")
-    .select("id, submit_status, updated_at, salon_name, machine_type")
-    .or(`appo_employee_id.eq.${user.id},closer_employee_id.eq.${user.id}`)
-    .in("submit_status", ["approved", "rejected"])
-    .order("updated_at", { ascending: false })
-    .limit(20);
-  const thirtyDaysAgo = new Date(
-    requestAt.getTime() - 30 * 86400000,
-  ).toISOString();
-  const { data: grantNews } = await supabase
-    .from("paid_leave_grants")
-    .select("grant_date, days_granted, grant_reason, created_at")
-    .eq("employee_id", user.id)
-    .gte("created_at", thirtyDaysAgo)
-    .order("created_at", { ascending: false })
-    .limit(15);
   for (const raw of grantNews ?? []) {
     const gr = raw as {
       grant_date: string;
@@ -419,20 +449,6 @@ export default async function MyHomePage() {
   noticeRows.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
   const notices = noticeRows.slice(0, 15);
 
-  function pad2(n: number) {
-    return String(n).padStart(2, "0");
-  }
-  const monthPunchStart = `${yMonth}-${pad2(mMonth)}-01T00:00:00+09:00`;
-  const nextM = mMonth === 12 ? 1 : mMonth + 1;
-  const nextY = mMonth === 12 ? yMonth + 1 : yMonth;
-  const monthPunchEnd = `${nextY}-${pad2(nextM)}-01T00:00:00+09:00`;
-  const { data: monthPunchRows } = await supabase
-    .from("attendance_punches")
-    .select("punch_type, punched_at")
-    .eq("user_id", user.id)
-    .gte("punched_at", monthPunchStart)
-    .lt("punched_at", monthPunchEnd)
-    .order("punched_at", { ascending: true });
   const monthSummary = summarizePunchesInRange(monthPunchRows ?? [], { now: nowYm });
   const fmtHM = (mins: number) => {
     const h = Math.floor(mins / 60);
