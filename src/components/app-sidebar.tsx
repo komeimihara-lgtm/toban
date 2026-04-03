@@ -79,11 +79,11 @@ function NavLink({
       className={`group flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-bold leading-snug transition-colors ${
         active
           ? "border border-accent/50 bg-accent/15 text-accent shadow-sm dark:border-transparent dark:bg-[var(--sidebar-active-bg)] dark:text-white dark:shadow-none"
-          : "border border-transparent text-zinc-800 hover:bg-slate-200/80 hover:text-zinc-950 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
+          : "border border-transparent text-zinc-800 hover:bg-slate-200/80 hover:text-zinc-950 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white/90"
       }`}
     >
       <Icon
-        className={`size-4 shrink-0 ${active ? "text-accent opacity-100 dark:text-white" : "text-zinc-600 dark:text-white/70 dark:group-hover:text-white"}`}
+        className={`size-4 shrink-0 ${active ? "text-accent opacity-100 dark:text-white" : "text-zinc-600 dark:text-white/60 dark:group-hover:text-white/90"}`}
         aria-hidden
       />
       <span className="flex-1">{label}</span>
@@ -104,7 +104,7 @@ function SectionLabel({
   badgeCount?: number;
 }) {
   return (
-    <p className="mb-1.5 mt-5 flex items-center gap-2 px-3 text-[11px] font-bold tracking-[0.06em] text-zinc-700 normal-case dark:text-white/70 first:mt-0">
+    <p className="mb-1.5 mt-5 flex items-center gap-2 px-3 text-[11px] font-bold tracking-[0.06em] text-zinc-700 normal-case dark:text-white/40 first:mt-0">
       <span>{children}</span>
       {badgeCount != null && badgeCount > 0 ? (
         <span className="rounded-full bg-amber-600/90 px-1.5 py-0.5 text-[10px] font-bold text-white tabular-nums dark:bg-amber-500">
@@ -132,7 +132,7 @@ export function AppSidebar({
         <p className="text-xs font-medium uppercase tracking-wide text-accent">LENARD HR</p>
         <p className="mt-1 truncate text-sm text-zinc-900 dark:text-white">{userLabel}</p>
         {tenantName ? (
-          <p className="mt-1 truncate text-xs text-zinc-600 dark:text-white/70">{tenantName}</p>
+          <p className="mt-1 truncate text-xs text-zinc-600 dark:text-white/60">{tenantName}</p>
         ) : null}
       </div>
       <nav
