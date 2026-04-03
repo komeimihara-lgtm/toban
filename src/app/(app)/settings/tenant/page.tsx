@@ -1,4 +1,5 @@
 import { CompanyTenantSettings } from "@/components/settings/company-tenant-settings";
+import { DepartmentIncentiveToggle } from "@/components/settings/department-incentive-toggle";
 import { normalizeCompanySettings } from "@/lib/company-settings";
 import { createClient } from "@/lib/supabase/server";
 import type { Company, CompanyPlan } from "@/types/index";
@@ -81,18 +82,7 @@ export default async function SettingsTenantPage() {
 
       <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
         <h2 className="text-sm font-medium text-zinc-500">部門・インセンティブ対象</h2>
-        <ul className="mt-2 space-y-1 text-sm">
-          {deptList.map((d) => (
-            <li key={d.id}>
-              {d.name}
-              {d.incentive_enabled ? (
-                <span className="ml-2 text-xs text-emerald-700 dark:text-emerald-400">インセンティブ対象</span>
-              ) : (
-                <span className="ml-2 text-xs text-zinc-500">対象外</span>
-              )}
-            </li>
-          ))}
-        </ul>
+        <DepartmentIncentiveToggle departments={deptList} />
       </section>
 
       <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
