@@ -116,8 +116,8 @@ export function AppSidebar({
   incentiveDraftBadgeCount = 0,
 }: AppSidebarProps) {
   return (
-    <aside className="no-print flex w-56 shrink-0 flex-col border-r border-zinc-800/60 bg-[#141210] dark:border-zinc-800/60">
-      <div className="border-b border-zinc-700/50 px-4 py-4">
+    <aside className="no-print flex w-56 shrink-0 flex-col border-r border-slate-800/80 bg-surface-sidebar">
+      <div className="border-b border-slate-700/50 px-4 py-4">
         <p className="text-xs font-medium uppercase tracking-wide text-accent/90">LENARD HR</p>
         <p className="mt-1 truncate text-sm text-zinc-200">{userLabel}</p>
         {tenantName ? (

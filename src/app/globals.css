@@ -4,19 +4,26 @@
   --background: #ffffff;
   --foreground: #171717;
   --accent: #9a7b2d;
+  --surface-sidebar: #f8fafc;
 }
 
-/* 社内ツールはダーク基調（#1a1814・ゴールドアクセント） */
+/*
+ * ダークテーマ: リポジトリ内に Figma 等のデザインデータはない。
+ * 初期コミットは #0a0a0a。画面全体は zinc/slate 系が多いため、
+ * 「ネイビーっぽい」トーンへ slate-900/950 + ゴールドアクセントで統一。
+ */
 html.dark {
-  --background: #1a1814;
-  --foreground: #ece8e1;
-  --accent: #c9a962;
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+  --accent: #d4b96a;
+  --surface-sidebar: #020617;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
+  --color-surface-sidebar: var(--surface-sidebar);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
