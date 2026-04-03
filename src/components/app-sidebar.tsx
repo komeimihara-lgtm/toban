@@ -146,20 +146,25 @@ export function AppSidebar({
     const el = navRef.current;
     if (!el) return;
 
-    const saved = sessionStorage.getItem("sidebar-scroll");
-    if (saved) {
-      requestAnimationFrame(() => {
+    const timer = setTimeout(() => {
+      const saved = sessionStorage.getItem("sidebar-scroll");
+      if (saved) {
         el.scrollTop = Number(saved);
-      });
-    }
+      }
+    }, 50);
 
+    return () => clearTimeout(timer);
+  }, [pathname]);
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
     const handleScroll = () => {
       sessionStorage.setItem("sidebar-scroll", String(el.scrollTop));
     };
-
     el.addEventListener("scroll", handleScroll, { passive: true });
     return () => el.removeEventListener("scroll", handleScroll);
-  }, [pathname]);
+  }, []);
 
   return (
     <aside className="no-print flex w-56 shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--background-sidebar)]">
