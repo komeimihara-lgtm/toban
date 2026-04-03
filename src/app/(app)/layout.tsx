@@ -47,15 +47,17 @@ async function fetchEmployeeRowForAuthUser(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
 ) {
+  const empCols =
+    "id, role, is_sales_target, is_service_target, created_at, name, company_id";
   const { data: byAuth } = await supabase
     .from("employees")
-    .select("id, role, is_sales_target, is_service_target, created_at")
+    .select(empCols)
     .eq("auth_user_id", userId)
     .maybeSingle();
   if (byAuth) return byAuth;
   const { data: byUser } = await supabase
     .from("employees")
-    .select("id, role, is_sales_target, is_service_target, created_at")
+    .select(empCols)
     .eq("user_id", userId)
     .maybeSingle();
   return byUser ?? null;
@@ -120,10 +122,8 @@ export default async function AppGroupLayout({
         }
 
         const name =
-          (profile as { name?: string | null } | null)?.name?.trim() ||
-          user.email ||
-          user.id.slice(0, 8);
-        userLabel = name;
+          (profile as { name?: string | null } | null)?.name?.trim() ?? "";
+        userLabel = name || "氏名未登録";
 
         const role =
           (emp as { role?: string | null } | null)?.role ??

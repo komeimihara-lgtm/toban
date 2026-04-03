@@ -198,11 +198,27 @@ export function AppSidebar({
         `}
       >
         <div className="flex items-start justify-between border-b border-[var(--sidebar-border)] px-4 py-4">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-accent">LENARD HR</p>
-            <p className="mt-1 truncate text-sm text-zinc-900 dark:text-white">{userLabel}</p>
+          <div className="min-w-0 flex-1 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 shadow-lg shadow-blue-900/40">
+                <span className="text-lg font-black text-white">L</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold tracking-widest text-zinc-900 dark:text-white">
+                  LENARD HR
+                </p>
+                <p className="text-[10px] text-zinc-500 dark:text-zinc-500">
+                  Human Resource System
+                </p>
+              </div>
+            </div>
+            <p className="truncate text-sm font-medium text-zinc-900 dark:text-white">
+              {userLabel}
+            </p>
             {tenantName ? (
-              <p className="mt-1 truncate text-xs text-zinc-600 dark:text-white">{tenantName}</p>
+              <p className="truncate text-xs text-zinc-600 dark:text-zinc-400">
+                {tenantName}
+              </p>
             ) : null}
           </div>
           <button
