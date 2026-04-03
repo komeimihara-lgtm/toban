@@ -325,12 +325,6 @@ export default async function MyHomePage() {
               日
             </span>
           </p>
-          <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-300">
-            次回付与日:{" "}
-            {(leaveBal as { next_accrual_date?: string } | null)?.next_accrual_date ?? "—"}
-            {((leaveBal as { next_accrual_days?: number } | null)?.next_accrual_days != null) &&
-              `（${(leaveBal as { next_accrual_days: number }).next_accrual_days}日）`}
-          </p>
           <Link
             href="/my/leave"
             className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/20 px-4 py-2 text-sm font-medium text-blue-600 transition-all hover:bg-blue-600/30 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
@@ -344,9 +338,6 @@ export default async function MyHomePage() {
           </h2>
           <p className="mt-2 text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
             {pendingCount} 件 · {yen(pendingSum)}
-          </p>
-          <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
-            第1・最終承認待ち・今月申請分（下書きは含みません）
           </p>
           <Link
             href="/my/expenses"
@@ -402,9 +393,6 @@ export default async function MyHomePage() {
           <p className="mt-2 text-lg font-semibold text-emerald-700 dark:text-emerald-400">
             {incentivePreview}
           </p>
-          <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
-            差戻し案件を除き、あなたのアポ・クローズ分の合計です。
-          </p>
           <Link
             href="/my/incentive"
             className="mt-2 inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/20 px-4 py-2 text-sm font-medium text-blue-600 transition-all hover:bg-blue-600/30 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
@@ -449,9 +437,7 @@ export default async function MyHomePage() {
         <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
           今月の勤務時間サマリー
         </h2>
-        <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-300">
-          {yMonth}年{mMonth}月 · 出勤のあった日数と打刻から算出した労働時間（休憩控除後）
-        </p>
+        <p className="mt-2 text-xs text-zinc-500">※ 休憩控除済み</p>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
           <div>
             <dt className="text-xs text-zinc-600 dark:text-zinc-400">出勤日数</dt>

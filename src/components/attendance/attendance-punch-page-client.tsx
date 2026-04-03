@@ -200,8 +200,6 @@ export function AttendancePunchPageClient({
           />
         </div>
 
-        <p className="text-xs text-zinc-500 mt-3 hidden md:block">※ 労働時間に応じて休憩時間を自動控除します（6h超:45分 / 8h超:60分）</p>
-
         <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
           <MapPin className="size-3.5 shrink-0" aria-hidden />
           <span>{geoAddress ?? geoStatus}</span>
