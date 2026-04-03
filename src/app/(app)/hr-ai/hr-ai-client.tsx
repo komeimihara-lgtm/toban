@@ -131,7 +131,7 @@ export function HrAiClient({
 
         {accepted && (
           <>
-            <div className="max-h-80 space-y-3 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
+            <div className="max-h-80 space-y-3 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-card">
               {messages.map((m, i) => (
                 <div
                   key={`${i}-${m.role}-${m.content.slice(0, 12)}`}
@@ -141,7 +141,7 @@ export function HrAiClient({
                       : "mr-8 text-left text-zinc-700 dark:text-zinc-300"
                   }`}
                 >
-                  <span className="inline-block rounded-2xl bg-white px-3 py-2 shadow-sm dark:bg-zinc-800">
+                  <span className="inline-block rounded-2xl bg-white px-3 py-2 shadow-sm dark:bg-card/80">
                     {m.content}
                   </span>
                 </div>
@@ -166,7 +166,7 @@ export function HrAiClient({
                   }
                 }}
                 placeholder="メッセージを入力…"
-                className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-card dark:text-zinc-100 dark:placeholder:text-zinc-500"
                 disabled={Boolean(doneMsg)}
               />
               <button
@@ -183,7 +183,7 @@ export function HrAiClient({
               type="button"
               onClick={finish}
               disabled={Boolean(doneMsg) || pending}
-              className="w-full rounded-lg border border-zinc-400 bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+              className="w-full rounded-lg border border-zinc-400 bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-card dark:text-zinc-100 dark:hover:bg-zinc-800"
             >
               面談を終了する
             </button>

@@ -110,7 +110,7 @@ export function OnboardingPageClient() {
 
   if (!employeeRecordId) {
     return (
-      <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+      <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm dark:border-zinc-800 dark:bg-card">
         <p>従業員レコードがまだありません。管理者に連絡するか、しばらくしてから再度お試しください。</p>
       </div>
     );
@@ -133,7 +133,7 @@ export function OnboardingPageClient() {
             {completedCount} / {tasks.length}（{progress}%）
           </span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+        <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-card/80">
           <div
             className="h-full rounded-full bg-emerald-600 transition-[width]"
             style={{ width: `${progress}%` }}
@@ -196,7 +196,7 @@ export function OnboardingPageClient() {
             <select
               value={uploadTaskId}
               onChange={(e) => setUploadTaskId(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-card"
             >
               <option value="">（指定なし）</option>
               {tasks.map((t) => (
@@ -226,7 +226,7 @@ export function OnboardingPageClient() {
               name="document_type"
               type="text"
               placeholder="例: 雇用契約書"
-              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-card"
             />
           </div>
           <button

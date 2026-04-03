@@ -222,7 +222,7 @@ export function DocumentsAdminClient({ initialDocuments }: { initialDocuments: D
               value={uploadName}
               onChange={(e) => setUploadName(e.target.value)}
               placeholder="例: 就業規則（2026年4月版）"
-              className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-card"
             />
             {selectedFiles.length > 1 ? (
               <p className="mt-1 text-xs text-zinc-400">

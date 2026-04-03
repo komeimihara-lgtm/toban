@@ -18,7 +18,7 @@ const SHIFT_CLASS: Record<ShiftCellType, string> = {
   day: "bg-sky-100 text-sky-950 dark:bg-sky-950/50 dark:text-sky-100",
   night: "bg-indigo-100 text-indigo-950 dark:bg-indigo-950/50 dark:text-indigo-100",
   half: "bg-amber-100 text-amber-950 dark:bg-amber-950/40 dark:text-amber-100",
-  off: "bg-zinc-100 text-zinc-500 dark:bg-zinc-800/60 dark:text-zinc-400",
+  off: "bg-zinc-100 text-zinc-500 dark:bg-card/80/60 dark:text-zinc-400",
 };
 
 const HOURS: Record<ShiftCellType, number> = {
@@ -170,11 +170,11 @@ export function ShiftWeekClient() {
         </div>
       </header>
 
-      <section className="overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-card">
         <table className="w-full min-w-[720px] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-              <th className="sticky left-0 z-10 min-w-[5.5rem] border-r border-zinc-200 bg-zinc-50 px-2 py-3 text-left text-xs font-semibold dark:border-zinc-800 dark:bg-zinc-900/50">
+            <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-card">
+              <th className="sticky left-0 z-10 min-w-[5.5rem] border-r border-zinc-200 bg-zinc-50 px-2 py-3 text-left text-xs font-semibold dark:border-zinc-800 dark:bg-card">
                 スタッフ
               </th>
               {days.map((d, i) => (
@@ -202,7 +202,7 @@ export function ShiftWeekClient() {
                 key={s.id}
                 className="border-b border-zinc-100 dark:border-zinc-800/80"
               >
-                <td className="sticky left-0 z-10 border-r border-zinc-100 bg-white px-2 py-2 font-medium dark:border-zinc-800 dark:bg-zinc-950">
+                <td className="sticky left-0 z-10 border-r border-zinc-100 bg-white px-2 py-2 font-medium dark:border-zinc-800 dark:bg-card">
                   {s.name}
                 </td>
                 {days.map((_, di) => {
@@ -231,7 +231,7 @@ export function ShiftWeekClient() {
         </table>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
+      <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-semibold">今週の集計</h2>
         <dl className="mt-3 flex flex-wrap gap-6">
           <div>
@@ -276,7 +276,7 @@ export function ShiftWeekClient() {
           aria-modal
           aria-labelledby="shift-modal-title"
         >
-          <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 shadow-xl dark:border-zinc-700 dark:bg-zinc-950">
+          <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 shadow-xl dark:border-zinc-700 dark:bg-card">
             <h2 id="shift-modal-title" className="text-base font-semibold">
               シフトを選択
             </h2>

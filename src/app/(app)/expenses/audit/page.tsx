@@ -18,7 +18,7 @@ export default async function ExpensesAuditPage() {
   const now = new Date();
 
   return (
-    <div className="min-h-screen bg-zinc-50/80 px-4 py-8 dark:bg-zinc-950">
+    <div className="min-h-screen bg-zinc-50/80 px-4 py-8 dark:bg-card">
       <div className="mb-6 text-sm">
         <Link href="/expenses" className="text-zinc-600 underline dark:text-zinc-400">
           ← 経費一覧

@@ -50,7 +50,7 @@ export function InterviewInviteBanner({ requestId }: { requestId: string }) {
             setHidden(true);
             router.refresh();
           }}
-          className="rounded-lg border border-amber-600/40 bg-white px-4 py-2 text-sm font-medium text-amber-950 hover:bg-amber-100 dark:border-amber-600 dark:bg-zinc-900 dark:text-amber-100 dark:hover:bg-zinc-800"
+          className="rounded-lg border border-amber-600/40 bg-white px-4 py-2 text-sm font-medium text-amber-950 hover:bg-amber-100 dark:border-amber-600 dark:bg-card dark:text-amber-100 dark:hover:bg-zinc-800"
         >
           後で
         </button>

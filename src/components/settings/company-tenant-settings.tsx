@@ -197,7 +197,7 @@ export function CompanyTenantSettings({
         </p>
       ) : null}
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
           承認フロー
         </h2>
@@ -242,7 +242,7 @@ export function CompanyTenantSettings({
                     next[i] = { ...next[i], label: e.target.value };
                     setSteps(next);
                   }}
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
                 />
               </label>
               <label className="block text-sm">
@@ -257,7 +257,7 @@ export function CompanyTenantSettings({
                     };
                     setSteps(next);
                   }}
-                  className="mt-1 rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
                 >
                   {ROLE_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -298,7 +298,7 @@ export function CompanyTenantSettings({
         </p>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
           通知チャネル
         </h2>
@@ -320,7 +320,7 @@ export function CompanyTenantSettings({
         </label>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
           インセンティブ（部門フラグ）
         </h2>
@@ -339,7 +339,7 @@ export function CompanyTenantSettings({
             value={incentiveNotes}
             onChange={(e) => setIncentiveNotes(e.target.value)}
             rows={2}
-            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
           />
         </label>
         <div className="mt-6 border-t border-zinc-100 pt-4 dark:border-zinc-800">
@@ -367,7 +367,7 @@ export function CompanyTenantSettings({
         </div>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
           経費カテゴリ
         </h2>
@@ -376,7 +376,7 @@ export function CompanyTenantSettings({
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             placeholder="新しいカテゴリ名"
-            className="min-w-[12rem] flex-1 rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className="min-w-[12rem] flex-1 rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
           />
           <button
             type="button"
@@ -397,7 +397,7 @@ export function CompanyTenantSettings({
                     const v = e.target.value.trim();
                     if (v && v !== c.label) void patchCategory(c.id, { label: v });
                   }}
-                  className="w-full rounded border border-zinc-200 px-2 py-1 text-sm font-medium dark:border-zinc-700 dark:bg-zinc-900"
+                  className="w-full rounded border border-zinc-200 px-2 py-1 text-sm font-medium dark:border-zinc-700 dark:bg-card"
                 />
                 <p className="mt-0.5 text-[10px] text-zinc-500">
                   code: {c.code}
@@ -408,7 +408,7 @@ export function CompanyTenantSettings({
                 <input
                   type="number"
                   defaultValue={c.sort_order}
-                  className="w-16 rounded border px-1 py-0.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="w-16 rounded border px-1 py-0.5 dark:border-zinc-600 dark:bg-card"
                   onBlur={(e) => {
                     const n = Number(e.target.value);
                     if (Number.isFinite(n))

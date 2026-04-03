@@ -14,7 +14,7 @@ export function PersonalHrSummary({ data }: { data: PersonalHrData }) {
   const c = data.contract;
 
   return (
-    <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+    <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
       <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
         あなたの雇用・有給サマリー
       </h2>

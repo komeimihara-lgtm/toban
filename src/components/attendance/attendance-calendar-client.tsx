@@ -8,11 +8,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const KIND_CLASS: Record<CalendarCell["kind"], string> = {
   empty: "bg-transparent",
-  weekend: "bg-zinc-100 text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400",
+  weekend: "bg-zinc-100 text-zinc-500 dark:bg-card/80/50 dark:text-zinc-400",
   work: "bg-emerald-100 text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100",
   leave_full: "bg-sky-200 text-sky-950 dark:bg-sky-900/50 dark:text-sky-100",
   leave_half: "bg-sky-100 text-sky-900 dark:bg-sky-950/35 dark:text-sky-100",
-  neutral: "bg-white text-zinc-800 dark:bg-zinc-950 dark:text-zinc-200",
+  neutral: "bg-white text-zinc-800 dark:bg-card dark:text-zinc-200",
 };
 
 export function AttendanceCalendarClient({
@@ -118,20 +118,20 @@ export function AttendanceCalendarClient({
         ))}
       </div>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-semibold">月間サマリー</h2>
         <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">
+          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-card">
             <dt className="text-xs text-zinc-500">出勤日数</dt>
             <dd className="mt-1 text-lg font-semibold tabular-nums">{workDays} 日</dd>
           </div>
-          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">
+          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-card">
             <dt className="text-xs text-zinc-500">総労働時間（自動休憩控除後）</dt>
             <dd className="mt-1 text-lg font-semibold tabular-nums">
               {formatHoursMinutes(totalWorkMinutes)}
             </dd>
           </div>
-          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">
+          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-card">
             <dt className="text-xs text-zinc-500">有給取得日数（換算）</dt>
             <dd className="mt-1 text-lg font-semibold tabular-nums text-sky-800 dark:text-sky-300">
               {paidLeaveDays} 日

@@ -75,7 +75,7 @@ export function OffboardingPageClient() {
 
   if (!employee || employee.offboarding_status !== "offboarding") {
     return (
-      <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+      <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm dark:border-zinc-800 dark:bg-card">
         退社手続きは人事から開始されるまで表示されません。ご不明点は管理本部へお問い合わせください。
       </p>
     );
@@ -162,7 +162,7 @@ export function OffboardingPageClient() {
             {completedCount} / {tasks.length}（{progress}%）
           </span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+        <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-card/80">
           <div
             className="h-full rounded-full bg-amber-600 transition-[width]"
             style={{ width: `${progress}%` }}

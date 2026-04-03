@@ -124,13 +124,13 @@ export default async function EmployeesPage({
           name="q"
           placeholder="名前検索"
           defaultValue={sp.q}
-          className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-600 dark:bg-zinc-900"
+          className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-600 dark:bg-card"
         />
         <input
           name="dept"
           placeholder="部署（テキスト）"
           defaultValue={sp.dept}
-          className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-600 dark:bg-zinc-900"
+          className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-600 dark:bg-card"
         />
         <button
           type="submit"
@@ -141,7 +141,7 @@ export default async function EmployeesPage({
       </form>
       <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
         <table className="w-full min-w-[800px] text-left text-sm">
-          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50">
+          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-800 dark:bg-card">
             <tr>
               <th className="px-3 py-2">名前</th>
               <th className="px-3 py-2">部署</th>

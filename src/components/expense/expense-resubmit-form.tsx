@@ -34,7 +34,7 @@ export function ExpenseResubmitForm({ row }: { row: Row }) {
             <select
               name="type"
               defaultValue={row.type}
-              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             >
               <option value="expense">経費</option>
               <option value="travel">出張</option>
@@ -48,7 +48,7 @@ export function ExpenseResubmitForm({ row }: { row: Row }) {
               name="category"
               required
               defaultValue={row.category}
-              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             />
           </label>
           <label className="text-xs text-zinc-600 dark:text-zinc-400">
@@ -59,7 +59,7 @@ export function ExpenseResubmitForm({ row }: { row: Row }) {
               step="1"
               required
               defaultValue={row.amount}
-              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             />
           </label>
           <label className="text-xs text-zinc-600 dark:text-zinc-400">
@@ -69,7 +69,7 @@ export function ExpenseResubmitForm({ row }: { row: Row }) {
               type="date"
               required
               defaultValue={row.paid_date}
-              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             />
           </label>
         </div>
@@ -78,7 +78,7 @@ export function ExpenseResubmitForm({ row }: { row: Row }) {
           <input
             name="vendor"
             defaultValue={row.vendor ?? ""}
-            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
           />
         </label>
         <label className="block text-xs text-zinc-600 dark:text-zinc-400">
@@ -88,7 +88,7 @@ export function ExpenseResubmitForm({ row }: { row: Row }) {
             required
             rows={3}
             defaultValue={row.purpose}
-            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
           />
         </label>
         <button

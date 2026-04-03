@@ -43,7 +43,7 @@ export function LaborExportPanel() {
   }
 
   return (
-    <div className="space-y-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950/50">
+    <div className="space-y-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-card/50">
       <div>
         <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">社労士提出用データ出力</h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
@@ -56,7 +56,7 @@ export function LaborExportPanel() {
           <span className="text-xs text-zinc-500">年</span>
           <input
             type="number"
-            className="mt-1 w-28 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 w-28 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
           />
@@ -64,7 +64,7 @@ export function LaborExportPanel() {
         <label className="block">
           <span className="text-xs text-zinc-500">月</span>
           <select
-            className="mt-1 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
           >
@@ -88,7 +88,7 @@ export function LaborExportPanel() {
           type="button"
           disabled={busy != null}
           onClick={() => void download("attendance")}
-          className="rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-2.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+          className="rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-2.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:bg-card dark:hover:bg-zinc-800"
         >
           {busy === "attendance" ? "生成中…" : "勤怠データを Excel で出力"}
         </button>
@@ -96,7 +96,7 @@ export function LaborExportPanel() {
           type="button"
           disabled={busy != null}
           onClick={() => void download("incentive")}
-          className="rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-2.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+          className="rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-2.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:bg-card dark:hover:bg-zinc-800"
         >
           {busy === "incentive" ? "生成中…" : "インセンティブを Excel で出力"}
         </button>
@@ -104,7 +104,7 @@ export function LaborExportPanel() {
           type="button"
           disabled={busy != null}
           onClick={() => void download("expense")}
-          className="rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-2.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+          className="rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-2.5 text-sm font-medium hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:bg-card dark:hover:bg-zinc-800"
         >
           {busy === "expense" ? "生成中…" : "経費データを Excel で出力"}
         </button>

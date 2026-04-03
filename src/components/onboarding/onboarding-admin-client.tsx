@@ -46,7 +46,7 @@ export function OnboardingAdminClient({
       )}
       <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-zinc-50 text-xs font-semibold uppercase text-zinc-500 dark:bg-zinc-900/80">
+          <thead className="bg-zinc-50 text-xs font-semibold uppercase text-zinc-500 dark:bg-card">
             <tr>
               <th className="px-4 py-2">氏名</th>
               <th className="px-4 py-2">入社レコード作成</th>

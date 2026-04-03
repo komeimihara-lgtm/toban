@@ -174,7 +174,7 @@ export function IncentiveRatesSettings() {
                   <input
                     type="number"
                     step="0.01"
-                    className="w-28 rounded border border-zinc-300 px-2 py-1 tabular-nums dark:border-zinc-600 dark:bg-zinc-900"
+                    className="w-28 rounded border border-zinc-300 px-2 py-1 tabular-nums dark:border-zinc-600 dark:bg-card"
                     value={rates[e.id] ?? ""}
                     placeholder="0"
                     onChange={(ev) =>
@@ -202,7 +202,7 @@ export function IncentiveRatesSettings() {
           年
           <input
             type="number"
-            className="mt-1 block w-24 rounded border px-2 py-1.5 dark:bg-zinc-900"
+            className="mt-1 block w-24 rounded border px-2 py-1.5 dark:bg-card"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
           />
@@ -213,7 +213,7 @@ export function IncentiveRatesSettings() {
             type="number"
             min={1}
             max={12}
-            className="mt-1 block w-20 rounded border px-2 py-1.5 dark:bg-zinc-900"
+            className="mt-1 block w-20 rounded border px-2 py-1.5 dark:bg-card"
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
           />
@@ -238,7 +238,7 @@ export function IncentiveRatesSettings() {
       {row("営業部", salesMembers, "川津・大岩・小笠原・飯田（DBフラグ準拠）")}
       {row("サービス部", serviceMembers, "高橋・田村・中村・橋本（DBフラグ準拠）")}
 
-      <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900/30">
+      <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 text-sm dark:border-zinc-800 dark:bg-card">
         <h3 className="font-semibold text-zinc-800 dark:text-zinc-100">
           承認フロー（経費・インセンティブ共通イメージ）
         </h3>
@@ -252,7 +252,7 @@ export function IncentiveRatesSettings() {
 
       <p className="text-xs text-zinc-500">
         対象月キー:{" "}
-        <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">
+        <code className="rounded bg-zinc-100 px-1 dark:bg-card/80">
           {ymLabel(year, month)}
         </code>
       </p>

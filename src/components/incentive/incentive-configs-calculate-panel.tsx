@@ -68,7 +68,7 @@ export function IncentiveConfigsCalculatePanel() {
           <select
             value={deptId}
             onChange={(e) => setDeptId(e.target.value)}
-            className="mt-1 block rounded border border-emerald-200 bg-white px-2 py-1.5 text-sm dark:border-emerald-800 dark:bg-zinc-950"
+            className="mt-1 block rounded border border-emerald-200 bg-white px-2 py-1.5 text-sm dark:border-emerald-800 dark:bg-card"
           >
             {depts.map((d) => (
               <option key={d.id} value={d.id}>
@@ -83,7 +83,7 @@ export function IncentiveConfigsCalculatePanel() {
             type="number"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="mt-1 block w-24 rounded border border-emerald-200 bg-white px-2 py-1.5 text-sm dark:border-emerald-800 dark:bg-zinc-950"
+            className="mt-1 block w-24 rounded border border-emerald-200 bg-white px-2 py-1.5 text-sm dark:border-emerald-800 dark:bg-card"
           />
         </label>
         <label className="text-xs">
@@ -94,7 +94,7 @@ export function IncentiveConfigsCalculatePanel() {
             max={12}
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
-            className="mt-1 block w-20 rounded border border-emerald-200 bg-white px-2 py-1.5 text-sm dark:border-emerald-800 dark:bg-zinc-950"
+            className="mt-1 block w-20 rounded border border-emerald-200 bg-white px-2 py-1.5 text-sm dark:border-emerald-800 dark:bg-card"
           />
         </label>
         <button

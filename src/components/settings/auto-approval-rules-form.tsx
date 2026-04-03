@@ -80,7 +80,7 @@ export function AutoApprovalRulesForm({
 
       <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
         <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400">
+          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-600 dark:border-zinc-800 dark:bg-card dark:text-zinc-400">
             <tr>
               <th className="px-4 py-3">カテゴリ</th>
               <th className="px-4 py-3">上限（円）</th>
@@ -90,7 +90,7 @@ export function AutoApprovalRulesForm({
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {sorted.map((r) => (
-              <tr key={r.id} className="bg-white dark:bg-zinc-950">
+              <tr key={r.id} className="bg-white dark:bg-card">
                 <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">
                   {r.category}
                 </td>
@@ -104,7 +104,7 @@ export function AutoApprovalRulesForm({
                     onChange={(e) =>
                       patch(r.id, "max_amount", Number(e.target.value) || 0)
                     }
-                    className="w-28 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 tabular-nums disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-900"
+                    className="w-28 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 tabular-nums disabled:opacity-50 dark:border-zinc-600 dark:bg-card"
                   />
                 </td>
                 <td className="px-4 py-3">

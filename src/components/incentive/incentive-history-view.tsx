@@ -26,7 +26,7 @@ export function IncentiveHistoryView({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-semibold">月別推移（棒グラフ）</h2>
         <div className="mt-4 space-y-2">
           {monthly.length === 0 ? (
@@ -41,7 +41,7 @@ export function IncentiveHistoryView({
                   <span className="w-16 shrink-0 tabular-nums text-zinc-600 dark:text-zinc-400">
                     {m.ym}
                   </span>
-                  <div className="h-3 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                  <div className="h-3 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-100 dark:bg-card/80">
                     <div
                       className="h-full rounded-full bg-amber-500/90 dark:bg-amber-600/90"
                       style={{ width: `${(m.total / max) * 100}%` }}
@@ -66,7 +66,7 @@ export function IncentiveHistoryView({
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50">
+            <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-800 dark:bg-card">
               <tr>
                 <th className="px-3 py-2">月</th>
                 <th className="px-3 py-2">合計</th>
@@ -105,7 +105,7 @@ export function IncentiveHistoryView({
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50">
+            <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-800 dark:bg-card">
               <tr>
                 <th className="px-3 py-2">年月</th>
                 <th className="px-3 py-2">氏名</th>

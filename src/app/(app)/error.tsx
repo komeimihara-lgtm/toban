@@ -16,7 +16,7 @@ export default function AppGroupError({
         データの読み込みでエラーが発生しています。Supabase の接続・テーブル・マイグレーション（RLS
         含む）を確認してください。「再試行」でリロードできます。
       </p>
-      <p className="break-all rounded-md bg-zinc-100 p-3 font-mono text-xs text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+      <p className="break-all rounded-md bg-zinc-100 p-3 font-mono text-xs text-zinc-800 dark:bg-card dark:text-zinc-200">
         {error.message}
       </p>
       <button

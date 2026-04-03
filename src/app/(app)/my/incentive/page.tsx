@@ -55,7 +55,7 @@ export default async function MyIncentivePage() {
 
   if (!incentiveEligible) {
     return (
-      <div className="mx-auto max-w-lg rounded-xl border border-zinc-200 bg-zinc-50 px-6 py-8 text-center dark:border-zinc-800 dark:bg-zinc-950/50">
+      <div className="mx-auto max-w-lg rounded-xl border border-zinc-200 bg-zinc-50 px-6 py-8 text-center dark:border-zinc-800 dark:bg-card/50">
         <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
           あなたはインセンティブ対象外です
         </p>

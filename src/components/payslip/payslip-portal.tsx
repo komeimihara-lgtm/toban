@@ -131,7 +131,7 @@ export function PayslipPortal() {
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
             <Printer className="size-4" aria-hidden />
             印刷・PDF保存
@@ -139,7 +139,7 @@ export function PayslipPortal() {
           <button
             type="button"
             onClick={() => shiftMonth(-1)}
-            className="inline-flex size-9 items-center justify-center rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            className="inline-flex size-9 items-center justify-center rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800"
             aria-label="前月"
           >
             <ChevronLeft className="size-4" />
@@ -150,7 +150,7 @@ export function PayslipPortal() {
           <button
             type="button"
             onClick={() => shiftMonth(1)}
-            className="inline-flex size-9 items-center justify-center rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            className="inline-flex size-9 items-center justify-center rounded-lg border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800"
             aria-label="翌月"
           >
             <ChevronRight className="size-4" />
@@ -179,13 +179,13 @@ export function PayslipPortal() {
       )}
 
       {!loading && err?.needs_mapping && (
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-4 text-sm dark:border-zinc-700 dark:bg-zinc-900/50">
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-4 text-sm dark:border-zinc-700 dark:bg-card">
           <p className="font-medium text-zinc-900 dark:text-zinc-100">
             freee の従業員IDが未設定です
           </p>
           <p className="mt-2 text-zinc-600 dark:text-zinc-400">
             データベースの{" "}
-            <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">
+            <code className="rounded bg-zinc-200 px-1 dark:bg-card/80">
               profiles.freee_employee_id
             </code>{" "}
             に、freee 人事労務の数値の従業員IDを登録してください。
@@ -217,7 +217,7 @@ export function PayslipPortal() {
 
       {data && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_1fr]">
-          <div className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-card">
             <div className="bg-zinc-900 px-5 py-4 text-white">
               <p className="text-[10px] uppercase tracking-wider text-zinc-400">
                 LENARD
@@ -377,7 +377,7 @@ export function PayslipPortal() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
               <p className="text-xs font-semibold tracking-wide text-zinc-500">
                 有給（freee サマリー）
               </p>

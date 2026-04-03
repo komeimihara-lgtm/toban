@@ -40,7 +40,7 @@ export function ProfileForm({
   );
 
   const fieldClass =
-    "mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900/80 dark:text-zinc-50";
+    "mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-card dark:text-zinc-50";
   const labelClass = "block text-xs font-medium text-zinc-600 dark:text-zinc-400";
 
   return (
@@ -54,7 +54,7 @@ export function ProfileForm({
         </p>
       </div>
 
-      <section className="rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
+      <section className="rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-card/40">
         <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
           社員情報（参照のみ）
         </h2>
@@ -82,7 +82,7 @@ export function ProfileForm({
 
       <form
         action={profileAction}
-        className="space-y-4 rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/40"
+        className="space-y-4 rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-card/40"
       >
         <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
           連絡先・LINE（編集可）
@@ -198,7 +198,7 @@ export function ProfileForm({
 
       <form
         action={pwAction}
-        className="space-y-4 rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/40"
+        className="space-y-4 rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-card/40"
       >
         <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
           パスワード変更

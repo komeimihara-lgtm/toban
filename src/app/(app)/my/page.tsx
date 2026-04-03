@@ -333,7 +333,7 @@ export default async function MyHomePage() {
         <InterviewInviteBanner requestId={(interviewReq as { id: string }).id} />
       )}
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-card">
         <div>
           <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             今日の打刻
@@ -399,7 +399,7 @@ export default async function MyHomePage() {
       )}
 
       <section className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-card">
           <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             有給残日数・次回付与日
           </h2>
@@ -416,7 +416,7 @@ export default async function MyHomePage() {
             有給・休暇の詳細 →
           </Link>
         </div>
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-card">
           <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             今月の承認待ち経費
           </h2>
@@ -432,7 +432,7 @@ export default async function MyHomePage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
           {payslipIsCurrentMonth ? "今月の給与明細（サマリー）" : "給与明細サマリー（直近）"}
         </h2>
@@ -470,7 +470,7 @@ export default async function MyHomePage() {
       </section>
 
       {incentivePreview != null && p && elig(p) && (
-        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-card">
           <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             今月のインセンティブ試算（案件）
           </h2>
@@ -486,7 +486,7 @@ export default async function MyHomePage() {
         </section>
       )}
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">お知らせ</h2>
         {notices.length === 0 ? (
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
@@ -517,7 +517,7 @@ export default async function MyHomePage() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
           今月の勤務時間サマリー
         </h2>

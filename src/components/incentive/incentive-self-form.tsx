@@ -131,8 +131,8 @@ export function IncentiveSelfForm({
         </p>
       </header>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900/40">
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-card">
+        <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 px-4 py-3 dark:border-zinc-700 dark:bg-card">
           <p className="text-xs font-medium text-zinc-500">あなたの適用率（incentive_rates）</p>
           <p className="mt-1 text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
             {ratePercent.toLocaleString("ja-JP", { maximumFractionDigits: 4 })}%
@@ -162,7 +162,7 @@ export function IncentiveSelfForm({
               disabled={locked || pending}
               value={rawSales}
               onChange={(e) => setRawSales(digitsOnly(e.target.value))}
-              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400/40 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400/40 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-card dark:text-zinc-100"
               placeholder="0"
             />
           </div>
@@ -181,7 +181,7 @@ export function IncentiveSelfForm({
           </div>
 
           {submission?.status === "draft" && (
-            <p className="rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-3 text-sm text-zinc-800 dark:border-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-200">
+            <p className="rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-3 text-sm text-zinc-800 dark:border-zinc-600 dark:bg-card/80/50 dark:text-zinc-200">
               下書き保存済みです。「提出する」で送信してください。
             </p>
           )}

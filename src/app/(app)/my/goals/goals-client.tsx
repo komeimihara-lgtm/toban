@@ -134,7 +134,7 @@ export function GoalsClient({
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
               goal.status === "approved" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
               : goal.status === "rejected" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-              : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+              : "bg-zinc-100 text-zinc-600 dark:bg-card/80 dark:text-zinc-400"
             }`}>
               {STATUS_LABEL[goal.status] ?? goal.status}
             </span>
@@ -149,7 +149,7 @@ export function GoalsClient({
               onChange={(e) => setTheme(e.target.value)}
               disabled={!isEditable}
               rows={2}
-              className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
+              className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-card"
               placeholder="例: 新規顧客3件獲得と既存顧客のフォロー強化"
             />
           </div>
@@ -166,7 +166,7 @@ export function GoalsClient({
                     setGoals(next);
                   }}
                   disabled={!isEditable}
-                  className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-card"
                   placeholder={`目標 ${i + 1}`}
                 />
                 {isEditable && goals.length > 1 && (
@@ -187,21 +187,21 @@ export function GoalsClient({
                   value={kpi.name}
                   onChange={(e) => { const next = [...kpis]; next[i] = { ...kpi, name: e.target.value }; setKpis(next); }}
                   disabled={!isEditable}
-                  className="flex-1 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="flex-1 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-card"
                   placeholder="項目名"
                 />
                 <input
                   value={kpi.target}
                   onChange={(e) => { const next = [...kpis]; next[i] = { ...kpi, target: e.target.value }; setKpis(next); }}
                   disabled={!isEditable}
-                  className="w-24 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="w-24 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-card"
                   placeholder="目標値"
                 />
                 <input
                   value={kpi.unit}
                   onChange={(e) => { const next = [...kpis]; next[i] = { ...kpi, unit: e.target.value }; setKpis(next); }}
                   disabled={!isEditable}
-                  className="w-16 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="w-16 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-60 dark:border-zinc-700 dark:bg-card"
                   placeholder="単位"
                 />
                 {isEditable && kpis.length > 1 && (
@@ -245,7 +245,7 @@ export function GoalsClient({
                     next[i] = { ...next[i], actual: e.target.value };
                     setKpiResults(next);
                   }}
-                  className="w-24 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                  className="w-24 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-card"
                   placeholder="実績値"
                 />
                 <input
@@ -255,7 +255,7 @@ export function GoalsClient({
                     next[i] = { ...next[i], comment: e.target.value };
                     setKpiResults(next);
                   }}
-                  className="flex-1 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                  className="flex-1 rounded-lg border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-card"
                   placeholder="コメント"
                 />
               </div>
@@ -266,7 +266,7 @@ export function GoalsClient({
                 value={resultComment}
                 onChange={(e) => setResultComment(e.target.value)}
                 rows={3}
-                className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-card"
                 placeholder="今月の振り返り..."
               />
             </div>
@@ -332,7 +332,7 @@ export function GoalsClient({
                     <span className="text-sm font-bold">{h.ai_score}点</span>
                   )}
                   <span className={`rounded-full px-2 py-0.5 text-xs ${
-                    h.status === "approved" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800"
+                    h.status === "approved" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-zinc-100 text-zinc-600 dark:bg-card/80"
                   }`}>
                     {STATUS_LABEL[h.status] ?? h.status}
                   </span>

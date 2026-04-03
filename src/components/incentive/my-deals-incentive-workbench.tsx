@@ -383,13 +383,13 @@ export function MyDealsIncentiveWorkbench(props: {
       return "border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100";
     if (s === "rejected")
       return "border-red-200 bg-red-50 text-red-950 dark:border-red-900 dark:bg-red-950/40 dark:text-red-100";
-    return "border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/60";
+    return "border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-card";
   };
 
   return (
     <div className="space-y-6">
       {msg ? (
-        <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900/40">
+        <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-card">
           {msg}
         </p>
       ) : null}
@@ -399,7 +399,7 @@ export function MyDealsIncentiveWorkbench(props: {
           <label className="block text-xs text-zinc-500">年</label>
           <input
             type="number"
-            className="mt-1 w-28 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+            className="mt-1 w-28 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
           />
@@ -407,7 +407,7 @@ export function MyDealsIncentiveWorkbench(props: {
         <div>
           <label className="block text-xs text-zinc-500">月</label>
           <select
-            className="mt-1 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+            className="mt-1 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
           >
@@ -439,7 +439,7 @@ export function MyDealsIncentiveWorkbench(props: {
               className={
                 active
                   ? "rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1 text-xs font-medium text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
-                  : "rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs text-zinc-700 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-200"
+                  : "rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs text-zinc-700 dark:border-zinc-600 dark:bg-card dark:text-zinc-200"
               }
             >
               {label}（{yy}/{pad2(mm)}）
@@ -489,7 +489,7 @@ export function MyDealsIncentiveWorkbench(props: {
           </p>
           <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-              <thead className="bg-zinc-50 dark:bg-zinc-900/50">
+              <thead className="bg-zinc-50 dark:bg-card">
                 <tr>
                   {["サロン", "機種", "純利益", "アポ¥", "クローザー¥", "状態", ""].map((h) => (
                     <th key={h} className="px-3 py-2 text-left font-medium">
@@ -586,7 +586,7 @@ export function MyDealsIncentiveWorkbench(props: {
                 return (
                   <div
                     key={d.id}
-                    className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800 dark:bg-zinc-950/40"
+                    className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800 dark:bg-card/40"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
@@ -647,7 +647,7 @@ export function MyDealsIncentiveWorkbench(props: {
           ) : (
             <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
               <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-                <thead className="bg-zinc-50 dark:bg-zinc-900/50">
+                <thead className="bg-zinc-50 dark:bg-card">
                   <tr>
                     {["年月", "承認済インセン（自分）", "承認待ち（試算）", "承認待ち件数", ""].map((h) => (
                       <th key={h} className="px-3 py-2 text-left font-medium">
@@ -689,13 +689,13 @@ export function MyDealsIncentiveWorkbench(props: {
 
       {modalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-950">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-card">
             <h3 className="text-lg font-semibold">{editingId ? "案件を編集" : "新規案件"}</h3>
             <div className="mt-4 grid gap-3 text-sm">
               <label className="block">
                 <span className="text-xs text-zinc-500">商品マスタ</span>
                 <select
-                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={selectedProductId}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -738,7 +738,7 @@ export function MyDealsIncentiveWorkbench(props: {
               <label className="block">
                 <span className="text-xs text-zinc-500">サロン名</span>
                 <input
-                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={form.salon_name}
                   onChange={(e) => setForm((f) => ({ ...f, salon_name: e.target.value }))}
                 />
@@ -748,7 +748,7 @@ export function MyDealsIncentiveWorkbench(props: {
                   <span className="text-xs text-zinc-500">販売価格（税込）</span>
                   <input
                     type="number"
-                    className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                    className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                     value={form.sale_price}
                     onChange={(e) => setForm((f) => ({ ...f, sale_price: e.target.value }))}
                   />
@@ -757,7 +757,7 @@ export function MyDealsIncentiveWorkbench(props: {
                   <span className="text-xs text-zinc-500">実質原価（商品選択で自動・編集可）</span>
                   <input
                     type="number"
-                    className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                    className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                     value={form.cost_price}
                     onChange={(e) => setForm((f) => ({ ...f, cost_price: e.target.value }))}
                   />
@@ -783,7 +783,7 @@ export function MyDealsIncentiveWorkbench(props: {
                         <label className="block sm:col-span-1">
                           <span className="text-xs text-zinc-500">サービス内容</span>
                           <input
-                            className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                            className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                             placeholder="例：ハンドピース1本"
                             value={line.name}
                             onChange={(e) =>
@@ -797,7 +797,7 @@ export function MyDealsIncentiveWorkbench(props: {
                           <span className="text-xs text-zinc-500">サービス原価</span>
                           <input
                             type="number"
-                            className="mt-1 w-full min-w-[8rem] rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                            className="mt-1 w-full min-w-[8rem] rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                             placeholder="0"
                             value={line.cost}
                             onChange={(e) =>
@@ -820,7 +820,7 @@ export function MyDealsIncentiveWorkbench(props: {
                 )}
               </div>
               {preview ? (
-                <div className="rounded-lg border border-zinc-300 bg-zinc-50 p-4 text-sm tabular-nums dark:border-zinc-600 dark:bg-zinc-900/60">
+                <div className="rounded-lg border border-zinc-300 bg-zinc-50 p-4 text-sm tabular-nums dark:border-zinc-600 dark:bg-card">
                   <div className="flex justify-between gap-4">
                     <span className="text-zinc-600 dark:text-zinc-400">販売価格（税抜）</span>
                     <span>{formatYen(Math.round(Number(form.sale_price) / 1.1))}</span>
@@ -863,7 +863,7 @@ export function MyDealsIncentiveWorkbench(props: {
               <label className="block">
                 <span className="text-xs text-zinc-500">支払い方法</span>
                 <input
-                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={form.payment_method}
                   onChange={(e) => setForm((f) => ({ ...f, payment_method: e.target.value }))}
                 />
@@ -872,7 +872,7 @@ export function MyDealsIncentiveWorkbench(props: {
                 <span className="text-xs text-zinc-500">レナード入金日</span>
                 <input
                   type="date"
-                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={form.payment_date}
                   onChange={(e) => setForm((f) => ({ ...f, payment_date: e.target.value }))}
                 />
@@ -880,7 +880,7 @@ export function MyDealsIncentiveWorkbench(props: {
               <label className="block">
                 <span className="text-xs text-zinc-500">備考</span>
                 <textarea
-                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   rows={2}
                   value={form.notes}
                   onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}

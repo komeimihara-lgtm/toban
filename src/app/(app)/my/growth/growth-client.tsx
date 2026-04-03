@@ -119,7 +119,7 @@ export function GrowthClient({
                     </td>
                     <td className="py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs ${
-                        s.status === "reviewed" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800"
+                        s.status === "reviewed" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-zinc-100 text-zinc-600 dark:bg-card/80"
                       }`}>{s.status === "reviewed" ? "完了" : s.status === "submitted" ? "提出済み" : "下書き"}</span>
                     </td>
                   </tr>

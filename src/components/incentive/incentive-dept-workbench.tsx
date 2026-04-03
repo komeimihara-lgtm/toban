@@ -218,12 +218,12 @@ export function IncentiveDeptWorkbench() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-card">
         <label className="text-xs text-zinc-600 dark:text-zinc-400">
           年
           <input
             type="number"
-            className="mt-1 block w-24 rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 block w-24 rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
           />
@@ -234,14 +234,14 @@ export function IncentiveDeptWorkbench() {
             type="number"
             min={1}
             max={12}
-            className="mt-1 block w-20 rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 block w-20 rounded border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
           />
         </label>
         <p className="text-xs text-zinc-500">
           設定率: {ym(year, month)} の{" "}
-          <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">incentive_rates</code>
+          <code className="rounded bg-zinc-100 px-1 dark:bg-card/80">incentive_rates</code>
         </p>
       </div>
 
@@ -272,7 +272,7 @@ export function IncentiveDeptWorkbench() {
 
       <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
         <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium uppercase text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50">
+          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium uppercase text-zinc-500 dark:border-zinc-800 dark:bg-card">
             <tr>
               <th className="px-4 py-3">メンバー</th>
               <th className="px-4 py-3">月間売上（円）</th>
@@ -295,13 +295,13 @@ export function IncentiveDeptWorkbench() {
                 const inv =
                   Number.isFinite(s) && s >= 0 ? incentiveAmount(s, r) : 0;
                 return (
-                  <tr key={m.id} className="bg-white dark:bg-zinc-950/30">
+                  <tr key={m.id} className="bg-white dark:bg-card/30">
                     <td className="px-4 py-3 font-medium">{m.name ?? "—"}</td>
                     <td className="px-4 py-3">
                       <input
                         type="text"
                         inputMode="numeric"
-                        className="w-36 rounded border border-zinc-300 px-2 py-1.5 tabular-nums dark:border-zinc-600 dark:bg-zinc-900"
+                        className="w-36 rounded border border-zinc-300 px-2 py-1.5 tabular-nums dark:border-zinc-600 dark:bg-card"
                         value={raw}
                         placeholder="0"
                         onChange={(e) =>

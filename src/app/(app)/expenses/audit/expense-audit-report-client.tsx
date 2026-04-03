@@ -181,7 +181,7 @@ export function ExpenseAuditReportClient({
               type="number"
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="ml-1 w-24 rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+              className="ml-1 w-24 rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-600 dark:bg-card"
             />
           </label>
           <label className="text-xs text-zinc-500">
@@ -192,7 +192,7 @@ export function ExpenseAuditReportClient({
               max={12}
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
-              className="ml-1 w-16 rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+              className="ml-1 w-16 rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-600 dark:bg-card"
             />
           </label>
           <button
@@ -215,19 +215,19 @@ export function ExpenseAuditReportClient({
       {data && (
         <>
           <section className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-card">
               <p className="text-xs font-medium text-zinc-500">申請件数</p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">
                 {data.expense_count}
               </p>
             </div>
-            <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-card">
               <p className="text-xs font-medium text-zinc-500">月間合計</p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">
                 ¥{data.month_total_jpy.toLocaleString("ja-JP")}
               </p>
             </div>
-            <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-card">
               <p className="text-xs font-medium text-zinc-500">
                 削減候補（試算・税抜は加味しません）
               </p>
@@ -235,7 +235,7 @@ export function ExpenseAuditReportClient({
                 ¥{data.suggested_savings_jpy.toLocaleString("ja-JP")}
               </p>
             </div>
-            <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:col-span-3">
+            <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-card sm:col-span-3">
               <p className="text-xs font-medium text-zinc-500">
                 年間試算（同ペースで改善した場合の参考値）
               </p>
@@ -260,20 +260,20 @@ export function ExpenseAuditReportClient({
                 を上限として、申請金額との差分を合算しています（泊数は用途欄の記載がなければ金額から推定）。
               </p>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-lg border border-indigo-100 bg-white/80 px-3 py-2 dark:border-indigo-900/40 dark:bg-zinc-950/50">
+                <div className="rounded-lg border border-indigo-100 bg-white/80 px-3 py-2 dark:border-indigo-900/40 dark:bg-card/50">
                   <p className="text-xs text-zinc-500">宿泊件数</p>
                   <p className="text-lg font-semibold tabular-nums">
                     {data.lodging_vs_recommended.lodging_expense_count}
                   </p>
                 </div>
-                <div className="rounded-lg border border-indigo-100 bg-white/80 px-3 py-2 dark:border-indigo-900/40 dark:bg-zinc-950/50">
+                <div className="rounded-lg border border-indigo-100 bg-white/80 px-3 py-2 dark:border-indigo-900/40 dark:bg-card/50">
                   <p className="text-xs text-zinc-500">宿泊費合計</p>
                   <p className="text-lg font-semibold tabular-nums">
                     ¥
                     {data.lodging_vs_recommended.total_lodging_jpy.toLocaleString("ja-JP")}
                   </p>
                 </div>
-                <div className="rounded-lg border border-indigo-100 bg-white/80 px-3 py-2 dark:border-indigo-900/40 dark:bg-zinc-950/50">
+                <div className="rounded-lg border border-indigo-100 bg-white/80 px-3 py-2 dark:border-indigo-900/40 dark:bg-card/50">
                   <p className="text-xs text-zinc-500">推奨上限超過分（試算）</p>
                   <p className="text-lg font-semibold text-amber-800 tabular-nums dark:text-amber-300">
                     ¥
@@ -386,7 +386,7 @@ export function ExpenseAuditReportClient({
                             : ""}
                         </span>
                       </div>
-                      <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-200/80 dark:bg-zinc-800">
+                      <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-200/80 dark:bg-card/80">
                         <div
                           className="h-full rounded-full bg-cyan-500"
                           style={{
@@ -394,7 +394,7 @@ export function ExpenseAuditReportClient({
                           }}
                         />
                       </div>
-                      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-900">
+                      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-card">
                         <div
                           className="h-full rounded-full bg-zinc-400/90 dark:bg-zinc-600"
                           style={{
@@ -418,7 +418,7 @@ export function ExpenseAuditReportClient({
                 {data.sales_efficiency.consolidation_suggestions.map((c, i) => (
                   <li
                     key={`${c.submitter_name}-${c.area_hint}-${i}`}
-                    className="rounded-lg border border-amber-100 bg-white/70 px-3 py-2 dark:border-amber-900/50 dark:bg-zinc-950/50"
+                    className="rounded-lg border border-amber-100 bg-white/70 px-3 py-2 dark:border-amber-900/50 dark:bg-card/50"
                   >
                     <p className="font-medium text-amber-950 dark:text-amber-100">
                       {c.submitter_name ?? "—"} · {c.area_hint}
@@ -435,7 +435,7 @@ export function ExpenseAuditReportClient({
             </section>
           ) : null}
 
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+          <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
             <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
               カテゴリ別・削減試算の内訳
             </h2>
@@ -455,7 +455,7 @@ export function ExpenseAuditReportClient({
             </ul>
           </section>
 
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+          <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
             <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
               削減提案 TOP5
             </h2>
@@ -482,7 +482,7 @@ export function ExpenseAuditReportClient({
             </ul>
           </section>
 
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+          <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
             <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
               部門別コスト傾向
             </h2>
@@ -498,7 +498,7 @@ export function ExpenseAuditReportClient({
                       ¥{Math.round(d.total).toLocaleString("ja-JP")}（{d.count} 件）
                     </span>
                   </div>
-                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-card/80">
                     <div
                       className="h-full rounded-full bg-violet-500"
                       style={{
@@ -514,7 +514,7 @@ export function ExpenseAuditReportClient({
             </ul>
           </section>
 
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+          <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
             <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
               削減提案リスト（金額・試算の大きい順）
             </h2>
@@ -541,7 +541,7 @@ export function ExpenseAuditReportClient({
             </ul>
           </section>
 
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+          <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
             <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
               スコアが低い申請（審査済みのみ）
             </h2>
@@ -574,7 +574,7 @@ export function ExpenseAuditReportClient({
               {data.approver_notes}
             </p>
             {data.report_md ? (
-              <div className="mt-4 rounded-lg border border-violet-200 bg-white/80 p-4 text-sm dark:border-violet-900 dark:bg-zinc-950">
+              <div className="mt-4 rounded-lg border border-violet-200 bg-white/80 p-4 text-sm dark:border-violet-900 dark:bg-card">
                 <p className="mb-2 text-xs font-medium text-zinc-500">詳細（Markdown）</p>
                 <pre className="whitespace-pre-wrap font-sans text-zinc-800 dark:text-zinc-200">
                   {data.report_md}

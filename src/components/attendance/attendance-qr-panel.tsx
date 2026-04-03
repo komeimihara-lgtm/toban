@@ -53,7 +53,7 @@ export function AttendanceQrPanel() {
   }
 
   return (
-    <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+    <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-card">
       <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
         QR 打刻（約5分で更新）
       </h2>

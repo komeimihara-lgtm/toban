@@ -82,7 +82,7 @@ export default async function MyLeavePage() {
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
           <h2 className="text-sm font-medium text-zinc-500">残日数</h2>
           <p className="mt-2 text-3xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
             {bal?.days_remaining ?? "—"}
@@ -96,7 +96,7 @@ export default async function MyLeavePage() {
             {bal?.next_accrual_days != null && `（${bal.next_accrual_days}日）`}
           </p>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
           <h2 className="text-sm font-medium text-zinc-500">今月の取得</h2>
           <p className="mt-2 text-3xl font-semibold tabular-nums text-sky-700 dark:text-sky-400">
             {takenThisMonth}
@@ -114,7 +114,7 @@ export default async function MyLeavePage() {
 
       <LeaveRequestForm />
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-medium text-zinc-500">申請一覧</h2>
         <ul className="mt-3 divide-y divide-zinc-100 dark:divide-zinc-800">
           {requests.map((r) => (

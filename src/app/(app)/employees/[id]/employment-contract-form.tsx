@@ -48,7 +48,7 @@ export function EmploymentContractForm({
           <select
             name="employment_type"
             defaultValue={String(c?.employment_type ?? "full_time")}
-            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
           >
             {EMP_OPTIONS.map(([v, l]) => (
               <option key={v} value={v}>
@@ -64,7 +64,7 @@ export function EmploymentContractForm({
             name="start_date"
             required
             defaultValue={String(c?.start_date ?? c?.hire_date ?? "")}
-            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
           />
         </label>
         <label className="block">
@@ -73,7 +73,7 @@ export function EmploymentContractForm({
             type="date"
             name="trial_end_date"
             defaultValue={String(c?.trial_end_date ?? "")}
-            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
           />
         </label>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -85,7 +85,7 @@ export function EmploymentContractForm({
                   type="number"
                   name="base_salary"
                   defaultValue={c?.base_salary != null ? String(c.base_salary) : ""}
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                 />
               </label>
               <label className="block">
@@ -94,7 +94,7 @@ export function EmploymentContractForm({
                   type="number"
                   name="hourly_wage"
                   defaultValue={c?.hourly_wage != null ? String(c.hourly_wage) : ""}
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                 />
               </label>
               <label className="block">
@@ -106,7 +106,7 @@ export function EmploymentContractForm({
                   defaultValue={
                     c?.work_hours_per_day != null ? String(c.work_hours_per_day) : ""
                   }
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                 />
               </label>
               <label className="block">
@@ -118,7 +118,7 @@ export function EmploymentContractForm({
                   defaultValue={
                     c?.work_days_per_week != null ? String(c.work_days_per_week) : ""
                   }
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                 />
               </label>
               <label className="block">
@@ -132,7 +132,7 @@ export function EmploymentContractForm({
                       ? String(c.deemed_overtime_hours)
                       : ""
                   }
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                 />
               </label>
               <label className="block">
@@ -145,7 +145,7 @@ export function EmploymentContractForm({
                       ? String(c.deemed_overtime_amount)
                       : ""
                   }
-                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                 />
               </label>
             </>
@@ -160,7 +160,7 @@ export function EmploymentContractForm({
                   ? String(c.commute_allowance_monthly)
                   : ""
               }
-              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
             />
           </label>
           <label className="block sm:col-span-2">
@@ -168,7 +168,7 @@ export function EmploymentContractForm({
             <input
               name="commute_route"
               defaultValue={String(c?.commute_route ?? "")}
-              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
             />
           </label>
           <label className="block">
@@ -180,7 +180,7 @@ export function EmploymentContractForm({
               defaultValue={
                 c?.commute_distance_km != null ? String(c.commute_distance_km) : ""
               }
-              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+              className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
             />
           </label>
         </div>
@@ -190,7 +190,7 @@ export function EmploymentContractForm({
             name="notes"
             rows={2}
             defaultValue={String(c?.notes ?? "")}
-            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 w-full rounded border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
           />
         </label>
         <label className="flex items-center gap-2">

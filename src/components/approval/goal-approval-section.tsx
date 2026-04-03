@@ -66,7 +66,7 @@ export function GoalApprovalSection({
                 <input
                   value={rejectReason[g.id] ?? ""}
                   onChange={(e) => setRejectReason({ ...rejectReason, [g.id]: e.target.value })}
-                  className="rounded border px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+                  className="rounded border px-2 py-1 text-sm dark:border-zinc-600 dark:bg-card"
                   placeholder="差戻し理由"
                 />
                 <button

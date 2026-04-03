@@ -323,7 +323,7 @@ export async function AdminDashboard() {
                     {fmt(amount)}
                   </span>
                 </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                <div className="h-2.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-card/80">
                   <div
                     className="h-full min-w-0 rounded-full bg-accent/75"
                     style={{
@@ -436,7 +436,7 @@ export async function AdminDashboard() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Link
                     href={`/employees/${r.employee_id}/retention`}
-                    className="inline-flex rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                    className="inline-flex rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800"
                   >
                     詳細を見る
                   </Link>
@@ -475,7 +475,7 @@ export async function AdminDashboard() {
         </p>
         <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-100 dark:border-zinc-800">
           <table className="w-full min-w-[480px] text-left text-sm">
-            <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-200">
+            <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-card/80/80 dark:text-zinc-200">
               <tr>
                 <th className="px-3 py-2">氏名</th>
                 <th className="px-3 py-2">権限</th>
@@ -594,7 +594,7 @@ export async function AdminDashboard() {
           <div className="flex items-end">
             <Link
               href="/settings/auto-approval"
-              className="inline-flex rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              className="inline-flex rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
               自動承認ルール
             </Link>

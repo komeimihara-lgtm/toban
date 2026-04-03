@@ -98,7 +98,7 @@ export function HrAssistantChat({
                   type="button"
                   disabled={loading}
                   onClick={() => void send(q)}
-                  className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-left text-sm text-zinc-800 transition hover:border-blue-400 hover:bg-blue-50/80 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-blue-500 dark:hover:bg-blue-950/40"
+                  className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-left text-sm text-zinc-800 transition hover:border-blue-400 hover:bg-blue-50/80 disabled:opacity-50 dark:border-zinc-600 dark:bg-card/80 dark:text-zinc-200 dark:hover:border-blue-500 dark:hover:bg-blue-950/40"
                 >
                   {q}
                 </button>
@@ -107,7 +107,7 @@ export function HrAssistantChat({
           </ul>
         </aside>
 
-        <section className="flex min-h-[28rem] flex-col rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <section className="flex min-h-[28rem] flex-col rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-card">
           <div className="max-h-[min(60vh,520px)] flex-1 space-y-4 overflow-y-auto p-4">
             {messages.length === 0 && !loading && (
               <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
@@ -123,7 +123,7 @@ export function HrAssistantChat({
                   className={`max-w-[min(100%,42rem)] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                     m.role === "user"
                       ? "bg-blue-600 text-white"
-                      : "border border-zinc-200 bg-zinc-50 text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                      : "border border-zinc-200 bg-zinc-50 text-zinc-800 dark:border-zinc-700 dark:bg-card/80 dark:text-zinc-100"
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{m.content}</p>
@@ -132,7 +132,7 @@ export function HrAssistantChat({
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+                <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-card dark:text-zinc-400">
                   <Loader2 className="size-4 animate-spin" aria-hidden />
                   回答を用意しています…
                 </div>
@@ -158,7 +158,7 @@ export function HrAssistantChat({
                 placeholder="質問を日本語で入力…（Enter 送信 / Shift+Enter 改行）"
                 rows={2}
                 disabled={loading}
-                className="min-h-[44px] flex-1 resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                className="min-h-[44px] flex-1 resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-700 dark:bg-card/80 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
               <button
                 type="button"

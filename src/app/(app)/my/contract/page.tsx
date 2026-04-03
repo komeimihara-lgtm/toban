@@ -98,7 +98,7 @@ export default async function MyContractPage() {
         </p>
       </div>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">基本条件</h2>
         <dl className="mt-4 grid gap-4 text-sm">
           <div>
@@ -125,7 +125,7 @@ export default async function MyContractPage() {
         </dl>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">通勤費（登録中）</h2>
         {(commutes ?? []).length === 0 ? (
           <p className="mt-2 text-sm text-zinc-500">有効な通勤費登録がありません。</p>
@@ -160,7 +160,7 @@ export default async function MyContractPage() {
         )}
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
           有給（参考・次回付与）
         </h2>

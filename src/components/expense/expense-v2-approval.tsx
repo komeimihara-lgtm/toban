@@ -166,7 +166,7 @@ export function ExpenseV2Approval({
           const sc = row.audit_score ?? ar?.score ?? null;
           const badgeClass =
             sc == null
-              ? "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+              ? "bg-zinc-200 text-zinc-700 dark:bg-card/80 dark:text-zinc-300"
               : sc >= 80
                 ? "bg-emerald-600 text-white"
                 : sc >= 50
@@ -202,7 +202,7 @@ export function ExpenseV2Approval({
                 </button>
               </div>
               {ar && ar.issues.length > 0 ? (
-                <details className="mb-3 rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-zinc-900/50">
+                <details className="mb-3 rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-card">
                   <summary className="cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300">
                     確認事項（{ar.issues.length} 件）
                   </summary>
@@ -255,7 +255,7 @@ export function ExpenseV2Approval({
               ) : null}
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-1">
                 <div className="flex flex-wrap items-center gap-1 text-xs">
-                  <span className="rounded-full bg-zinc-200 px-2.5 py-1 font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+                  <span className="rounded-full bg-zinc-200 px-2.5 py-1 font-medium text-zinc-800 dark:bg-card/80 dark:text-zinc-200">
                     申請者
                   </span>
                   <span className="text-zinc-400">→</span>
@@ -273,7 +273,7 @@ export function ExpenseV2Approval({
                     className={`rounded-full px-2.5 py-1 font-medium ${
                       row.status === "step2_pending"
                         ? "bg-amber-100 text-amber-950 ring-2 ring-amber-500 dark:bg-amber-950/60 dark:text-amber-100"
-                        : "bg-zinc-200 text-zinc-600 dark:bg-zinc-800"
+                        : "bg-zinc-200 text-zinc-600 dark:bg-card/80"
                     }`}
                   >
                     最終 三原孔明
@@ -338,7 +338,7 @@ export function ExpenseV2Approval({
           aria-modal="true"
           aria-labelledby="reject-title"
         >
-          <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-700 dark:bg-zinc-950">
+          <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-700 dark:bg-card">
             <h2 id="reject-title" className="text-sm font-semibold">
               差戻し理由
             </h2>
@@ -347,7 +347,7 @@ export function ExpenseV2Approval({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="必須"
-              className="mt-3 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+              className="mt-3 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-card"
               rows={4}
             />
             <div className="mt-4 flex justify-end gap-2">

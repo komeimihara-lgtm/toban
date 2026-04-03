@@ -511,7 +511,7 @@ export function DealsAdminClient() {
   return (
     <div className="space-y-6">
       {msg ? (
-        <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900/40">
+        <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-card">
           {msg}
         </p>
       ) : null}
@@ -521,7 +521,7 @@ export function DealsAdminClient() {
           <label className="block text-xs text-zinc-500">年</label>
           <input
             type="number"
-            className="mt-1 w-28 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+            className="mt-1 w-28 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
           />
@@ -529,7 +529,7 @@ export function DealsAdminClient() {
         <div>
           <label className="block text-xs text-zinc-500">月</label>
           <select
-            className="mt-1 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-950"
+            className="mt-1 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
           >
@@ -602,7 +602,7 @@ export function DealsAdminClient() {
 
           <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-              <thead className="bg-zinc-50 dark:bg-zinc-900/50">
+              <thead className="bg-zinc-50 dark:bg-card">
                 <tr>
                   <th className="px-2 py-2" />
                   {[
@@ -708,7 +708,7 @@ export function DealsAdminClient() {
 
           <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-              <thead className="bg-zinc-50 dark:bg-zinc-900/50">
+              <thead className="bg-zinc-50 dark:bg-card">
                 <tr>
                   {["スタッフ", "アポ件数", "アポ合計", "クローザー件数", "クローザー合計", "合計"].map((h) => (
                     <th key={h} className="px-3 py-2 text-left font-medium">
@@ -789,7 +789,7 @@ export function DealsAdminClient() {
           </p>
           <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-              <thead className="bg-zinc-50 dark:bg-zinc-900/50">
+              <thead className="bg-zinc-50 dark:bg-card">
                 <tr>
                   <th className="px-3 py-2 text-left">機械種別</th>
                   <th className="px-3 py-2 text-left">役割</th>
@@ -805,7 +805,7 @@ export function DealsAdminClient() {
                         <input
                           type="number"
                           step="0.0001"
-                          className="w-32 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-600 dark:bg-zinc-950"
+                          className="w-32 rounded border border-zinc-300 px-2 py-1 dark:border-zinc-600 dark:bg-card"
                           value={rateDraft[`${r.machine_type}|${r.role}`] ?? r.rate}
                           onChange={(e) =>
                             setRateDraft((prev) => ({
@@ -833,13 +833,13 @@ export function DealsAdminClient() {
 
       {modalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-950">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-card">
             <h3 className="text-lg font-semibold">{editingId ? "案件を編集" : "案件を追加"}</h3>
             <div className="mt-4 grid gap-3 text-sm">
               <label className="block">
                 <span className="text-xs text-zinc-500">サロン名</span>
                 <input
-                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={form.salon_name}
                   onChange={(e) => setForm((f) => ({ ...f, salon_name: e.target.value }))}
                 />
@@ -847,7 +847,7 @@ export function DealsAdminClient() {
               <label className="block">
                 <span className="text-xs text-zinc-500">機械種別</span>
                 <select
-                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={form.machine_type}
                   onChange={(e) => setForm((f) => ({ ...f, machine_type: e.target.value }))}
                 >
@@ -863,7 +863,7 @@ export function DealsAdminClient() {
                   <span className="text-xs text-zinc-500">実質原価</span>
                   <input
                     type="number"
-                    className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                    className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                     value={form.cost_price}
                     onChange={(e) => setForm((f) => ({ ...f, cost_price: e.target.value }))}
                   />
@@ -872,7 +872,7 @@ export function DealsAdminClient() {
                   <span className="text-xs text-zinc-500">販売価格（税込）</span>
                   <input
                     type="number"
-                    className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                    className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                     value={form.sale_price}
                     onChange={(e) => setForm((f) => ({ ...f, sale_price: e.target.value }))}
                   />
@@ -900,7 +900,7 @@ export function DealsAdminClient() {
                         <label className="block">
                           <span className="text-xs text-zinc-500">サービス内容</span>
                           <input
-                            className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                            className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                             placeholder="例：ハンドピース1本"
                             value={line.name}
                             onChange={(e) =>
@@ -914,7 +914,7 @@ export function DealsAdminClient() {
                           <span className="text-xs text-zinc-500">サービス原価</span>
                           <input
                             type="number"
-                            className="mt-1 w-full min-w-[8rem] rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                            className="mt-1 w-full min-w-[8rem] rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                             value={line.cost}
                             onChange={(e) =>
                               setServiceLines((rows) =>
@@ -938,7 +938,7 @@ export function DealsAdminClient() {
               <label className="block">
                 <span className="text-xs text-zinc-500">支払い方法</span>
                 <input
-                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={form.payment_method}
                   onChange={(e) => setForm((f) => ({ ...f, payment_method: e.target.value }))}
                 />
@@ -947,7 +947,7 @@ export function DealsAdminClient() {
                 <span className="text-xs text-zinc-500">レナード入金日</span>
                 <input
                   type="date"
-                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={form.payment_date}
                   onChange={(e) => setForm((f) => ({ ...f, payment_date: e.target.value }))}
                 />
@@ -955,7 +955,7 @@ export function DealsAdminClient() {
               <label className="block">
                 <span className="text-xs text-zinc-500">入金・進捗</span>
                 <select
-                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={form.payment_status}
                   onChange={(e) => setForm((f) => ({ ...f, payment_status: e.target.value }))}
                 >
@@ -969,7 +969,7 @@ export function DealsAdminClient() {
               <label className="block">
                 <span className="text-xs text-zinc-500">承認フロー状態</span>
                 <select
-                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={form.submit_status}
                   onChange={(e) => setForm((f) => ({ ...f, submit_status: e.target.value }))}
                 >
@@ -983,7 +983,7 @@ export function DealsAdminClient() {
               <label className="block">
                 <span className="text-xs text-zinc-500">アポ担当</span>
                 <select
-                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={form.appo_employee_id}
                   onChange={(e) => setForm((f) => ({ ...f, appo_employee_id: e.target.value }))}
                 >
@@ -998,7 +998,7 @@ export function DealsAdminClient() {
               <label className="block">
                 <span className="text-xs text-zinc-500">クローザー担当</span>
                 <select
-                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   value={form.closer_employee_id}
                   onChange={(e) => setForm((f) => ({ ...f, closer_employee_id: e.target.value }))}
                 >
@@ -1013,14 +1013,14 @@ export function DealsAdminClient() {
               <label className="block">
                 <span className="text-xs text-zinc-500">メモ</span>
                 <textarea
-                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                  className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-card"
                   rows={2}
                   value={form.notes}
                   onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                 />
               </label>
               {previewComputed ? (
-                <div className="rounded-lg border border-zinc-300 bg-zinc-50 p-4 text-sm tabular-nums dark:border-zinc-600 dark:bg-zinc-900/60">
+                <div className="rounded-lg border border-zinc-300 bg-zinc-50 p-4 text-sm tabular-nums dark:border-zinc-600 dark:bg-card">
                   <div className="flex justify-between gap-4">
                     <span className="text-zinc-600 dark:text-zinc-400">販売価格（税抜）</span>
                     <span>{formatYen(Math.round(Number(form.sale_price) / 1.1))}</span>
@@ -1078,10 +1078,10 @@ export function DealsAdminClient() {
 
       {rejectOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-950">
+          <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-card">
             <h3 className="font-semibold">差戻し理由</h3>
             <textarea
-              className="mt-3 w-full rounded-md border px-2 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+              className="mt-3 w-full rounded-md border px-2 py-2 text-sm dark:border-zinc-600 dark:bg-card"
               rows={4}
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}

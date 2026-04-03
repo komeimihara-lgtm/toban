@@ -105,7 +105,7 @@ export function OffboardingAdminClient({
             required
             value={empId}
             onChange={(e) => setEmpId(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-card"
           >
             <option value="">選択してください</option>
             {candidateEmployees.map((c) => (
@@ -122,7 +122,7 @@ export function OffboardingAdminClient({
             required
             value={resignDate}
             onChange={(e) => setResignDate(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950"
+            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-card"
           />
         </div>
         <div>
@@ -132,7 +132,7 @@ export function OffboardingAdminClient({
             required
             value={lastWork}
             onChange={(e) => setLastWork(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950"
+            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-card"
           />
         </div>
         <button
@@ -146,7 +146,7 @@ export function OffboardingAdminClient({
 
       <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-zinc-50 text-xs font-semibold uppercase text-zinc-500 dark:bg-zinc-900/80">
+          <thead className="bg-zinc-50 text-xs font-semibold uppercase text-zinc-500 dark:bg-card">
             <tr>
               <th className="px-4 py-2">氏名</th>
               <th className="px-4 py-2">ステータス</th>

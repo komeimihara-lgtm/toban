@@ -107,7 +107,7 @@ export function CheckSheetClient({
               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
               : sheet.status === "submitted"
               ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-              : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+              : "bg-zinc-100 text-zinc-600 dark:bg-card/80 dark:text-zinc-400"
           }`}>
             {sheet.status === "reviewed" ? "評価完了" : sheet.status === "submitted" ? "提出済み" : "下書き"}
           </span>
@@ -115,7 +115,7 @@ export function CheckSheetClient({
       </div>
 
       {/* 評価基準 */}
-      <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+      <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-card">
         <p className="mb-2 text-xs font-semibold">評価基準</p>
         <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
           {SCORE_OPTIONS.map((o) => (
@@ -134,7 +134,7 @@ export function CheckSheetClient({
       </div>
 
       {/* リアルタイム合計・倍率（上部サマリー） */}
-      <div className="grid grid-cols-2 gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="grid grid-cols-2 gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-card">
         <div>
           <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">自己評価</p>
           <p className="mt-0.5 text-2xl font-bold tabular-nums">
@@ -177,7 +177,7 @@ export function CheckSheetClient({
           </div>
 
           {/* 2列ヘッダー */}
-          <div className="hidden border-b border-zinc-100 bg-zinc-50/50 px-4 py-1.5 dark:border-zinc-800 dark:bg-zinc-900/30 sm:grid sm:grid-cols-[1fr_auto_auto] sm:gap-4">
+          <div className="hidden border-b border-zinc-100 bg-zinc-50/50 px-4 py-1.5 dark:border-zinc-800 dark:bg-card sm:grid sm:grid-cols-[1fr_auto_auto] sm:gap-4">
             <span className="text-[10px] font-medium text-zinc-400">評価項目</span>
             <span className="w-[176px] text-center text-[10px] font-medium text-zinc-400">自己評価</span>
             <span className="w-[44px] text-center text-[10px] font-medium text-zinc-400">上長</span>
@@ -214,7 +214,7 @@ export function CheckSheetClient({
                               ? o.value > 0
                                 ? "bg-accent text-white shadow-sm"
                                 : "bg-red-500 text-white shadow-sm"
-                              : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                              : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-card/80 dark:text-zinc-400 dark:hover:bg-zinc-700"
                           } disabled:cursor-default`}
                         >
                           {o.label}
@@ -235,7 +235,7 @@ export function CheckSheetClient({
                         {mEntry.score > 0 ? "+" : ""}{mEntry.score}
                       </span>
                     ) : (
-                      <span className="flex h-8 w-10 items-center justify-center rounded-lg bg-zinc-50 text-xs text-zinc-300 dark:bg-zinc-900 dark:text-zinc-600">
+                      <span className="flex h-8 w-10 items-center justify-center rounded-lg bg-zinc-50 text-xs text-zinc-300 dark:bg-card dark:text-zinc-600">
                         —
                       </span>
                     )}
@@ -285,7 +285,7 @@ export function CheckSheetClient({
         </div>
 
         {/* 倍率スコア表 */}
-        <div className="mt-4 rounded-lg border border-zinc-200/50 bg-white/60 p-3 dark:border-zinc-700/50 dark:bg-zinc-900/40">
+        <div className="mt-4 rounded-lg border border-zinc-200/50 bg-white/60 p-3 dark:border-zinc-700/50 dark:bg-card">
           <p className="mb-1.5 text-[10px] font-semibold text-zinc-500">倍率スコア表（{items.length}項目・最大{maxScore}点）</p>
           <div className="flex flex-wrap gap-x-4 gap-y-0.5">
             {multiplierTable.map((r, i) => (

@@ -338,7 +338,7 @@ export function ExpenseApiForm() {
       : "申請者 → 承認 → 完了";
 
   const fieldClass =
-    "mt-1 w-full rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-400";
+    "mt-1 w-full rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-600 dark:bg-card/80 dark:text-zinc-50 dark:placeholder:text-zinc-400";
 
   return (
     <div className="space-y-6 text-zinc-900 dark:text-zinc-100">
@@ -415,7 +415,7 @@ export function ExpenseApiForm() {
           type="button"
           disabled={ocrLoading}
           onClick={() => filePickRef.current?.click()}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-900 transition hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-900 transition hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-card dark:text-zinc-100 dark:hover:bg-zinc-800"
         >
           <Upload className="size-4" aria-hidden />
           ファイルから選択
@@ -432,7 +432,7 @@ export function ExpenseApiForm() {
         )}
       </div>
 
-      <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
+      <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-4 text-sm dark:border-zinc-800 dark:bg-card">
         <p className="font-medium text-zinc-800 dark:text-zinc-200">承認フロー</p>
         <p className="mt-1 text-zinc-600 dark:text-zinc-400">{flowDescription}</p>
       </div>
@@ -449,7 +449,7 @@ export function ExpenseApiForm() {
                 className={`rounded-lg border px-2 py-2 text-left text-xs font-medium ${
                   kind === k.id
                     ? "border-emerald-600 bg-emerald-100 text-emerald-950 dark:border-emerald-500 dark:bg-emerald-950/60 dark:text-emerald-50"
-                    : "border-zinc-300 bg-zinc-100 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                    : "border-zinc-300 bg-zinc-100 text-zinc-900 dark:border-zinc-600 dark:bg-card/80 dark:text-zinc-100"
                 }`}
               >
                 {k.emoji} {k.label}
@@ -647,7 +647,7 @@ export function ExpenseApiForm() {
               <>
                 <p className="mt-2 text-zinc-800 dark:text-zinc-200">{audit.summary}</p>
                 {audit.issues.length > 0 ? (
-                  <details className="mt-3 rounded-lg border border-zinc-200/80 bg-white/50 p-3 dark:border-zinc-600 dark:bg-zinc-900/40">
+                  <details className="mt-3 rounded-lg border border-zinc-200/80 bg-white/50 p-3 dark:border-zinc-600 dark:bg-card">
                     <summary className="cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300">
                       確認事項（{audit.issues.length} 件）
                     </summary>
@@ -696,7 +696,7 @@ export function ExpenseApiForm() {
                       onClick={() => {
                         formRef.current?.querySelector<HTMLElement>("[name=purpose]")?.focus();
                       }}
-                      className="rounded-lg border border-zinc-400 bg-white px-3 py-1.5 text-xs text-zinc-900 dark:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-100"
+                      className="rounded-lg border border-zinc-400 bg-white px-3 py-1.5 text-xs text-zinc-900 dark:border-zinc-500 dark:bg-card/80 dark:text-zinc-100"
                     >
                       修正する
                     </button>
@@ -720,7 +720,7 @@ export function ExpenseApiForm() {
             type="button"
             disabled={loading}
             onClick={() => void doSubmit(false)}
-            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-card/80 dark:text-zinc-100"
           >
             下書き保存
           </button>

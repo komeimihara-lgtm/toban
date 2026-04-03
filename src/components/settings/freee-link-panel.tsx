@@ -44,11 +44,11 @@ export function FreeeLinkPanel() {
     <div className="space-y-4">
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         給与明細・勤怠サマリー（有給残など）は freee 人事労務 API から取得し、
-        <code className="mx-1 rounded bg-zinc-100 px-1 text-xs dark:bg-zinc-800">
+        <code className="mx-1 rounded bg-zinc-100 px-1 text-xs dark:bg-card/80">
           payslip_cache
         </code>
         および
-        <code className="mx-1 rounded bg-zinc-100 px-1 text-xs dark:bg-zinc-800">
+        <code className="mx-1 rounded bg-zinc-100 px-1 text-xs dark:bg-card/80">
           deemed_ot_records
         </code>
         に保存されます。Vercel Cron（毎月25日 09:00 UTC 相当・

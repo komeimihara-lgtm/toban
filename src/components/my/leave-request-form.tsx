@@ -11,7 +11,7 @@ export function LeaveRequestForm() {
 
   return (
     <form
-      className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
+      className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-card"
       id="leave-req-form"
       onSubmit={(e) => {
         e.preventDefault();
@@ -39,7 +39,7 @@ export function LeaveRequestForm() {
             name="start_date"
             type="date"
             required
-            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-card"
           />
         </label>
         <label className="text-xs text-zinc-500">
@@ -48,7 +48,7 @@ export function LeaveRequestForm() {
             name="end_date"
             type="date"
             required
-            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-card"
           />
         </label>
       </div>
@@ -56,7 +56,7 @@ export function LeaveRequestForm() {
         種別
         <select
           name="kind"
-          className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-card"
         >
           <option value="full">全日</option>
           <option value="half">半日</option>
@@ -68,7 +68,7 @@ export function LeaveRequestForm() {
         <input
           name="reason"
           type="text"
-          className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+          className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-card"
           placeholder="例：私用のため"
         />
       </label>

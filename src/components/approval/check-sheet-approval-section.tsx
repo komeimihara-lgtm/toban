@@ -100,7 +100,7 @@ export function CheckSheetApprovalSection({
             return (
               <li key={s.id} className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
                 {/* ヘッダー */}
-                <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-card">
                   <div>
                     <p className="text-sm font-medium">{empName || "—"}</p>
                     <p className="text-xs text-zinc-500">{s.year}年{s.month}月 · {SHEET_LABEL[sheetType]}</p>
@@ -152,7 +152,7 @@ export function CheckSheetApprovalSection({
                                       className={`flex h-6 w-8 items-center justify-center rounded text-[10px] font-bold transition-colors ${
                                         mgrVal === o.value
                                           ? o.value > 0 ? "bg-accent text-white" : "bg-red-500 text-white"
-                                          : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400"
+                                          : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-card/80 dark:text-zinc-400"
                                       }`}
                                     >
                                       {o.label}
@@ -169,7 +169,7 @@ export function CheckSheetApprovalSection({
                 </div>
 
                 {/* 提出ボタン */}
-                <div className="flex items-center justify-between border-t border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <div className="flex items-center justify-between border-t border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-card">
                   <div className="text-xs text-zinc-500">
                     上司評価合計: <span className="font-bold text-zinc-800 dark:text-zinc-200">{mgrTotal}</span>/{maxScore}
                     （×{getMultiplier(sheetType, mgrTotal).toFixed(1)}）

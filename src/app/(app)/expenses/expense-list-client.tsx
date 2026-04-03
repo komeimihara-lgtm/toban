@@ -98,7 +98,7 @@ export function ExpenseListClient({
             className={`rounded-full px-3 py-1 text-xs font-medium ${
               tab === t.id
                 ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                : "bg-zinc-100 text-zinc-700 dark:bg-card/80 dark:text-zinc-300"
             }`}
           >
             {t.label}
@@ -158,7 +158,7 @@ export function ExpenseListClient({
               </div>
             </button>
             {openId === r.id && (
-              <div className="mt-1 rounded-lg border border-zinc-100 bg-zinc-50/80 px-4 py-3 text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
+              <div className="mt-1 rounded-lg border border-zinc-100 bg-zinc-50/80 px-4 py-3 text-sm dark:border-zinc-800 dark:bg-card">
                 <p className="text-xs text-zinc-500">ID: {r.id}</p>
                 {r.vendor ? (
                   <p className="mt-1 text-xs text-zinc-600">支払先: {r.vendor}</p>

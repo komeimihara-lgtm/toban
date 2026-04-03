@@ -99,7 +99,7 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
+      <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
           承認フロー（このテナントの設定）
         </h2>
@@ -117,7 +117,7 @@ export default async function SettingsPage() {
         ) : null}
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
           freee 人事労務連携
         </h2>
@@ -129,7 +129,7 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
           インセンティブ率（月次）
         </h2>
@@ -142,7 +142,7 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-card">
         <h2 className="text-sm font-medium text-zinc-500">商品を追加</h2>
         <form
           action={createProductAction}
@@ -152,7 +152,7 @@ export default async function SettingsPage() {
             name="name"
             required
             placeholder="商品名"
-            className="min-w-[12rem] flex-1 rounded border px-3 py-2 text-sm dark:bg-zinc-900"
+            className="min-w-[12rem] flex-1 rounded border px-3 py-2 text-sm dark:bg-card"
           />
           <input
             name="cost_price"
@@ -160,12 +160,12 @@ export default async function SettingsPage() {
             step="1"
             min="0"
             placeholder="原価"
-            className="w-32 rounded border px-3 py-2 text-sm dark:bg-zinc-900"
+            className="w-32 rounded border px-3 py-2 text-sm dark:bg-card"
           />
           <input
             name="notes"
             placeholder="メモ（任意）"
-            className="min-w-[12rem] flex-1 rounded border px-3 py-2 text-sm dark:bg-zinc-900"
+            className="min-w-[12rem] flex-1 rounded border px-3 py-2 text-sm dark:bg-card"
           />
           <button
             type="submit"
@@ -176,7 +176,7 @@ export default async function SettingsPage() {
         </form>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 dark:bg-card">
         <h2 className="border-b border-zinc-100 px-6 py-4 text-sm font-medium text-zinc-500 dark:border-zinc-800">
           商品マスタ（一覧・原価）
         </h2>
@@ -218,7 +218,7 @@ export default async function SettingsPage() {
                     min={0}
                     step={1}
                     defaultValue={Number(_product.cost_price)}
-                    className="w-28 rounded border px-2 py-1 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                    className="w-28 rounded border px-2 py-1 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-card dark:text-zinc-100"
                   />
                 </label>
                 <button
