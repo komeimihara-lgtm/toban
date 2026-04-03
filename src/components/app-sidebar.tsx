@@ -324,7 +324,7 @@ export function AppSidebar({
         />
         <NavLink
           href="/my/contract"
-          label="契約内容"
+          label="雇用契約内容"
           icon={FileText}
           pathPrefixes={["/my/contract"]}
         />

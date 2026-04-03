@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { CheckSheetClient } from "./check-sheet-client";
+import { getSheetType, type SheetType } from "./sheet-definitions";
 
 export const dynamic = "force-dynamic";
 
@@ -11,15 +12,17 @@ export default async function MyCheckSheetPage() {
 
   const { data: emp } = await supabase
     .from("employees")
-    .select("id, role, company_id")
+    .select("id, role, company_id, name")
     .eq("auth_user_id", user.id)
     .maybeSingle();
-  const profile = emp as { id: string; role: string; company_id: string } | null;
+  const profile = emp as { id: string; role: string; company_id: string; name: string | null } | null;
   if (!profile?.company_id) redirect("/my");
 
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
+
+  const sheetType: SheetType = getSheetType(profile.name ?? "");
 
   const { data: sheet } = await supabase
     .from("check_sheets")
@@ -31,11 +34,13 @@ export default async function MyCheckSheetPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-bold">チェックシート</h1>
+      <h1 className="text-lg font-bold">黄金ルール評価表</h1>
       <CheckSheetClient
         currentSheet={sheet}
         year={year}
         month={month}
+        sheetType={sheetType}
+        employeeName={profile.name ?? ""}
       />
     </div>
   );

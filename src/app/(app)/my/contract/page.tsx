@@ -80,7 +80,7 @@ export default async function MyContractPage() {
     <div className="mx-auto max-w-xl space-y-8">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          契約内容（閲覧のみ）
+          雇用契約内容（閲覧のみ）
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
           表示されている情報の変更は人事担当までお問い合わせください。

@@ -86,7 +86,7 @@ export function PersonalHrSummary({ data }: { data: PersonalHrData }) {
       <p className="mt-4 text-xs text-zinc-500">
         詳細は{" "}
         <Link href="/my/contract" className="text-emerald-700 underline dark:text-emerald-400">
-          契約内容（マイページ）
+          雇用契約内容（マイページ）
         </Link>
         でもご覧いただけます。
       </p>

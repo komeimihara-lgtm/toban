@@ -388,7 +388,7 @@ export async function appendExtendedCategoryRules(
         type: "comm_mid",
         severity: "warning",
         message:
-          "月額 ¥5,000〜¥15,000 帯です。業務用回線の契約内容を確認してください（確認事項）。",
+          "月額 ¥5,000〜¥15,000 帯です。業務用回線のプラン・契約条件を確認してください（確認事項）。",
       });
     } else {
       const saving = Math.round(amount * 0.2);
