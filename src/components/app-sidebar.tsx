@@ -180,7 +180,7 @@ export function AppSidebar({
             />
             <NavLink
               href="/approval"
-              label="承認"
+              label="ワークフロー承認"
               icon={ClipboardCheck}
               pathPrefixes={["/approval"]}
               badgeCount={approvalBadgeCount > 0 ? approvalBadgeCount : undefined}
@@ -190,16 +190,9 @@ export function AppSidebar({
               label="インセンティブ管理"
               icon={BarChart3}
               pathPrefixes={["/incentives"]}
-              excludePrefixes={["/incentives/history"]}
               badgeCount={
                 incentiveDraftBadgeCount > 0 ? incentiveDraftBadgeCount : undefined
               }
-            />
-            <NavLink
-              href="/incentives/history"
-              label="インセンティブ支給履歴"
-              icon={BarChart3}
-              pathPrefixes={["/incentives/history"]}
             />
             <NavLink
               href="/employees"
@@ -209,7 +202,7 @@ export function AppSidebar({
             />
             <NavLink
               href="/expenses/audit"
-              label="経費審査"
+              label="経費削減レポート"
               icon={FileSearch}
               pathPrefixes={["/expenses/audit"]}
             />
@@ -244,19 +237,12 @@ export function AppSidebar({
               excludePrefixes={[
                 "/settings/auto-approval",
                 "/settings/export",
-                "/settings/hr",
                 "/settings/tenant",
               ]}
             />
             <NavLink
-              href="/settings/hr"
-              label="人事設定"
-              icon={Settings}
-              pathPrefixes={["/settings/hr"]}
-            />
-            <NavLink
               href="/settings/tenant"
-              label="テナント・会社設定"
+              label="設定管理"
               icon={Building2}
               pathPrefixes={["/settings/tenant"]}
             />

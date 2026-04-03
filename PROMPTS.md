@@ -69,19 +69,16 @@ employeesテーブルのauth_user_idでroleを取得。
 
 管理（owner/approverのみ）:
 1. 管理ダッシュボード /
-2. 承認 /approval
-3. インセンティブ管理 /incentives
-4. インセンティブ支給履歴 /incentives/history
-5. 従業員管理 /employees
-6. 経費審査 /expenses/audit
-7. 経費・新規申請 /expenses/new
-8. 経費・申請一覧 /expenses
-9. 入退社手続き /onboarding/admin
-10. 自動承認ルール /settings/auto-approval
-11. 設定 /settings
-12. 人事設定 /settings/hr
-13. テナント・会社設定 /settings/tenant
-14. 月次データ出力 /settings/export
+2. ワークフロー承認 /approval
+3. インセンティブ管理 /incentives（タブ: 計算・提出 / 支給履歴）
+4. 従業員管理 /employees
+5. 経費削減レポート /expenses/audit
+6. 経費・申請一覧 /expenses
+7. 入退社手続き /onboarding/admin
+8. 自動承認ルール /settings/auto-approval
+9. 設定 /settings
+10. 設定管理 /settings/tenant
+11. 月次データ出力 /settings/export
 
 ---
 
