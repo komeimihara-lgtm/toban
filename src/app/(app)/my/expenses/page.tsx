@@ -1,6 +1,7 @@
 import { ExpenseListClient } from "@/app/(app)/expenses/expense-list-client";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
+import { Camera } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -33,22 +34,22 @@ export default async function MyExpensesPage() {
           <span className="mt-1 block font-mono text-xs opacity-90">{error.message}</span>
         </div>
       ) : null}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            申請状況
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            自分の経費の一覧。新規は「新規申請」から
-          </p>
-        </div>
-        <Link
-          href="/my/expenses/new"
-          className="text-sm font-medium text-emerald-700 underline dark:text-emerald-400"
-        >
-          新規申請
-        </Link>
+      <div>
+        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+          申請状況
+        </h1>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          自分の経費の一覧
+        </p>
       </div>
+      <Link
+        href="/my/expenses/new"
+        className="flex h-48 w-full flex-col items-center justify-center gap-3 rounded-2xl bg-emerald-500 text-white shadow-md transition hover:bg-emerald-400 active:scale-[0.98] active:brightness-95"
+      >
+        <Camera className="h-16 w-16" strokeWidth={1.65} aria-hidden />
+        <span className="text-2xl font-bold tracking-tight">レシートを撮影</span>
+        <span className="text-sm font-normal opacity-90">撮影してAIが自動入力</span>
+      </Link>
       <ExpenseListClient initialRows={(rows ?? []) as never} />
     </div>
   );

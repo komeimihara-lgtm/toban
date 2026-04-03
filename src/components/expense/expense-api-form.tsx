@@ -1,11 +1,11 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Company, ExpenseType } from "@/types/index";
 import type { ExpenseAuditResult } from "@/types/expense-audit";
 import { EXPENSE_CLAIM_KINDS } from "@/lib/expense-ui";
 import Link from "next/link";
-import { Camera, Upload } from "lucide-react";
+import { Camera, Loader2, Upload } from "lucide-react";
 
 const TYPE_MAP: Record<string, ExpenseType> = {
   expense: "expense",
@@ -59,6 +59,8 @@ export function ExpenseApiForm() {
   const [proceedDespiteAudit, setProceedDespiteAudit] = useState(false);
   const [isSalesTarget, setIsSalesTarget] = useState(false);
   const [category, setCategory] = useState("");
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrMsg, setOcrMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -176,9 +178,74 @@ export function ExpenseApiForm() {
     return { net, t };
   }, [amount]);
 
-  function onFilePick(files: FileList | null) {
+  const fillFormFromOcr = useCallback(
+    (data: { date?: string | null; amount?: number | null; vendor?: string | null; category?: string | null }) => {
+      const form = formRef.current;
+      if (!form) return;
+      if (data.date) {
+        const el = form.querySelector<HTMLInputElement>('[name="paid_date"]');
+        if (el) {
+          el.value = data.date;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      }
+      if (data.amount != null && data.amount > 0) {
+        setAmountStr(String(data.amount));
+      }
+      if (data.vendor) {
+        const el = form.querySelector<HTMLInputElement>('[name="vendor"]');
+        if (el) {
+          el.value = data.vendor;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      }
+      if (data.category) {
+        const cat = data.category;
+        const match =
+          categoryLabels.find((c) => c === cat) ??
+          categoryLabels.find((c) => c.includes(cat) || cat.includes(c));
+        if (match) setCategory(match);
+      }
+    },
+    [categoryLabels],
+  );
+
+  async function onFilePick(files: FileList | null) {
     const f = files?.[0];
     setReceiptLabel(f ? `${f.name}（${Math.round(f.size / 1024)} KB）` : null);
+    if (!f || !f.type.startsWith("image/")) return;
+
+    setOcrLoading(true);
+    setOcrMsg(null);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
+      const res = await fetch("/api/expenses/ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64, mediaType: f.type }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as {
+          date?: string | null;
+          amount?: number | null;
+          vendor?: string | null;
+          category?: string | null;
+        };
+        fillFormFromOcr(data);
+        setOcrMsg("読み取り完了 — フォームに自動入力しました");
+      } else {
+        setOcrMsg("読み取りに失敗しました。手動で入力してください");
+      }
+    } catch {
+      setOcrMsg("通信エラー。手動で入力してください");
+    } finally {
+      setOcrLoading(false);
+    }
   }
 
   async function doSubmit(submit: boolean) {
@@ -310,51 +377,59 @@ export function ExpenseApiForm() {
         ) : null}
       </div>
 
-      <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/50 p-6 dark:border-zinc-600 dark:bg-zinc-900/30">
-        <p className="text-center text-sm font-medium text-zinc-800 dark:text-zinc-200">
-          領収書（任意・アップロード）
-        </p>
-        <p className="mt-1 text-center text-xs text-zinc-600 dark:text-zinc-300">
-          クラウド保存は未接続です。選択したファイル名のみ保持します（OCR は今後接続予定）。
-        </p>
-        <div className="mt-4 flex flex-wrap justify-center gap-3">
-          <input
-            ref={fileCameraRef}
-            type="file"
-            accept="image/*,.pdf"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => onFilePick(e.target.files)}
-          />
-          <input
-            ref={filePickRef}
-            type="file"
-            accept="image/*,.pdf"
-            className="hidden"
-            onChange={(e) => onFilePick(e.target.files)}
-          />
-          <button
-            type="button"
-            onClick={() => fileCameraRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-          >
-            <Camera className="size-4" aria-hidden />
-            カメラで撮影
-          </button>
-          <button
-            type="button"
-            onClick={() => filePickRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-          >
-            <Upload className="size-4" aria-hidden />
-            ファイルを選択
-          </button>
-        </div>
-        {receiptLabel ? (
-          <p className="mt-3 text-center text-xs text-zinc-600 dark:text-zinc-400">
+      <div className="space-y-3">
+        <input
+          ref={fileCameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={(e) => void onFilePick(e.target.files)}
+        />
+        <input
+          ref={filePickRef}
+          type="file"
+          accept="image/*,.pdf"
+          className="hidden"
+          onChange={(e) => void onFilePick(e.target.files)}
+        />
+        <button
+          type="button"
+          disabled={ocrLoading}
+          onClick={() => fileCameraRef.current?.click()}
+          className="flex h-48 w-full flex-col items-center justify-center gap-3 rounded-2xl bg-emerald-500 text-white shadow-md transition hover:bg-emerald-400 active:scale-[0.98] active:brightness-95 disabled:opacity-60"
+        >
+          {ocrLoading ? (
+            <Loader2 className="h-16 w-16 animate-spin" aria-hidden />
+          ) : (
+            <Camera className="h-16 w-16" strokeWidth={1.65} aria-hidden />
+          )}
+          <span className="text-2xl font-bold tracking-tight">
+            {ocrLoading ? "AIが読み取り中…" : "レシートを撮影"}
+          </span>
+          <span className="text-sm font-normal opacity-90">
+            {ocrLoading ? "しばらくお待ちください" : "撮影してAIが自動入力"}
+          </span>
+        </button>
+        <button
+          type="button"
+          disabled={ocrLoading}
+          onClick={() => filePickRef.current?.click()}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-900 transition hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+        >
+          <Upload className="size-4" aria-hidden />
+          ファイルから選択
+        </button>
+        {receiptLabel && (
+          <p className="text-center text-xs text-zinc-600 dark:text-zinc-400">
             選択中: {receiptLabel}
           </p>
-        ) : null}
+        )}
+        {ocrMsg && (
+          <p className="text-center text-sm font-medium text-emerald-700 dark:text-emerald-300">
+            {ocrMsg}
+          </p>
+        )}
       </div>
 
       <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
