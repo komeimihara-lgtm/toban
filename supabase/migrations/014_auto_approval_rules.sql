@@ -17,7 +17,7 @@ comment on column public.expenses.auto_approved is 'AIルール・スコアに�
 alter table public.auto_approval_rules add column if not exists category text;
 alter table public.auto_approval_rules add column if not exists per_person boolean not null default false;
 alter table public.auto_approval_rules add column if not exists is_enabled boolean;
-alter table public.auto_approval_rules add column if not exists updated_by uuid references public.profiles (id) on delete set null;
+alter table public.auto_approval_rules add column if not exists updated_by uuid references public.employees (id) on delete set null;
 alter table public.auto_approval_rules add column if not exists updated_at timestamptz not null default now();
 
 update public.auto_approval_rules
@@ -61,8 +61,8 @@ create policy "auto_rules_owner_insert"
   with check (
     company_id = public.auth_user_company_id()
     and exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = 'owner'
+      select 1 from public.employees e
+      where e.auth_user_id = auth.uid() and e.role = 'owner'
     )
   );
 
@@ -71,8 +71,8 @@ create policy "auto_rules_owner_update"
   using (
     company_id = public.auth_user_company_id()
     and exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = 'owner'
+      select 1 from public.employees e
+      where e.auth_user_id = auth.uid() and e.role = 'owner'
     )
   )
   with check (company_id = public.auth_user_company_id());
@@ -82,8 +82,8 @@ create policy "auto_rules_owner_delete"
   using (
     company_id = public.auth_user_company_id()
     and exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = 'owner'
+      select 1 from public.employees e
+      where e.auth_user_id = auth.uid() and e.role = 'owner'
     )
   );
 

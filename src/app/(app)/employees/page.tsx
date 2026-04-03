@@ -35,16 +35,24 @@ export default async function EmployeesPage({
     redirect("/my");
   }
 
+  const { data: departments } = await supabase
+    .from("departments")
+    .select("id, name")
+    .eq("company_id", companyId);
+  const deptName = new Map(
+    (departments ?? []).map((d) => [(d as { id: string }).id, (d as { name: string }).name]),
+  );
+
   let qy = supabase
     .from("employees")
-    .select("id, name, department, department_id, is_sales_target, is_service_target")
+    .select("id, name, department_id, is_sales_target, is_service_target")
     .eq("company_id", companyId)
     .order("name");
   if (sp.q?.trim()) {
     qy = qy.ilike("name", `%${sp.q.trim()}%`);
   }
   if (sp.dept?.trim()) {
-    qy = qy.eq("department", sp.dept.trim());
+    qy = qy.eq("department_id", sp.dept.trim());
   }
   const { data: employees } = await qy;
 
@@ -149,7 +157,7 @@ export default async function EmployeesPage({
               const row = r as {
                 id: string;
                 name: string | null;
-                department: string | null;
+                department_id: string | null;
                 is_sales_target: boolean;
                 is_service_target: boolean;
               };
@@ -178,7 +186,7 @@ export default async function EmployeesPage({
                       {row.name ?? "（無名）"}
                     </Link>
                   </td>
-                  <td className="px-3 py-2">{row.department ?? "—"}</td>
+                  <td className="px-3 py-2">{row.department_id ? (deptName.get(row.department_id) ?? "—") : "—"}</td>
                   <td className="px-3 py-2 tabular-nums">{hire}</td>
                   <td className="px-3 py-2 tabular-nums">
                     {Math.round((leaveRemain.get(row.id) ?? 0) * 100) / 100} 日
