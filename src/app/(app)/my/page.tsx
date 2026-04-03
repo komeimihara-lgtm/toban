@@ -187,12 +187,34 @@ export default async function MyHomePage() {
   type TodayReservation = {
     id: string;
     vehicle_name: string;
+    employee_name: string;
     start_time: string;
     end_time: string;
     destination: string;
+    date_label: string;
   };
   let todayReservations: TodayReservation[] = [];
+  let branchReservations: TodayReservation[] = [];
+  let myBranch = "東京本社";
+
   if (p?.id) {
+    // 支社判定: department名から推定
+    const deptId = (empProfile as { department_id?: string | null })?.department_id;
+    if (deptId) {
+      const { data: deptRow } = await supabase
+        .from("departments")
+        .select("name")
+        .eq("id", deptId)
+        .maybeSingle();
+      const deptName = (deptRow as { name?: string } | null)?.name ?? "";
+      if (deptName.includes("名古屋")) myBranch = "名古屋支社";
+      else if (deptName.includes("福岡")) myBranch = "福岡支社";
+    } else {
+      const dept = (empProfile as { department?: string | null })?.department ?? "";
+      if (dept.includes("名古屋")) myBranch = "名古屋支社";
+      else if (dept.includes("福岡")) myBranch = "福岡支社";
+    }
+
     const jpDateStr = requestAt.toLocaleDateString("sv-SE", {
       timeZone: "Asia/Tokyo",
     });
@@ -200,6 +222,18 @@ export default async function MyHomePage() {
     const dayEndExclusiveJst = new Date(
       dayStartJst.getTime() + 24 * 60 * 60 * 1000,
     );
+    const twoDayEndJst = new Date(
+      dayStartJst.getTime() + 2 * 24 * 60 * 60 * 1000,
+    );
+
+    const timeFmt: Intl.DateTimeFormatOptions = {
+      timeZone: "Asia/Tokyo",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    };
+
+    // 自分の本日予約
     const { data: resvRows } = await supabase
       .from("vehicle_reservations")
       .select("id, start_at, end_at, destination, vehicles(name)")
@@ -208,12 +242,6 @@ export default async function MyHomePage() {
       .lt("start_at", dayEndExclusiveJst.toISOString())
       .order("start_at", { ascending: true });
 
-    const timeFmt: Intl.DateTimeFormatOptions = {
-      timeZone: "Asia/Tokyo",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    };
     todayReservations = (resvRows ?? []).map((row) => {
       const vRaw = row.vehicles as
         | { name: string }
@@ -224,19 +252,54 @@ export default async function MyHomePage() {
       return {
         id: String(row.id),
         vehicle_name: vehName ?? "",
-        start_time: new Date(row.start_at as string).toLocaleTimeString(
-          "ja-JP",
-          timeFmt,
-        ),
-        end_time: new Date(row.end_at as string).toLocaleTimeString(
-          "ja-JP",
-          timeFmt,
-        ),
-        destination: String(
-          (row as { destination?: string | null }).destination ?? "",
-        ).trim(),
+        employee_name: "",
+        start_time: new Date(row.start_at as string).toLocaleTimeString("ja-JP", timeFmt),
+        end_time: new Date(row.end_at as string).toLocaleTimeString("ja-JP", timeFmt),
+        destination: String((row as { destination?: string | null }).destination ?? "").trim(),
+        date_label: "",
       };
     });
+
+    // 同じ支社の今日・明日の予約（車両のbranch でフィルタ）
+    const { data: branchVehicles } = await supabase
+      .from("vehicles")
+      .select("id")
+      .eq("company_id", (empProfile as { company_id: string }).company_id)
+      .eq("branch", myBranch)
+      .eq("is_active", true);
+    const branchVehicleIds = (branchVehicles ?? []).map((v) => (v as { id: string }).id);
+
+    if (branchVehicleIds.length > 0) {
+      const { data: branchResvRows } = await supabase
+        .from("vehicle_reservations")
+        .select("id, start_at, end_at, destination, vehicle_id, vehicles(name), employees!vehicle_reservations_employee_id_fkey(name)")
+        .in("vehicle_id", branchVehicleIds)
+        .gt("end_at", dayStartJst.toISOString())
+        .lt("start_at", twoDayEndJst.toISOString())
+        .order("start_at", { ascending: true })
+        .limit(10);
+
+      const tomorrowDateStr = new Date(dayStartJst.getTime() + 24 * 60 * 60 * 1000)
+        .toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+
+      branchReservations = (branchResvRows ?? []).map((row) => {
+        const vRaw = row.vehicles as | { name: string } | { name: string }[] | null | undefined;
+        const vehName = Array.isArray(vRaw) ? vRaw[0]?.name : vRaw?.name;
+        const empRaw = row.employees as | { name: string } | { name: string }[] | null | undefined;
+        const empName = Array.isArray(empRaw) ? empRaw[0]?.name : empRaw?.name;
+        const startDate = new Date(row.start_at as string).toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+        const isToday = startDate === jpDateStr;
+        return {
+          id: String(row.id),
+          vehicle_name: vehName ?? "",
+          employee_name: empName ?? "",
+          start_time: new Date(row.start_at as string).toLocaleTimeString("ja-JP", timeFmt),
+          end_time: new Date(row.end_at as string).toLocaleTimeString("ja-JP", timeFmt),
+          destination: String((row as { destination?: string | null }).destination ?? "").trim(),
+          date_label: isToday ? "今日" : startDate === tomorrowDateStr ? "明日" : startDate,
+        };
+      });
+    }
   }
 
   let incentivePreview: string | null = null;
@@ -408,17 +471,9 @@ export default async function MyHomePage() {
       </section>
 
       <section className="rounded-2xl border border-zinc-200 bg-card p-4 dark:border-zinc-800">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-300">
-            設備予約
-          </h2>
-          <Link
-            href="/my/vehicles"
-            className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-          >
-            予約する →
-          </Link>
-        </div>
+        <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-300">
+          設備予約
+        </h2>
         {todayReservations.length > 0 ? (
           <ul className="mt-2 space-y-1">
             {todayReservations.map((r) => (
@@ -432,8 +487,39 @@ export default async function MyHomePage() {
             ))}
           </ul>
         ) : (
-          <p className="mt-2 text-sm text-zinc-500">本日の予約はありません</p>
+          <p className="mt-2 text-sm text-zinc-500">本日の自分の予約はありません</p>
         )}
+
+        <div className="mt-3 space-y-1">
+          <p className="text-xs text-zinc-500">📍 {myBranch}の本日・明日の予約</p>
+          {branchReservations.length > 0 ? (
+            branchReservations.map((r) => (
+              <div key={r.id} className="flex justify-between text-xs">
+                <span className="text-zinc-300">
+                  <span className="text-zinc-500">{r.date_label}</span> {r.vehicle_name} / {r.employee_name}
+                </span>
+                <span className="text-zinc-400">{r.start_time}〜{r.end_time}</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-xs text-zinc-500">予約なし</p>
+          )}
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Link
+            href="/my/vehicles"
+            className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-medium text-white hover:bg-blue-500 transition"
+          >
+            🚗 予約する
+          </Link>
+          <Link
+            href="/my/vehicles?tab=myreservations"
+            className="flex items-center justify-center gap-2 rounded-xl border border-zinc-600 bg-zinc-800/50 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-700 transition"
+          >
+            📋 予約確認
+          </Link>
+        </div>
       </section>
 
       {monthlyGoal ? (
