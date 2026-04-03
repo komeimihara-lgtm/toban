@@ -7,6 +7,7 @@ import {
   BarChart3,
   BookOpen,
   Building2,
+  Car,
   CheckSquare,
   ClipboardCheck,
   ClipboardList,
@@ -305,6 +306,12 @@ export function AppSidebar({
               />
             ) : null}
             <NavLink
+              href="/settings/vehicles"
+              label="車両管理"
+              icon={Car}
+              pathPrefixes={["/settings/vehicles"]}
+            />
+            <NavLink
               href="/settings"
               label="設定"
               icon={Settings}
@@ -314,6 +321,7 @@ export function AppSidebar({
                 "/settings/documents",
                 "/settings/export",
                 "/settings/tenant",
+                "/settings/vehicles",
               ]}
             />
             <NavLink
@@ -348,6 +356,7 @@ export function AppSidebar({
         />
         <NavLink href="/my/payslip" label="給与明細" icon={Banknote} exact />
         <NavLink href="/my/leave" label="有給・休暇" icon={Umbrella} pathPrefixes={["/my/leave"]} />
+        <NavLink href="/my/vehicles" label="社用車予約" icon={Car} pathPrefixes={["/my/vehicles"]} />
         {showMyIncentiveNav ? (
           <NavLink
             href="/my/incentive"
