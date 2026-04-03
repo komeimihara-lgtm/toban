@@ -63,17 +63,31 @@ async function fetchEmployeeRowForAuthUser(
   return byUser ?? null;
 }
 
+type EmpOnboardingSlice = { id: string; created_at: string };
+
+/** layout で既に取った employees 行を渡せば二重クエリを省略。`false` = 行なし。 */
 async function shouldShowEmployeeOnboarding(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
+  preloaded: EmpOnboardingSlice | false | undefined = undefined,
 ) {
   try {
-    const emp = await fetchEmployeeRowForAuthUser(supabase, userId);
-    if (!emp) return false;
-    const createdAt = new Date((emp as { created_at: string }).created_at);
+    let empId: string;
+    let createdAt: Date;
+    if (preloaded === false) {
+      return false;
+    }
+    if (preloaded) {
+      empId = preloaded.id;
+      createdAt = new Date(preloaded.created_at);
+    } else {
+      const emp = await fetchEmployeeRowForAuthUser(supabase, userId);
+      if (!emp) return false;
+      empId = (emp as { id: string }).id;
+      createdAt = new Date((emp as { created_at: string }).created_at);
+    }
     const daysSince = (Date.now() - createdAt.getTime()) / 86400000;
     if (daysSince <= 30) return true;
-    const empId = (emp as { id: string }).id;
     const { count } = await supabase
       .from("onboarding_tasks")
       .select("*", { count: "exact", head: true })
@@ -112,14 +126,6 @@ export default async function AppGroupLayout({
         const profile = emp as { name?: string; role?: string; company_id?: string; is_sales_target?: boolean; is_service_target?: boolean } | null;
 
         const cid = (emp as { company_id?: string } | null)?.company_id;
-        if (cid) {
-          const { data: co } = await supabase
-            .from("companies")
-            .select("name")
-            .eq("id", cid)
-            .maybeSingle();
-          tenantName = (co as { name?: string } | null)?.name ?? null;
-        }
 
         const name =
           (profile as { name?: string | null } | null)?.name?.trim() ?? "";
@@ -150,28 +156,48 @@ export default async function AppGroupLayout({
           showMyIncentiveNav = Boolean(p && isIncentiveEligible(p));
         }
 
-        showEmployeeOnboardingNav = await shouldShowEmployeeOnboarding(supabase, user.id);
+        const onboardingPreload: EmpOnboardingSlice | false | undefined = emp
+          ? {
+              id: (emp as { id: string }).id,
+              created_at: (emp as { created_at: string }).created_at,
+            }
+          : false;
 
-        if (showAdminSection) {
-          try {
-            approvalBadgeCount = await countExpenseApprovalBadges(supabase, role);
-          } catch {
-            approvalBadgeCount = 0;
-          }
-        }
+        const [coRes, onboardingNav, approvalBadges, dealDraft] =
+          await Promise.all([
+            cid
+              ? supabase
+                  .from("companies")
+                  .select("name")
+                  .eq("id", cid)
+                  .maybeSingle()
+                  .then(
+                    (r) => r,
+                    () => ({ data: null }),
+                  )
+              : Promise.resolve({ data: null }),
+            shouldShowEmployeeOnboarding(
+              supabase,
+              user.id,
+              onboardingPreload,
+            ).catch(() => false),
+            showAdminSection
+              ? countExpenseApprovalBadges(supabase, role).catch(() => 0)
+              : Promise.resolve(0),
+            cid
+              ? countDealDraftBadges(supabase, {
+                  userId: user.id,
+                  companyId: cid,
+                  isAdmin: showAdminSection,
+                }).catch(() => 0)
+              : Promise.resolve(0),
+          ]);
 
-        if (cid) {
-          try {
-            const dealDraft = await countDealDraftBadges(supabase, {
-              userId: user.id,
-              companyId: cid,
-              isAdmin: showAdminSection,
-            });
-            incentiveDraftBadgeCount = dealDraft;
-          } catch {
-            incentiveDraftBadgeCount = 0;
-          }
-        }
+        tenantName =
+          (coRes.data as { name?: string } | null)?.name ?? null;
+        showEmployeeOnboardingNav = onboardingNav;
+        approvalBadgeCount = approvalBadges;
+        incentiveDraftBadgeCount = dealDraft;
       }
     } catch {
       userLabel = "接続エラー";
