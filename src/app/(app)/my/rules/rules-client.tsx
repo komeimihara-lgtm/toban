@@ -43,7 +43,10 @@ export function RulesClient({
     setTimeout(() => setToast(null), ms);
   }
 
-  async function runSummarize(documentId: string): Promise<boolean> {
+  async function runSummarize(
+    documentId: string,
+    opts?: { quietSuccess?: boolean },
+  ): Promise<boolean> {
     setSummarizingIds((prev) => new Set(prev).add(documentId));
     try {
       const res = await fetch("/api/company-documents/summarize", {
@@ -65,7 +68,7 @@ export function RulesClient({
           d.id === documentId ? { ...d, ai_summary: summary || null } : d,
         ),
       );
-      showToast("AI学習完了", 4000);
+      if (!opts?.quietSuccess) showToast("AI学習完了", 4000);
       return true;
     } catch {
       showToast("AI要約に失敗しました");
@@ -164,10 +167,18 @@ export function RulesClient({
           ? `アップロードしました（${uploaded.length}件）`
           : "アップロードしました",
       );
+      let anyFail = false;
       for (const u of uploaded) {
-        if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
-          await runSummarize(u.id);
-        }
+        const ok = await runSummarize(u.id, { quietSuccess: true });
+        if (!ok) anyFail = true;
+      }
+      if (uploaded.length > 0 && !anyFail) {
+        showToast(
+          uploaded.length > 1
+            ? `AI学習完了（${uploaded.length}件）`
+            : "AI学習完了",
+          4000,
+        );
       }
     } catch {
       showToast("アップロードに失敗しました");
