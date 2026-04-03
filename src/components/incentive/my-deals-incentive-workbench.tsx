@@ -73,6 +73,7 @@ export function MyDealsIncentiveWorkbench(props: {
   const [msg, setMsg] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const [modalError, setModalError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -242,6 +243,7 @@ export function MyDealsIncentiveWorkbench(props: {
 
   const openCreate = () => {
     setEditingId(null);
+    setModalError(null);
     const first = products[0];
     setSelectedProductId(first?.id ?? "");
     setForm({
@@ -262,6 +264,7 @@ export function MyDealsIncentiveWorkbench(props: {
   const openEdit = (d: DealRow) => {
     if (d.submit_status !== "draft" && d.submit_status !== "rejected") return;
     setEditingId(d.id);
+    setModalError(null);
     const match = products.find((p) => p.name === d.machine_type);
     setSelectedProductId(match?.id ?? "");
     setForm({
@@ -291,10 +294,11 @@ export function MyDealsIncentiveWorkbench(props: {
 
   const saveDraft = async (alsoSubmit: boolean) => {
     if (!form.is_appo && !form.is_closer) {
-      setMsg("アポまたはクローザーのいずれかにチェックを入れてください");
+      setModalError("アポまたはクローザーのいずれかにチェックを入れてください");
       return;
     }
     setSaving(true);
+    setModalError(null);
     setMsg(null);
     try {
       const payload = {
@@ -333,7 +337,7 @@ export function MyDealsIncentiveWorkbench(props: {
       closeModal();
       await loadDeals();
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : "保存エラー");
+      setModalError(e instanceof Error ? e.message : "保存エラー");
     } finally {
       setSaving(false);
     }
@@ -889,6 +893,11 @@ export function MyDealsIncentiveWorkbench(props: {
                 />
               </label>
             </div>
+            {modalError && (
+              <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+                {modalError}
+              </p>
+            )}
             <div className="mt-6 flex flex-wrap justify-end gap-2">
               <button type="button" onClick={closeModal} className="rounded-md border px-3 py-1.5 text-sm">
                 キャンセル
