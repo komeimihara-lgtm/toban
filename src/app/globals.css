@@ -5,9 +5,11 @@
   --foreground: #171717;
   --accent: #9a7b2d;
   --surface-sidebar: #f1f5f9;
+  --background-sidebar: #f1f5f9;
   --sidebar-border: #e2e8f0;
   --sidebar-muted: #64748b;
   --sidebar-text: #0f172a;
+  --card: #ffffff;
 }
 
 /*
@@ -16,13 +18,16 @@
  * 「ネイビーっぽい」トーンへ slate-900/950 + ゴールドアクセントで統一。
  */
 html.dark {
-  --background: #0f172a;
+  --background: #161412;
   --foreground: #e2e8f0;
   --accent: #d4b96a;
-  --surface-sidebar: #0c1222;
+  --surface-sidebar: #1a1f2e;
+  --background-sidebar: #1a1f2e;
+  --sidebar-active-bg: #243352;
   --sidebar-border: rgba(148, 163, 184, 0.22);
-  --sidebar-muted: #94a3b8;
+  --sidebar-muted: #d1d5db;
   --sidebar-text: #f1f5f9;
+  --card: #1e1b17;
 }
 
 @theme inline {
@@ -30,9 +35,12 @@ html.dark {
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --color-surface-sidebar: var(--surface-sidebar);
+  --color-background-sidebar: var(--background-sidebar);
+  --color-sidebar-active-bg: var(--sidebar-active-bg);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-muted: var(--sidebar-muted);
   --color-sidebar-text: var(--sidebar-text);
+  --color-card: var(--card);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
