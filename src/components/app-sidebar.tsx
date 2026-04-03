@@ -13,7 +13,6 @@ import {
   Coins,
   Download,
   FileSearch,
-  FileText,
   Home,
   LayoutDashboard,
   ScrollText,
@@ -24,7 +23,6 @@ import {
   Timer,
   Umbrella,
   UserCircle,
-  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -380,25 +378,10 @@ export function AppSidebar({
         />
         <NavLink
           href="/my/profile"
-          label="プロフィール設定"
+          label="プロフィール"
           icon={UserCircle}
           pathPrefixes={["/my/profile"]}
         />
-        <NavLink
-          href="/my/contract"
-          label="雇用契約内容"
-          icon={FileText}
-          pathPrefixes={["/my/contract"]}
-        />
-        {showEmployeeOnboardingNav ? (
-          <NavLink
-            href="/onboarding"
-            label="入社手続き"
-            icon={UserPlus}
-            pathPrefixes={["/onboarding"]}
-            excludePrefixes={["/onboarding/admin"]}
-          />
-        ) : null}
       </nav>
     </aside>
     </>
