@@ -14,7 +14,7 @@ import {
   FileText,
   Home,
   LayoutDashboard,
-  Receipt,
+
   Settings,
   SlidersHorizontal,
   Sparkles,
@@ -202,12 +202,6 @@ export function AppSidebar({
               label="経費審査"
               icon={FileSearch}
               pathPrefixes={["/expenses/audit"]}
-            />
-            <NavLink
-              href="/expenses/new"
-              label="経費・新規申請"
-              icon={Receipt}
-              pathPrefixes={["/expenses/new"]}
             />
             <NavLink
               href={expensesListHref}

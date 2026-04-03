@@ -7,6 +7,15 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+type RawRow = {
+  id: string;
+  year: number;
+  month: number;
+  incentive_amount: number;
+  status: string;
+  profiles: { full_name: string | null }[] | { full_name: string | null } | null;
+};
+
 type Row = {
   id: string;
   year: number;
@@ -34,12 +43,21 @@ export default async function IncentivesHistoryPage() {
 
   const { data: rows, error } = await supabase
     .from("incentive_configs")
-    .select("id, year, month, employee_name, incentive_amount, status")
+    .select("id, year, month, incentive_amount, status, profiles!employee_id(full_name)")
     .order("year", { ascending: false })
     .order("month", { ascending: false })
     .limit(500);
 
-  const list = (rows ?? []) as Row[];
+  const list = ((rows ?? []) as RawRow[]).map((r) => ({
+    id: r.id,
+    year: r.year,
+    month: r.month,
+    employee_name: Array.isArray(r.profiles)
+      ? (r.profiles[0]?.full_name ?? null)
+      : (r.profiles?.full_name ?? null),
+    incentive_amount: r.incentive_amount,
+    status: r.status,
+  })) satisfies Row[];
 
   const byYm = new Map<
     string,
