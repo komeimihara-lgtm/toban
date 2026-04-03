@@ -7,11 +7,28 @@ import {
 import { createBrowserClient } from "@supabase/ssr";
 import { useActionState, useEffect, useState } from "react";
 
+function formatDateJa(value: string | null | undefined) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export default function MyProfilePage() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [initialName, setInitialName] = useState("");
+  const [initialPhone, setInitialPhone] = useState("");
+  const [initialAddress, setInitialAddress] = useState("");
+  const [initialEmergency, setInitialEmergency] = useState("");
   const [initialLine, setInitialLine] = useState("");
+  const [hireDateLabel, setHireDateLabel] = useState("—");
+  const [departmentLabel, setDepartmentLabel] = useState("—");
+  const [jobTitleLabel, setJobTitleLabel] = useState("—");
   const [formKey, setFormKey] = useState(0);
 
   const [profileState, profileAction, profilePending] = useActionState(
@@ -35,68 +52,174 @@ export default function MyProfilePage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (user) {
-        setEmail(user.email ?? "");
-        const { data: p } = await supabase
-          .from("profiles")
-          .select("full_name, line_user_id")
-          .eq("id", user.id)
-          .maybeSingle();
-        const pr = p as { full_name?: string; line_user_id?: string } | null;
-        setInitialName(pr?.full_name?.trim() ?? "");
-        setInitialLine(pr?.line_user_id?.trim() ?? "");
-        setFormKey((k) => k + 1);
+      if (!user) {
+        setLoading(false);
+        return;
       }
+      setEmail(user.email ?? "");
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select(
+          "full_name, phone, address, emergency_contact, line_user_id, department, job_title, department_id",
+        )
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const p = profile as {
+        full_name?: string | null;
+        phone?: string | null;
+        address?: string | null;
+        emergency_contact?: string | null;
+        line_user_id?: string | null;
+        department?: string | null;
+        job_title?: string | null;
+        department_id?: string | null;
+      } | null;
+
+      setInitialName(p?.full_name?.trim() ?? "");
+      setInitialPhone(p?.phone?.trim() ?? "");
+      setInitialAddress(p?.address?.trim() ?? "");
+      setInitialEmergency(p?.emergency_contact?.trim() ?? "");
+      setInitialLine(p?.line_user_id?.trim() ?? "");
+
+      let deptFromMaster: string | null = null;
+      const depId = p?.department_id;
+      if (depId) {
+        const { data: depRow } = await supabase
+          .from("departments")
+          .select("name")
+          .eq("id", depId)
+          .maybeSingle();
+        deptFromMaster =
+          (depRow as { name?: string | null } | null)?.name?.trim() ?? null;
+      }
+      const dept =
+        (p?.department?.trim() && p.department.trim().length > 0
+          ? p.department.trim()
+          : null) ?? deptFromMaster;
+      setDepartmentLabel(dept ?? "—");
+      setJobTitleLabel(p?.job_title?.trim() || "—");
+
+      const { data: contract } = await supabase
+        .from("employment_contracts")
+        .select("hire_date, start_date")
+        .eq("employee_id", user.id)
+        .maybeSingle();
+
+      const c = contract as {
+        hire_date?: string | null;
+        start_date?: string | null;
+      } | null;
+      const hd = c?.hire_date ?? c?.start_date ?? null;
+      setHireDateLabel(formatDateJa(hd));
+
+      setFormKey((k) => k + 1);
       setLoading(false);
     }
     void load();
   }, []);
 
+  const fieldClass =
+    "mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900/80 dark:text-zinc-50";
+  const labelClass = "block text-xs font-medium text-zinc-600 dark:text-zinc-400";
+
   if (loading) {
-    return <p className="text-sm text-zinc-500">読み込み中…</p>;
+    return <p className="text-sm text-zinc-500 dark:text-zinc-400">読み込み中…</p>;
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-8">
+    <div className="mx-auto max-w-2xl space-y-10 pb-12">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          プロフィール設定
+          プロフィール
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          表示名・LINE 通知・パスワードを管理します。
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          連絡先・LINE・パスワードを管理します。入社情報は人事登録に基づき表示されます。
         </p>
       </div>
+
+      <section className="rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
+        <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+          社員情報（参照のみ）
+        </h2>
+        <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-1">
+          <div>
+            <dt className="text-xs text-zinc-500 dark:text-zinc-400">入社日</dt>
+            <dd className="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
+              {hireDateLabel}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-zinc-500 dark:text-zinc-400">部署</dt>
+            <dd className="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
+              {departmentLabel}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-zinc-500 dark:text-zinc-400">役職</dt>
+            <dd className="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
+              {jobTitleLabel}
+            </dd>
+          </div>
+        </dl>
+      </section>
 
       <form
         key={`prof-${formKey}`}
         action={profileAction}
-        className="space-y-3 rounded-xl border border-zinc-200 p-5 dark:border-zinc-800"
+        className="space-y-4 rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/40"
       >
-        <h2 className="text-sm font-medium text-zinc-500">表示名・LINE 通知</h2>
-        <p className="text-xs text-zinc-500">ログインメール: {email}</p>
-        <label className="block text-xs text-zinc-600 dark:text-zinc-400">
-          表示名
+        <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+          連絡先・LINE（編集可）
+        </h2>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">ログインメール: {email}</p>
+
+        <label className={labelClass}>
+          氏名
+          <input name="full_name" defaultValue={initialName} className={fieldClass} />
+        </label>
+        <label className={labelClass}>
+          電話番号
           <input
-            name="full_name"
-            defaultValue={initialName}
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            defaultValue={initialPhone}
+            className={fieldClass}
           />
         </label>
-        <p className="text-xs text-zinc-600">
+        <label className={labelClass}>
+          住所
+          <textarea
+            name="address"
+            rows={3}
+            autoComplete="street-address"
+            defaultValue={initialAddress}
+            className={fieldClass}
+          />
+        </label>
+        <label className={labelClass}>
+          緊急連絡先（氏名・続柄・電話番号など）
+          <textarea
+            name="emergency_contact"
+            rows={2}
+            defaultValue={initialEmergency}
+            className={fieldClass}
+          />
+        </label>
+        <label className={labelClass}>
+          LINE ID（通知用）
+          <input name="line_user_id" defaultValue={initialLine} className={fieldClass} />
+        </label>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
           LINE 通知を受け取る場合は、LINE のユーザーIDを登録してください。
         </p>
-        <label className="block text-xs text-zinc-600 dark:text-zinc-400">
-          LINE ユーザーID
-          <input
-            name="line_user_id"
-            defaultValue={initialLine}
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
-          />
-        </label>
+
         <button
           type="submit"
           disabled={profilePending}
-          className="rounded bg-zinc-900 px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+          className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
         >
           {profilePending ? "保存中…" : "プロフィールを保存"}
         </button>
@@ -104,26 +227,28 @@ export default function MyProfilePage() {
           <p className="text-sm text-emerald-600 dark:text-emerald-400">保存しました。</p>
         ) : null}
         {profileState && !profileState.ok && profileState.message ? (
-          <p className="text-sm text-red-600">{profileState.message}</p>
+          <p className="text-sm text-red-600 dark:text-red-400">{profileState.message}</p>
         ) : null}
       </form>
 
       <form
         action={pwAction}
-        className="space-y-3 rounded-xl border border-zinc-200 p-5 dark:border-zinc-800"
+        className="space-y-4 rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-zinc-950/40"
       >
-        <h2 className="text-sm font-medium text-zinc-500">パスワード変更</h2>
-        <label className="block text-xs text-zinc-600 dark:text-zinc-400">
+        <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+          パスワード変更
+        </h2>
+        <label className={labelClass}>
           現在のパスワード
           <input
             name="current_password"
             type="password"
             autoComplete="current-password"
             required
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className={fieldClass}
           />
         </label>
-        <label className="block text-xs text-zinc-600 dark:text-zinc-400">
+        <label className={labelClass}>
           新しいパスワード（8文字以上）
           <input
             name="new_password"
@@ -131,10 +256,10 @@ export default function MyProfilePage() {
             autoComplete="new-password"
             required
             minLength={8}
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className={fieldClass}
           />
         </label>
-        <label className="block text-xs text-zinc-600 dark:text-zinc-400">
+        <label className={labelClass}>
           新しいパスワード（確認）
           <input
             name="new_password_confirm"
@@ -142,13 +267,13 @@ export default function MyProfilePage() {
             autoComplete="new-password"
             required
             minLength={8}
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900"
+            className={fieldClass}
           />
         </label>
         <button
           type="submit"
           disabled={pwPending}
-          className="rounded bg-zinc-900 px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+          className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
         >
           {pwPending ? "更新中…" : "パスワードを更新"}
         </button>
@@ -158,7 +283,7 @@ export default function MyProfilePage() {
           </p>
         ) : null}
         {pwState && !pwState.ok && pwState.message ? (
-          <p className="text-sm text-red-600">{pwState.message}</p>
+          <p className="text-sm text-red-600 dark:text-red-400">{pwState.message}</p>
         ) : null}
       </form>
     </div>

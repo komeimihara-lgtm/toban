@@ -2,11 +2,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { countExpenseApprovalBadges } from "@/lib/overview-stats";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import {
-  isAdminRole,
-  isIncentiveEligible,
-  type ProfileRow,
-} from "@/types/incentive";
+import { isIncentiveEligible, type ProfileRow } from "@/types/incentive";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -46,16 +42,30 @@ async function countDealDraftBadges(
   }
 }
 
+async function fetchEmployeeRowForAuthUser(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+) {
+  const { data: byAuth } = await supabase
+    .from("employees")
+    .select("id, role, is_sales_target, is_service_target, created_at")
+    .eq("auth_user_id", userId)
+    .maybeSingle();
+  if (byAuth) return byAuth;
+  const { data: byUser } = await supabase
+    .from("employees")
+    .select("id, role, is_sales_target, is_service_target, created_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return byUser ?? null;
+}
+
 async function shouldShowEmployeeOnboarding(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
 ) {
   try {
-    const { data: emp } = await supabase
-      .from("employees")
-      .select("id, created_at")
-      .eq("user_id", userId)
-      .maybeSingle();
+    const emp = await fetchEmployeeRowForAuthUser(supabase, userId);
     if (!emp) return false;
     const createdAt = new Date((emp as { created_at: string }).created_at);
     const daysSince = (Date.now() - createdAt.getTime()) / 86400000;
@@ -101,6 +111,8 @@ export default async function AppGroupLayout({
           .eq("id", user.id)
           .maybeSingle();
 
+        const emp = await fetchEmployeeRowForAuthUser(supabase, user.id);
+
         const cid = (profile as { company_id?: string } | null)?.company_id;
         if (cid) {
           const { data: co } = await supabase
@@ -117,25 +129,25 @@ export default async function AppGroupLayout({
           user.id.slice(0, 8);
         userLabel = name;
 
-        const role = (profile as { role?: string } | null)?.role ?? "staff";
-        showAdminSection = isAdminRole(role);
+        const role =
+          (emp as { role?: string | null } | null)?.role ??
+          (profile as { role?: string } | null)?.role ??
+          "staff";
+        showAdminSection = role === "owner" || role === "approver";
         if (showAdminSection) {
           dashboardHref = "/";
           expensesListHref = "/expenses";
         }
 
         const p = profile as ProfileRow | null;
-        const { data: empIncentive } = await supabase
-          .from("employees")
-          .select("is_sales_target, is_service_target")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (empIncentive) {
-          const er = empIncentive as {
-            is_sales_target: boolean;
-            is_service_target: boolean;
+        if (emp) {
+          const er = emp as {
+            is_sales_target?: boolean;
+            is_service_target?: boolean;
           };
-          showMyIncentiveNav = er.is_sales_target || er.is_service_target;
+          showMyIncentiveNav = Boolean(
+            er.is_sales_target || er.is_service_target,
+          );
         } else {
           showMyIncentiveNav = Boolean(p && isIncentiveEligible(p));
         }

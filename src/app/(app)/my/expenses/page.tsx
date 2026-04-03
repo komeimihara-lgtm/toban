@@ -22,16 +22,17 @@ export default async function MyExpensesPage() {
     .eq("submitter_id", user.id)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    return (
-      <p className="text-sm text-red-600">
-        一覧の取得に失敗しました。DB マイグレーション（expenses テーブル）を確認してください。
-      </p>
-    );
-  }
-
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      {error ? (
+        <div
+          className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
+          role="alert"
+        >
+          一覧の取得に失敗しました。DB マイグレーション（expenses テーブル・RLS）を確認してください。
+          <span className="mt-1 block font-mono text-xs opacity-90">{error.message}</span>
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">

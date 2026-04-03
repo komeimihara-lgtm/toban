@@ -8,6 +8,9 @@ export async function saveProfileSettingsAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string }> {
   const displayName = String(formData.get("full_name") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
+  const emergencyContact = String(formData.get("emergency_contact") ?? "").trim();
   const lineUserId = String(formData.get("line_user_id") ?? "").trim();
 
   const supabase = await createClient();
@@ -20,6 +23,9 @@ export async function saveProfileSettingsAction(
     .from("profiles")
     .update({
       full_name: displayName || null,
+      phone: phone || null,
+      address: address || null,
+      emergency_contact: emergencyContact || null,
       line_user_id: lineUserId || null,
     })
     .eq("id", user.id);
