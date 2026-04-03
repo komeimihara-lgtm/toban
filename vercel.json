@@ -18,7 +18,7 @@
     },
     {
       "path": "/api/cron/process-notifications",
-      "schedule": "0 2 * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/deactivate-scheduled-accounts",
