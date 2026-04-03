@@ -13,6 +13,7 @@ type Reservation = {
   start_at: string;
   end_at: string;
   purpose: string | null;
+  destination: string | null;
 };
 
 const BRANCHES = ["東京本社", "福岡支社", "名古屋支社"] as const;
@@ -43,9 +44,11 @@ function slotIndex(isoStr: string): number {
 
 export function VehicleReservationClient({
   userId,
+  userRole,
   vehicles,
 }: {
   userId: string;
+  userRole: string;
   vehicles: Vehicle[];
 }) {
   const [branch, setBranch] = useState<string>(BRANCHES[0]);
@@ -54,7 +57,7 @@ export function VehicleReservationClient({
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
-  // モーダル
+  // 新規予約モーダル
   const [modal, setModal] = useState<{
     vehicleId: string;
     vehicleName: string;
@@ -63,8 +66,15 @@ export function VehicleReservationClient({
   const [modalStart, setModalStart] = useState("");
   const [modalEnd, setModalEnd] = useState("");
   const [modalPurpose, setModalPurpose] = useState("");
+  const [modalDestination, setModalDestination] = useState("");
   const [modalError, setModalError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // 詳細モーダル
+  const [detail, setDetail] = useState<Reservation | null>(null);
+
+  const canDelete = (r: Reservation) =>
+    r.employee_auth_user_id === userId || userRole === "owner" || userRole === "director";
 
   const branchVehicles = useMemo(
     () => vehicles.filter((v) => v.branch === branch),
@@ -105,6 +115,7 @@ export function VehicleReservationClient({
     setModalStart(`${pad2(startH)}:${startM}`);
     setModalEnd(`${pad2(endH)}:${endM}`);
     setModalPurpose("");
+    setModalDestination("");
     setModalError(null);
   };
 
@@ -123,6 +134,7 @@ export function VehicleReservationClient({
           start_at: startIso,
           end_at: endIso,
           purpose: modalPurpose || null,
+          destination: modalDestination || null,
         }),
       });
       const j = (await res.json()) as { error?: string };
@@ -142,6 +154,7 @@ export function VehicleReservationClient({
       const res = await fetch(`/api/vehicle-reservations/${id}`, { method: "DELETE" });
       const j = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(j.error ?? "削除に失敗しました");
+      setDetail(null);
       await loadReservations();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "エラー");
@@ -165,6 +178,14 @@ export function VehicleReservationClient({
   });
 
   const isToday = date === toJstDateStr(new Date());
+
+  // 予約ブロックのラベル生成
+  const blockLabel = (r: Reservation) => {
+    const parts = [r.employee_name];
+    if (r.destination) parts.push(r.destination);
+    if (r.purpose) parts.push(r.purpose);
+    return parts.join(" / ");
+  };
 
   return (
     <div className="space-y-4">
@@ -282,28 +303,19 @@ export function VehicleReservationClient({
                           className="relative border-b border-zinc-800 px-1 py-1"
                           style={{ gridColumn: `span ${span}` }}
                         >
-                          <div
-                            className={`flex h-full items-center gap-1 rounded-md px-2 py-1 text-[11px] leading-tight ${
+                          <button
+                            type="button"
+                            onClick={() => setDetail(reservation)}
+                            className={`flex h-full w-full items-center rounded-md px-2 py-1 text-left text-[11px] leading-tight ${
                               isMine
-                                ? "bg-blue-600/30 text-blue-200 border border-blue-500/40"
-                                : "bg-zinc-700/50 text-zinc-300 border border-zinc-600/40"
+                                ? "bg-blue-600/30 text-blue-200 border border-blue-500/40 hover:bg-blue-600/40"
+                                : "bg-zinc-700/50 text-zinc-300 border border-zinc-600/40 hover:bg-zinc-700/70"
                             }`}
                           >
                             <span className="min-w-0 truncate">
-                              {reservation.employee_name}
-                              {reservation.purpose ? ` · ${reservation.purpose}` : ""}
+                              {blockLabel(reservation)}
                             </span>
-                            {isMine && (
-                              <button
-                                type="button"
-                                onClick={() => void deleteReservation(reservation.id)}
-                                className="ml-auto shrink-0 rounded p-0.5 hover:bg-red-600/40"
-                                title="予約を取消"
-                              >
-                                <X className="size-3" />
-                              </button>
-                            )}
-                          </div>
+                          </button>
                         </div>
                       );
                     }
@@ -324,7 +336,38 @@ export function VehicleReservationClient({
         </div>
       )}
 
-      {/* 予約モーダル */}
+      {/* 詳細モーダル */}
+      {detail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-xs rounded-xl border border-zinc-700 bg-card p-5">
+            <div className="space-y-3 text-sm">
+              <p><span className="mr-2">👤</span>{detail.employee_name}</p>
+              <p><span className="mr-2">📍</span>{detail.destination || "未入力"}</p>
+              <p><span className="mr-2">📝</span>{detail.purpose || "未入力"}</p>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              {canDelete(detail) && (
+                <button
+                  type="button"
+                  onClick={() => void deleteReservation(detail.id)}
+                  className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500"
+                >
+                  削除
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setDetail(null)}
+                className="rounded-md border border-zinc-600 px-3 py-1.5 text-sm hover:bg-card/80"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 新規予約モーダル */}
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-sm rounded-xl border border-zinc-700 bg-card p-5">
@@ -358,10 +401,19 @@ export function VehicleReservationClient({
                 </select>
               </label>
               <label className="block">
+                <span className="text-xs text-zinc-400">行き先・地域</span>
+                <input
+                  className="mt-1 w-full rounded-md border border-zinc-600 bg-card px-2 py-1.5"
+                  placeholder="例：千葉県市川市"
+                  value={modalDestination}
+                  onChange={(e) => setModalDestination(e.target.value)}
+                />
+              </label>
+              <label className="block">
                 <span className="text-xs text-zinc-400">用途</span>
                 <input
                   className="mt-1 w-full rounded-md border border-zinc-600 bg-card px-2 py-1.5"
-                  placeholder="例：顧客訪問"
+                  placeholder="例：営業"
                   value={modalPurpose}
                   onChange={(e) => setModalPurpose(e.target.value)}
                 />

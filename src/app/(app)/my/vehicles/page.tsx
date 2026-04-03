@@ -16,7 +16,7 @@ export default async function MyVehiclesPage() {
 
   const { data: emp } = await supabase
     .from("employees")
-    .select("id, company_id")
+    .select("id, company_id, role")
     .eq("auth_user_id", user.id)
     .maybeSingle();
   if (!emp) redirect("/login");
@@ -32,6 +32,7 @@ export default async function MyVehiclesPage() {
   return (
     <VehicleReservationClient
       userId={user.id}
+      userRole={(emp.role as string) ?? "staff"}
       vehicles={(vehicles ?? []) as { id: string; name: string; plate_number: string | null; branch: string }[]}
     />
   );

@@ -38,6 +38,7 @@ export async function GET(req: Request) {
         start_at: r.start_at,
         end_at: r.end_at,
         purpose: r.purpose,
+        destination: r.destination,
       };
     });
 
@@ -60,6 +61,7 @@ export async function POST(req: Request) {
       start_at?: string;
       end_at?: string;
       purpose?: string;
+      destination?: string;
     };
 
     if (!body.vehicle_id || !body.start_at || !body.end_at) {
@@ -93,6 +95,7 @@ export async function POST(req: Request) {
         start_at: body.start_at,
         end_at: body.end_at,
         purpose: body.purpose?.trim() || null,
+        destination: body.destination?.trim() || null,
       })
       .select()
       .single();
