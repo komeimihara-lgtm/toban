@@ -11,8 +11,7 @@ import {
 } from "@/lib/attendance-summary";
 import type { AttendancePunchType } from "@/types";
 import { LargePunchActionTiles } from "@/components/attendance/large-punch-tiles";
-import { MapPin, RefreshCw } from "lucide-react";
-import Link from "next/link";
+import { MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 
@@ -53,6 +52,7 @@ export function AttendancePunchPageClient({
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
   const [geoStatus, setGeoStatus] = useState<string>("未取得");
+  const [geoAddress, setGeoAddress] = useState<string | null>(null);
   const [lastGeo, setLastGeo] = useState<PunchGeo | null>(null);
 
   useEffect(() => {
@@ -81,6 +81,19 @@ export function AttendancePunchPageClient({
           setGeoStatus(
             `取得済（±${Math.round(pos.coords.accuracy ?? 0)}m 付近）`,
           );
+          // 逆ジオコーディングで市区町村を取得
+          fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&localityLanguage=ja`,
+          )
+            .then((r) => r.json())
+            .then((data) => {
+              const city =
+                data.city || data.locality || data.principalSubdivision || "";
+              if (city) setGeoAddress(city);
+            })
+            .catch(() => {
+              /* ignore */
+            });
           resolve(g);
         },
         () => {
@@ -106,10 +119,6 @@ export function AttendancePunchPageClient({
     });
   };
 
-  const previewCoords =
-    lastGeo != null
-      ? `${lastGeo.latitude.toFixed(5)}, ${lastGeo.longitude.toFixed(5)}`
-      : "—";
 
   const timelineRows = useMemo((): TimelineRow[] => {
     const clockOnly = todayPunches.filter(
@@ -156,15 +165,7 @@ export function AttendancePunchPageClient({
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            勤怠打刻
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            打刻時に位置情報を取得します（拒否した場合も打刻は可能です）。
-          </p>
-        </div>
+      <header className="flex flex-wrap items-start justify-end gap-4">
         <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-right tabular-nums dark:border-zinc-800 dark:bg-zinc-900/40">
           <p className="text-xs font-medium text-zinc-500">現在時刻（ブラウザ）</p>
           <p className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
@@ -199,59 +200,23 @@ export function AttendancePunchPageClient({
           />
         </div>
 
-        <div className="mt-5 rounded-lg border border-blue-200 bg-blue-50/90 px-4 py-3 text-sm text-blue-950 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-100">
-          <p className="font-medium">自動休憩控除（労基法準拠の目安）</p>
-          <p className="mt-2 text-xs leading-relaxed opacity-95">
-            実労働時間は「退勤 − 出勤」から、労働時間に応じて次の休憩分を自動で差し引きます。
-          </p>
-          <ul className="mt-2 list-inside list-disc text-xs leading-relaxed opacity-95">
-            <li>6時間以下: 休憩控除なし</li>
-            <li>6〜8時間: 45分控除</li>
-            <li>8時間超: 60分控除</li>
-          </ul>
-        </div>
+        <p className="text-xs text-zinc-500 mt-3 hidden md:block">※ 労働時間に応じて休憩時間を自動控除します（6h超:45分 / 8h超:60分）</p>
 
-        <div className="mt-5 flex flex-wrap items-start gap-4 rounded-lg border border-zinc-100 bg-zinc-50/80 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900/30">
-          <MapPin className="mt-0.5 size-4 shrink-0 text-zinc-500" aria-hidden />
-          <div className="min-w-0 flex-1 space-y-1">
-            <p className="font-medium text-zinc-800 dark:text-zinc-200">
-              GPS（Geolocation API）
-            </p>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400">{geoStatus}</p>
-            <p className="font-mono text-xs text-zinc-500">直近: {previewCoords}</p>
-            <button
-              type="button"
-              onClick={() => void requestGeo()}
-              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
-            >
-              <RefreshCw className="size-3" aria-hidden />
-              位置だけ取得（テスト）
-            </button>
-          </div>
+        <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
+          <MapPin className="size-3.5 shrink-0" aria-hidden />
+          <span>{geoAddress ?? geoStatus}</span>
         </div>
 
         {msg ? (
           <p className="mt-3 text-sm text-emerald-800 dark:text-emerald-300">{msg}</p>
         ) : null}
 
-        <p className="mt-4 text-xs text-zinc-500">
-          <Link
-            href="/my/attendance/correction"
-            className="font-medium text-emerald-700 underline dark:text-emerald-400"
-          >
-            打刻修正申請
-          </Link>
-          ・
-          <Link href="/my/attendance/calendar" className="underline">
-            月次カレンダー
-          </Link>
-        </p>
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="text-sm font-semibold">本日のタイムライン</h2>
         <p className="mt-1 text-xs text-zinc-500">
-          休憩は出退勤の間の実時間に応じて自動計上します（手動の休憩打刻はありません）。
+          自動で休憩時間を控除します
         </p>
         <ul className="mt-3 space-y-2">
           {timelineRows.length === 0 ? (
@@ -276,7 +241,7 @@ export function AttendancePunchPageClient({
                   <span className="font-medium text-zinc-800 dark:text-zinc-200">
                     {punchTypeLabel(row.punchType)}
                   </span>
-                  <span className="tabular-nums text-zinc-600 dark:text-zinc-400">
+                  <span className="text-lg font-semibold tabular-nums text-zinc-600 dark:text-zinc-400">
                     {new Date(row.punchedAt).toLocaleString("ja-JP", {
                       timeZone: "Asia/Tokyo",
                       hour: "2-digit",
@@ -294,7 +259,7 @@ export function AttendancePunchPageClient({
       <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="text-sm font-semibold">今月の勤務サマリー</h2>
         <p className="mt-1 text-xs text-zinc-500">
-          所定 8 時間/日を超えた分を残業として集計しています。総労働時間には上記の自動休憩控除後の実労働時間を用いています。
+          総労働時間は休憩控除（-1時間）後の実労働時間です
         </p>
         <dl className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/50">

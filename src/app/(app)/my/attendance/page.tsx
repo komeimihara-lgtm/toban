@@ -1,5 +1,4 @@
 import { AttendancePunchPageClient } from "@/components/attendance/attendance-punch-page-client";
-import { AttendanceQrPanel } from "@/components/attendance/attendance-qr-panel";
 import {
   jstDateKey,
   summarizePunchesInRange,
@@ -143,15 +142,6 @@ export default async function MyAttendancePage({
         totalWorkMinutes={summary.totalWorkMinutes}
         overtimeMinutes={summary.overtimeMinutes}
       />
-
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-          QR 打刻（別端末）
-        </h2>
-        <div className="mt-4">
-          <AttendanceQrPanel />
-        </div>
-      </section>
 
     </div>
   );
