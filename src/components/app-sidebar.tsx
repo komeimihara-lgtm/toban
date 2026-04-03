@@ -156,29 +156,26 @@ export function AppSidebar({
     return () => window.removeEventListener("open-mobile-menu", handler);
   }, []);
 
+  // スクロール保存
   useEffect(() => {
     const el = navRef.current;
     if (!el) return;
-
-    const timer = setTimeout(() => {
-      const saved = sessionStorage.getItem("sidebar-scroll");
-      if (saved) {
-        el.scrollTop = Number(saved);
-      }
-    }, 50);
-
-    return () => clearTimeout(timer);
-  }, [pathname]);
-
-  useEffect(() => {
-    const el = navRef.current;
-    if (!el) return;
-    const handleScroll = () => {
-      sessionStorage.setItem("sidebar-scroll", String(el.scrollTop));
-    };
-    el.addEventListener("scroll", handleScroll, { passive: true });
-    return () => el.removeEventListener("scroll", handleScroll);
+    const save = () => sessionStorage.setItem("sb-scroll", String(el.scrollTop));
+    el.addEventListener("scroll", save, { passive: true });
+    return () => el.removeEventListener("scroll", save);
   }, []);
+
+  // pathname変更時に復元（複数フレーム待って確実に復元）
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const saved = sessionStorage.getItem("sb-scroll");
+    if (!saved) return;
+    const t1 = setTimeout(() => { el.scrollTop = Number(saved); }, 0);
+    const t2 = setTimeout(() => { el.scrollTop = Number(saved); }, 50);
+    const t3 = setTimeout(() => { el.scrollTop = Number(saved); }, 150);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [pathname]);
 
   return (
     <>
