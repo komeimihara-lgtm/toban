@@ -79,11 +79,11 @@ function NavLink({
       className={`group flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-bold leading-snug transition-colors ${
         active
           ? "border border-accent/50 bg-accent/15 text-accent shadow-sm dark:border-transparent dark:bg-[var(--sidebar-active-bg)] dark:text-white dark:shadow-none"
-          : "border border-transparent text-zinc-800 hover:bg-slate-200/80 hover:text-zinc-950 dark:text-white/90 dark:hover:bg-white/10 dark:hover:text-white"
+          : "border border-transparent text-zinc-800 hover:bg-slate-200/80 hover:text-zinc-950 dark:text-gray-100 dark:hover:bg-white/10 dark:hover:text-white"
       }`}
     >
       <Icon
-        className={`size-4 shrink-0 ${active ? "text-accent opacity-100 dark:text-white" : "text-zinc-600 dark:text-white/90 dark:group-hover:text-white"}`}
+        className={`size-4 shrink-0 ${active ? "text-accent opacity-100 dark:text-white" : "text-zinc-600 dark:text-gray-100 dark:group-hover:text-white"}`}
         aria-hidden
       />
       <span className="flex-1">{label}</span>
