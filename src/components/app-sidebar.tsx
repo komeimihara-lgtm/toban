@@ -24,7 +24,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import type { ComponentType, ReactNode } from "react";
+import { useEffect, useRef, type ComponentType, type ReactNode } from "react";
 
 export type AppSidebarProps = {
   userLabel: string;
@@ -126,6 +126,25 @@ export function AppSidebar({
   dashboardHref,
   expensesListHref,
 }: AppSidebarProps) {
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const saved = sessionStorage.getItem("sidebar-scroll");
+    if (saved) el.scrollTop = Number(saved);
+  }, []);
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      sessionStorage.setItem("sidebar-scroll", String(el.scrollTop));
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <aside className="no-print flex w-56 shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--background-sidebar)]">
       <div className="border-b border-[var(--sidebar-border)] px-4 py-4">
@@ -136,6 +155,7 @@ export function AppSidebar({
         ) : null}
       </div>
       <nav
+        ref={navRef}
         className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3 pb-8"
         aria-label="メインメニュー"
       >
