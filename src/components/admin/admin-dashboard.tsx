@@ -280,7 +280,7 @@ export async function AdminDashboard() {
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/60">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-[linear-gradient(145deg,#1e2d4a,#162038)]">
           <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
             今月の経費合計（承認済・支払月）
           </p>
@@ -306,7 +306,7 @@ export async function AdminDashboard() {
         />
       </div>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-700 dark:bg-[linear-gradient(145deg,#1e2d4a,#162038)]">
         <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">今月の経費（カテゴリ別）</h2>
         <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
           承認済・支払日が当月の合計
@@ -337,7 +337,7 @@ export async function AdminDashboard() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-700 dark:bg-[linear-gradient(145deg,#1e2d4a,#162038)]">
         <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">要対応</h2>
         <ul className="mt-3 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
           <li className="flex flex-wrap items-center gap-2">
@@ -378,7 +378,7 @@ export async function AdminDashboard() {
         </ul>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-700 dark:bg-[linear-gradient(145deg,#1e2d4a,#162038)]">
         <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">
           退職リスクアラート（離職防止）
         </h2>
@@ -468,7 +468,7 @@ export async function AdminDashboard() {
         </ul>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-700 dark:bg-[linear-gradient(145deg,#1e2d4a,#162038)]">
         <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">全スタッフの出勤状況（本日）</h2>
         <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
           Asia/Tokyo · {staffAttendance.length} 名 · 出勤打刻から状態を表示しています
@@ -529,7 +529,7 @@ export async function AdminDashboard() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-700 dark:bg-[linear-gradient(145deg,#1e2d4a,#162038)]">
         <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">最近の申請（5件）</h2>
         <p className="mt-1 text-xs text-zinc-500">経費（下書き除く・更新日の新しい順）</p>
         <ul className="mt-3 space-y-2 text-sm">
@@ -570,7 +570,7 @@ export async function AdminDashboard() {
         </ul>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-[linear-gradient(145deg,#1e2d4a,#162038)]">
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
           自動承認の統計（今月・最終承認日ベース）
         </h2>
@@ -611,7 +611,7 @@ function fmt(n: number) {
 
 function Kpi({ title, value }: { title: string; value: string }) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/60">
+    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-[linear-gradient(145deg,#1e2d4a,#162038)]">
       <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">{title}</p>
       <p className="mt-2 text-lg font-semibold tabular-nums text-zinc-950 dark:text-zinc-50">
         {value}

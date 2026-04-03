@@ -23,21 +23,21 @@
  */
 html.dark {
   --background: #0f1117;
-  --background-sidebar: #1a1f2e;
-  --card: #1e2336;
-  --border: #2d3348;
-  --foreground: #ffffff;
-  --muted-foreground: #d1d5db;
+  --background-sidebar: #1c2235;
+  --card: #1e2d4a;
+  --border: #3a4a6b;
+  --foreground: #f0f4ff;
+  --muted-foreground: #94a3b8;
   --accent: #3b82f6;
-  --sidebar-active-bg: #2d4a8a;
+  --sidebar-active-bg: #2563eb;
   --success: #22c55e;
   --warning: #f59e0b;
   --error: #ef4444;
-  --surface-sidebar: #1a1f2e;
-  --sidebar-border: #2d3348;
-  --sidebar-muted: #e8eaed;
+  --surface-sidebar: #1c2235;
+  --sidebar-border: #2e3a5c;
+  --sidebar-muted: #cbd5e1;
   --sidebar-text: #ffffff;
-  --radius: 12px;
+  --radius: 14px;
   color-scheme: dark;
 }
 
@@ -65,6 +65,17 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+html.dark body {
+  background: linear-gradient(135deg, #0f1117 0%, #1a1f35 100%);
+}
+
+/* ダークモードのカードに光沢感 */
+.dark [class*="rounded-xl"],
+.dark [class*="rounded-2xl"] {
+  backdrop-filter: blur(4px);
 }
 
 /*

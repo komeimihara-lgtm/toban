@@ -291,7 +291,7 @@ export default async function MyHomePage() {
         <InterviewInviteBanner requestId={(interviewReq as { id: string }).id} />
       )}
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
@@ -304,7 +304,7 @@ export default async function MyHomePage() {
           </div>
           <Link
             href="/my/attendance"
-            className="shrink-0 text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/20 px-4 py-2 text-sm font-medium text-blue-600 transition-all hover:bg-blue-600/30 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
           >
             勤怠へ →
           </Link>
@@ -315,7 +315,7 @@ export default async function MyHomePage() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
           <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             有給残日数・次回付与日
           </h2>
@@ -333,12 +333,12 @@ export default async function MyHomePage() {
           </p>
           <Link
             href="/my/leave"
-            className="mt-3 inline-block text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/20 px-4 py-2 text-sm font-medium text-blue-600 transition-all hover:bg-blue-600/30 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
           >
             有給・休暇の詳細 →
           </Link>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
           <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             今月の承認待ち経費
           </h2>
@@ -350,14 +350,14 @@ export default async function MyHomePage() {
           </p>
           <Link
             href="/my/expenses"
-            className="mt-3 inline-block text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/20 px-4 py-2 text-sm font-medium text-blue-600 transition-all hover:bg-blue-600/30 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
           >
-            経費一覧へ
+            経費一覧へ →
           </Link>
         </div>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
           {payslipIsCurrentMonth ? "今月の給与明細（サマリー）" : "給与明細サマリー（直近）"}
         </h2>
@@ -388,14 +388,14 @@ export default async function MyHomePage() {
         )}
         <Link
           href="/my/payslip"
-          className="mt-3 inline-block text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+          className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/20 px-4 py-2 text-sm font-medium text-blue-600 transition-all hover:bg-blue-600/30 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
         >
-          給与明細の詳細へ
+          給与明細の詳細へ →
         </Link>
       </section>
 
       {incentivePreview != null && p && elig(p) && (
-        <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
           <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
             今月のインセンティブ試算（案件）
           </h2>
@@ -407,14 +407,14 @@ export default async function MyHomePage() {
           </p>
           <Link
             href="/my/incentive"
-            className="mt-2 inline-block text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            className="mt-2 inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/20 px-4 py-2 text-sm font-medium text-blue-600 transition-all hover:bg-blue-600/30 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
           >
-            入力・履歴へ
+            入力・履歴へ →
           </Link>
         </section>
       )}
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">お知らせ</h2>
         {notices.length === 0 ? (
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
@@ -445,7 +445,7 @@ export default async function MyHomePage() {
         )}
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
           今月の勤務時間サマリー
         </h2>
@@ -474,9 +474,9 @@ export default async function MyHomePage() {
         </dl>
         <Link
           href="/my/attendance"
-          className="mt-3 inline-block text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+          className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/20 px-4 py-2 text-sm font-medium text-blue-600 transition-all hover:bg-blue-600/30 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
         >
-          勤怠の詳細へ
+          勤怠の詳細へ →
         </Link>
       </section>
 
