@@ -205,7 +205,7 @@ export default async function AppGroupLayout({
   }
 
   return (
-    <div className="flex min-h-0 min-h-screen flex-1 bg-[var(--background)] text-[var(--foreground)]">
+    <div className="flex h-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
       <AppSidebar
         userLabel={userLabel}
         tenantName={tenantName}
@@ -218,7 +218,7 @@ export default async function AppGroupLayout({
         expensesListHref={expensesListHref}
         showCompanyDocumentsAdminNav={showCompanyDocumentsAdminNav}
       />
-      <main className="print-full text-foreground min-h-0 min-w-0 flex-1 overflow-auto px-4 pb-20 pt-6 md:p-10 md:pb-10">
+      <main className="print-full text-foreground min-w-0 flex-1 overflow-y-auto px-4 pb-20 pt-6 md:p-10 md:pb-10">
         {children}
       </main>
       <BottomNav />
