@@ -357,7 +357,7 @@ export default async function MyHomePage() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-zinc-300">今月の目標</h2>
             <Link
-              href="/my/goals"
+              href="/my/self-management?tab=goals"
               className="text-xs text-blue-400 hover:underline"
             >
               詳細 →
@@ -394,7 +394,7 @@ export default async function MyHomePage() {
         <section className="rounded-2xl border border-dashed border-zinc-700 p-4 text-center">
           <p className="text-sm text-zinc-500">今月の目標が未設定です</p>
           <Link
-            href="/my/goals"
+            href="/my/self-management?tab=goals"
             className="mt-2 inline-block text-xs text-blue-400 hover:underline"
           >
             目標を設定する →

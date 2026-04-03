@@ -8,7 +8,6 @@ import {
   BookOpen,
   Building2,
   Car,
-  CheckSquare,
   ClipboardCheck,
   ClipboardList,
   Coins,
@@ -23,7 +22,6 @@ import {
   Sparkles,
   Target,
   Timer,
-  TrendingUp,
   Umbrella,
   UserCircle,
   UserPlus,
@@ -369,22 +367,10 @@ export function AppSidebar({
           pathPrefixes={["/hr-ai", "/my/hr-ai"]}
         />
         <NavLink
-          href="/my/goals"
-          label="月間目標"
+          href="/my/self-management"
+          label="自己管理"
           icon={Target}
-          pathPrefixes={["/my/goals"]}
-        />
-        <NavLink
-          href="/my/check-sheet"
-          label="チェックシート"
-          icon={CheckSquare}
-          pathPrefixes={["/my/check-sheet"]}
-        />
-        <NavLink
-          href="/my/growth"
-          label="成長履歴"
-          icon={TrendingUp}
-          pathPrefixes={["/my/growth"]}
+          pathPrefixes={["/my/self-management", "/my/goals", "/my/check-sheet", "/my/growth"]}
         />
         <NavLink
           href="/my/rules"
