@@ -184,6 +184,61 @@ export default async function MyHomePage() {
     .limit(1)
     .maybeSingle();
 
+  type TodayReservation = {
+    id: string;
+    vehicle_name: string;
+    start_time: string;
+    end_time: string;
+    destination: string;
+  };
+  let todayReservations: TodayReservation[] = [];
+  if (p?.id) {
+    const jpDateStr = requestAt.toLocaleDateString("sv-SE", {
+      timeZone: "Asia/Tokyo",
+    });
+    const dayStartJst = new Date(`${jpDateStr}T00:00:00+09:00`);
+    const dayEndExclusiveJst = new Date(
+      dayStartJst.getTime() + 24 * 60 * 60 * 1000,
+    );
+    const { data: resvRows } = await supabase
+      .from("vehicle_reservations")
+      .select("id, start_at, end_at, destination, vehicles(name)")
+      .eq("employee_id", p.id)
+      .gt("end_at", dayStartJst.toISOString())
+      .lt("start_at", dayEndExclusiveJst.toISOString())
+      .order("start_at", { ascending: true });
+
+    const timeFmt: Intl.DateTimeFormatOptions = {
+      timeZone: "Asia/Tokyo",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    };
+    todayReservations = (resvRows ?? []).map((row) => {
+      const vRaw = row.vehicles as
+        | { name: string }
+        | { name: string }[]
+        | null
+        | undefined;
+      const vehName = Array.isArray(vRaw) ? vRaw[0]?.name : vRaw?.name;
+      return {
+        id: String(row.id),
+        vehicle_name: vehName ?? "",
+        start_time: new Date(row.start_at as string).toLocaleTimeString(
+          "ja-JP",
+          timeFmt,
+        ),
+        end_time: new Date(row.end_at as string).toLocaleTimeString(
+          "ja-JP",
+          timeFmt,
+        ),
+        destination: String(
+          (row as { destination?: string | null }).destination ?? "",
+        ).trim(),
+      };
+    });
+  }
+
   let incentivePreview: string | null = null;
   if (p && elig(p)) {
     const { data: dealRows } = await supabase
@@ -350,6 +405,35 @@ export default async function MyHomePage() {
         <div className="mt-4">
           <PunchButtons />
         </div>
+      </section>
+
+      <section className="rounded-2xl border border-zinc-200 bg-card p-4 dark:border-zinc-800">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-300">
+            設備予約
+          </h2>
+          <Link
+            href="/my/vehicles"
+            className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+          >
+            予約する →
+          </Link>
+        </div>
+        {todayReservations.length > 0 ? (
+          <ul className="mt-2 space-y-1">
+            {todayReservations.map((r) => (
+              <li
+                key={r.id}
+                className="text-sm text-zinc-700 dark:text-zinc-300"
+              >
+                🚗 {r.vehicle_name} {r.start_time}〜{r.end_time}
+                {r.destination ? ` ${r.destination}` : ""}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-2 text-sm text-zinc-500">本日の予約はありません</p>
+        )}
       </section>
 
       {monthlyGoal ? (

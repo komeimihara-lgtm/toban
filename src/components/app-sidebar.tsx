@@ -369,7 +369,6 @@ export function AppSidebar({
             badgeCount={incentiveDraftBadgeCount > 0 ? incentiveDraftBadgeCount : undefined}
           />
         ) : null}
-        <NavLink href="/my/vehicles" label="設備予約" icon={Car} pathPrefixes={["/my/vehicles"]} />
         <NavLink
           href="/my/rules"
           label="就業規則・社内規定"
