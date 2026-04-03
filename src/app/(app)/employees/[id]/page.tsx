@@ -10,7 +10,7 @@ import {
   ymdJst,
 } from "@/lib/paid-leave";
 import { retentionRiskScoreFromOpenAlerts } from "@/lib/retention-analyzer";
-import { isAdminRole } from "@/types/incentive";
+import { checkAdminRole } from "@/lib/require-admin";
 import { subMonths } from "date-fns";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -61,12 +61,7 @@ export default async function EmployeeDetailPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: me } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  const isAdmin = isAdminRole((me as { role?: string })?.role ?? "");
+  const isAdmin = await checkAdminRole(supabase, user.id);
 
   if (!isAdmin && user.id !== id) {
     redirect("/my");

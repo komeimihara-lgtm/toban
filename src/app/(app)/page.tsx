@@ -1,7 +1,7 @@
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import { isAdminRole } from "@/types/incentive";
+import { checkAdminRole } from "@/lib/require-admin";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -16,14 +16,7 @@ export default async function AppHomePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: me } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  const role = (me as { role?: string } | null)?.role ?? "staff";
-
-  if (!isAdminRole(role)) {
+  if (!(await checkAdminRole(supabase, user.id))) {
     redirect("/my");
   }
 

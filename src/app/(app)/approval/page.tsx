@@ -6,6 +6,7 @@ import { ExpenseV2Approval } from "@/components/expense/expense-v2-approval";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { isAdminRole } from "@/types/incentive";
+import { resolveUserRole } from "@/lib/require-admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -25,16 +26,10 @@ export default async function ApprovalPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: me } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (!isAdminRole((me as { role?: string })?.role ?? "")) {
+  const role = await resolveUserRole(supabase, user.id);
+  if (!isAdminRole(role)) {
     redirect("/my");
   }
-
-  const role = (me as { role?: string })?.role ?? "staff";
   let v2ExpenseRows: {
     id: string;
     status: string;

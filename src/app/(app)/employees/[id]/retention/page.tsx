@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import { isAdminRole } from "@/types/incentive";
+import { checkAdminRole } from "@/lib/require-admin";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -19,14 +19,14 @@ export default async function EmployeeRetentionDetailPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: me } = await supabase
-    .from("profiles")
-    .select("role, full_name")
-    .eq("id", user.id)
-    .single();
-  if (!isAdminRole((me as { role?: string })?.role ?? "")) {
+  if (!(await checkAdminRole(supabase, user.id))) {
     redirect("/my");
   }
+  const { data: me } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
 
   const { data: target } = await supabase
     .from("profiles")

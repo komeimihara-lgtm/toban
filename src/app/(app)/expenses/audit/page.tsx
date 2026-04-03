@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { isAdminRole } from "@/types/incentive";
+import { checkAdminRole } from "@/lib/require-admin";
 import { ExpenseAuditReportClient } from "./expense-audit-report-client";
 
 export const dynamic = "force-dynamic";
@@ -13,13 +13,7 @@ export default async function ExpensesAuditPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  const role = (profile as { role?: string } | null)?.role ?? "staff";
-  if (!isAdminRole(role)) redirect("/my");
+  if (!(await checkAdminRole(supabase, user.id))) redirect("/my");
 
   const now = new Date();
 

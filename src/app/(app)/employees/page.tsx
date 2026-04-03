@@ -6,6 +6,7 @@ import {
   ymdJst,
 } from "@/lib/paid-leave";
 import { isAdminRole } from "@/types/incentive";
+import { resolveUserRole } from "@/lib/require-admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -25,11 +26,12 @@ export default async function EmployeesPage({
   if (!user) redirect("/login");
   const { data: me } = await supabase
     .from("profiles")
-    .select("role, company_id")
+    .select("company_id")
     .eq("id", user.id)
     .single();
   const companyId = (me as { company_id?: string })?.company_id;
-  if (!isAdminRole((me as { role?: string })?.role ?? "") || !companyId) {
+  const role = await resolveUserRole(supabase, user.id);
+  if (!isAdminRole(role) || !companyId) {
     redirect("/my");
   }
 

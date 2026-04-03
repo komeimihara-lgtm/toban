@@ -66,12 +66,31 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && isLogin) {
-    const { data: pr } = await supabase
-      .from("profiles")
+    let role = "staff";
+    const { data: empByAuth } = await supabase
+      .from("employees")
       .select("role")
-      .eq("id", user.id)
+      .eq("auth_user_id", user.id)
       .maybeSingle();
-    const role = (pr as { role?: string } | null)?.role ?? "staff";
+    if (empByAuth) {
+      role = (empByAuth as { role?: string }).role ?? "staff";
+    } else {
+      const { data: empByUser } = await supabase
+        .from("employees")
+        .select("role")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (empByUser) {
+        role = (empByUser as { role?: string }).role ?? "staff";
+      } else {
+        const { data: pr } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+        role = (pr as { role?: string } | null)?.role ?? "staff";
+      }
+    }
     const dest = isAdminRole(role) ? "/" : "/my";
     const u = request.nextUrl.clone();
     u.pathname = dest;

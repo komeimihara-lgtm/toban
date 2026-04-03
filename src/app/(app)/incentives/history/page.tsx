@@ -1,7 +1,7 @@
 import { IncentiveHistoryView } from "@/components/incentive/incentive-history-view";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import { isAdminRole } from "@/types/incentive";
+import { checkAdminRole } from "@/lib/require-admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -28,11 +28,7 @@ export default async function IncentivesHistoryPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .maybeSingle();
-  if (!isAdminRole((profile as { role?: string } | null)?.role ?? "")) {
+  if (!(await checkAdminRole(supabase, user.id))) {
     redirect("/my/incentive");
   }
 

@@ -8,6 +8,7 @@ import { IncentiveRatesSettings } from "@/components/settings/incentive-rates-se
 import { normalizeCompanySettings } from "@/lib/company-settings";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminRole } from "@/types/incentive";
+import { resolveUserRole } from "@/lib/require-admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -22,12 +23,11 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, company_id")
+    .select("company_id")
     .eq("id", user.id)
     .single();
-  const pr = profile as { role?: string; company_id?: string } | null;
-  const role = pr?.role ?? "staff";
-  const companyId = pr?.company_id;
+  const companyId = (profile as { company_id?: string } | null)?.company_id;
+  const role = await resolveUserRole(supabase, user.id);
   if (!isAdminRole(role) || !companyId) redirect("/my");
 
   const { data: coRow } = await supabase

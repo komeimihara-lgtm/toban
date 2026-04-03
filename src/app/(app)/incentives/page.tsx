@@ -2,6 +2,7 @@ import { DealsAdminClient } from "@/components/incentive/deals-admin-client";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { isAdminRole } from "@/types/incentive";
+import { resolveUserRole } from "@/lib/require-admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -23,9 +24,7 @@ export default async function IncentivesAdminPage() {
 
   if (!user) redirect("/login");
 
-  const { data: selfProfile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-
-  const role = (selfProfile as { role?: string } | null)?.role ?? "staff";
+  const role = await resolveUserRole(supabase, user.id);
   if (!isAdminRole(role)) {
     redirect("/my/incentive");
   }

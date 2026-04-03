@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { OnboardingAdminClient } from "@/components/onboarding/onboarding-admin-client";
-import { isAdminRole } from "@/types/incentive";
+import { checkAdminRole } from "@/lib/require-admin";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -12,14 +12,13 @@ export default async function OnboardingAdminPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  if (!(await checkAdminRole(supabase, user.id))) redirect("/my");
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, company_id")
+    .select("company_id")
     .eq("id", user.id)
     .single();
-  const role = (profile as { role?: string } | null)?.role ?? "staff";
   const companyId = (profile as { company_id?: string } | null)?.company_id;
-  if (!isAdminRole(role)) redirect("/my");
   if (!companyId) redirect("/my");
 
   const { data: emps } = await supabase

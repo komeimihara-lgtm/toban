@@ -1,6 +1,6 @@
 import { LaborExportPanel } from "@/components/settings/labor-export-panel";
 import { createClient } from "@/lib/supabase/server";
-import { isAdminRole } from "@/types/incentive";
+import { checkAdminRole } from "@/lib/require-admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -13,13 +13,7 @@ export default async function SettingsExportPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  const role = (profile as { role?: string } | null)?.role ?? "staff";
-  if (!isAdminRole(role)) redirect("/my");
+  if (!(await checkAdminRole(supabase, user.id))) redirect("/my");
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
