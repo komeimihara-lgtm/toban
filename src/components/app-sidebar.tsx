@@ -7,6 +7,7 @@ import {
   BarChart3,
   Bot,
   ClipboardCheck,
+  Download,
   ClipboardList,
   Coins,
   FileSearch,
@@ -230,11 +231,17 @@ export function AppSidebar({
               pathPrefixes={["/settings/auto-approval"]}
             />
             <NavLink
+              href="/settings/export"
+              label="データ出力"
+              icon={Download}
+              pathPrefixes={["/settings/export"]}
+            />
+            <NavLink
               href="/settings"
               label="設定"
               icon={Settings}
               pathPrefixes={["/settings"]}
-              excludePrefixes={["/settings/auto-approval"]}
+              excludePrefixes={["/settings/auto-approval", "/settings/export"]}
             />
           </>
         ) : (

@@ -1,6 +1,12 @@
 "use client";
 
-import { DEAL_MACHINE_TYPES, buildDealComputed, ratesFromDbRows } from "@/lib/deals-compute";
+import {
+  DEAL_MACHINE_TYPES,
+  buildDealComputed,
+  normalizeDealServices,
+  ratesFromDbRows,
+  sumDealServiceCosts,
+} from "@/lib/deals-compute";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Employee = { id: string; name: string | null };
@@ -26,6 +32,7 @@ type DealRow = {
   appo_employee_name?: string | null;
   closer_employee_name?: string | null;
   notes: string | null;
+  deal_services?: { name: string; cost: number }[] | null;
 };
 
 type RateRow = { id: string; machine_type: string; role: string; rate: number };
@@ -41,6 +48,8 @@ function formatYen(n: number) {
 function pad2(m: number) {
   return String(m).padStart(2, "0");
 }
+
+type ServiceLineDraft = { name: string; cost: string };
 
 const PAYMENT_STATUSES = [
   { value: "pending", label: "入金待ち" },
@@ -95,6 +104,7 @@ export function DealsAdminClient() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<EditPayload>(emptyPayload());
+  const [serviceLines, setServiceLines] = useState<ServiceLineDraft[]>([]);
 
   const [submission, setSubmission] = useState<{ submitted_at: string } | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -173,6 +183,16 @@ export function DealsAdminClient() {
     })();
   }, [loadDeals, loadRates, loadSubmission]);
 
+  const serviceCostTotalLive = useMemo(
+    () =>
+      sumDealServiceCosts(
+        normalizeDealServices(
+          serviceLines.map((l) => ({ name: l.name, cost: Number(l.cost) })),
+        ),
+      ),
+    [serviceLines],
+  );
+
   const previewComputed = useMemo(() => {
     const sp = Number(form.sale_price);
     const cp = Number(form.cost_price);
@@ -181,19 +201,30 @@ export function DealsAdminClient() {
     const mRates = ratesFromDbRows(
       rows.map((r) => ({ role: r.role, rate: rateDraft[`${r.machine_type}|${r.role}`] ?? r.rate })),
     );
-    return buildDealComputed(sp, cp, mRates, {
-      appoEmployeeId: form.appo_employee_id || null,
-      closerEmployeeId: form.closer_employee_id || null,
-    });
-  }, [form, rateRows, rateDraft]);
+    return buildDealComputed(
+      sp,
+      cp,
+      mRates,
+      {
+        appoEmployeeId: form.appo_employee_id || null,
+        closerEmployeeId: form.closer_employee_id || null,
+      },
+      serviceCostTotalLive,
+    );
+  }, [form, rateRows, rateDraft, serviceCostTotalLive]);
 
   const staffAggregate = useMemo(() => {
-    const byId: Record<string, { name: string; appo: number; closer: number }> = {};
+    const byId: Record<
+      string,
+      { name: string; appo: number; closer: number; appo_n: number; closer_n: number }
+    > = {};
 
     const bump = (id: string | null, name: string | null | undefined, key: "appo" | "closer", v: number) => {
       if (!id) return;
-      if (!byId[id]) byId[id] = { name: name ?? "（不明）", appo: 0, closer: 0 };
+      if (!byId[id]) byId[id] = { name: name ?? "（不明）", appo: 0, closer: 0, appo_n: 0, closer_n: 0 };
       byId[id][key] += v;
+      if (key === "appo") byId[id].appo_n += 1;
+      else byId[id].closer_n += 1;
       if (name) byId[id].name = name;
     };
 
@@ -209,6 +240,29 @@ export function DealsAdminClient() {
     }));
   }, [deals]);
 
+  const downloadStaffCsv = () => {
+    const header = ["氏名", "アポ件数", "アポ合計", "クローザー件数", "クローザー合計", "合計インセンティブ"];
+    const lines = staffAggregate.map((s) =>
+      [s.name, String(s.appo_n), String(s.appo), String(s.closer_n), String(s.closer), String(s.total)].join(","),
+    );
+    const sumAppo = staffAggregate.reduce((a, s) => a + s.appo, 0);
+    const sumCloser = staffAggregate.reduce((a, s) => a + s.closer, 0);
+    const sumTotal = staffAggregate.reduce((a, s) => a + s.total, 0);
+    const sumAppoN = staffAggregate.reduce((a, s) => a + s.appo_n, 0);
+    const sumCloserN = staffAggregate.reduce((a, s) => a + s.closer_n, 0);
+    const body = [
+      header.join(","),
+      ...lines,
+      `合計,${sumAppoN},${sumAppo},${sumCloserN},${sumCloser},${sumTotal}`,
+    ].join("\r\n");
+    const blob = new Blob(["\ufeff" + body], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `incentive_staff_${year}_${String(month).padStart(2, "0")}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
       const n = new Set(prev);
@@ -221,6 +275,7 @@ export function DealsAdminClient() {
   const openCreate = () => {
     setEditingId(null);
     setForm(emptyPayload());
+    setServiceLines([]);
     setModalOpen(true);
   };
 
@@ -239,6 +294,10 @@ export function DealsAdminClient() {
       submit_status: d.submit_status,
       notes: d.notes ?? "",
     });
+    const ds = Array.isArray(d.deal_services) ? d.deal_services : [];
+    setServiceLines(
+      ds.length ? ds.map((row) => ({ name: row.name ?? "", cost: String(row.cost ?? "") })) : [],
+    );
     setModalOpen(true);
   };
 
@@ -265,6 +324,9 @@ export function DealsAdminClient() {
         payment_status: form.payment_status,
         submit_status: form.submit_status,
         notes: form.notes || null,
+        deal_services: normalizeDealServices(
+          serviceLines.map((l) => ({ name: l.name, cost: Number(l.cost) })),
+        ),
       };
 
       const url = editingId ? `/api/deals/${editingId}` : "/api/deals";
@@ -633,11 +695,22 @@ export function DealsAdminClient() {
             </p>
           ) : null}
 
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={staffAggregate.length === 0}
+              onClick={downloadStaffCsv}
+              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600 disabled:opacity-50"
+            >
+              CSVエクスポート
+            </button>
+          </div>
+
           <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
               <thead className="bg-zinc-50 dark:bg-zinc-900/50">
                 <tr>
-                  {["スタッフ", "アポ", "クローザー", "合計"].map((h) => (
+                  {["スタッフ", "アポ件数", "アポ合計", "クローザー件数", "クローザー合計", "合計"].map((h) => (
                     <th key={h} className="px-3 py-2 text-left font-medium">
                       {h}
                     </th>
@@ -647,19 +720,41 @@ export function DealsAdminClient() {
               <tbody>
                 {staffAggregate.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-3 py-6 text-center text-zinc-500">
+                    <td colSpan={6} className="px-3 py-6 text-center text-zinc-500">
                       表示中の案件から集計できません（案件一覧を確認）
                     </td>
                   </tr>
                 ) : (
-                  staffAggregate.map((s) => (
-                    <tr key={s.employee_id} className="border-t border-zinc-100 dark:border-zinc-800/80">
-                      <td className="px-3 py-2">{s.name}</td>
-                      <td className="px-3 py-2 text-right tabular-nums">{formatYen(s.appo)}</td>
-                      <td className="px-3 py-2 text-right tabular-nums">{formatYen(s.closer)}</td>
-                      <td className="px-3 py-2 text-right font-medium tabular-nums">{formatYen(s.total)}</td>
+                  <>
+                    {staffAggregate.map((s) => (
+                      <tr key={s.employee_id} className="border-t border-zinc-100 dark:border-zinc-800/80">
+                        <td className="px-3 py-2">{s.name}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{s.appo_n}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{formatYen(s.appo)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{s.closer_n}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{formatYen(s.closer)}</td>
+                        <td className="px-3 py-2 text-right font-medium tabular-nums">{formatYen(s.total)}</td>
+                      </tr>
+                    ))}
+                    <tr className="border-t-2 border-zinc-300 font-medium dark:border-zinc-600">
+                      <td className="px-3 py-2">合計</td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {staffAggregate.reduce((a, s) => a + s.appo_n, 0)}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {formatYen(staffAggregate.reduce((a, s) => a + s.appo, 0))}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {staffAggregate.reduce((a, s) => a + s.closer_n, 0)}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {formatYen(staffAggregate.reduce((a, s) => a + s.closer, 0))}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {formatYen(staffAggregate.reduce((a, s) => a + s.total, 0))}
+                      </td>
                     </tr>
-                  ))
+                  </>
                 )}
               </tbody>
             </table>
@@ -702,9 +797,7 @@ export function DealsAdminClient() {
                 </tr>
               </thead>
               <tbody>
-                {rateRows
-                  .filter((r) => r.role !== "hito")
-                  .map((r) => (
+                {rateRows.map((r) => (
                     <tr key={r.id}>
                       <td className="px-3 py-2">{r.machine_type}</td>
                       <td className="px-3 py-2">{r.role === "appo" ? "アポ" : "クローザー"}</td>
@@ -784,6 +877,63 @@ export function DealsAdminClient() {
                     onChange={(e) => setForm((f) => ({ ...f, sale_price: e.target.value }))}
                   />
                 </label>
+              </div>
+              <div className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                    サービス項目（原価加算）
+                  </span>
+                  <button
+                    type="button"
+                    className="rounded-md border border-zinc-300 px-2 py-1 text-xs dark:border-zinc-600"
+                    onClick={() => setServiceLines((rows) => [...rows, { name: "", cost: "" }])}
+                  >
+                    サービス項目を追加
+                  </button>
+                </div>
+                {serviceLines.length === 0 ? (
+                  <p className="mt-2 text-xs text-zinc-500">必要な場合のみ行を追加してください。</p>
+                ) : (
+                  <ul className="mt-2 space-y-2">
+                    {serviceLines.map((line, idx) => (
+                      <li key={idx} className="grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+                        <label className="block">
+                          <span className="text-xs text-zinc-500">サービス内容</span>
+                          <input
+                            className="mt-1 w-full rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                            placeholder="例：ハンドピース1本"
+                            value={line.name}
+                            onChange={(e) =>
+                              setServiceLines((rows) =>
+                                rows.map((r, i) => (i === idx ? { ...r, name: e.target.value } : r)),
+                              )
+                            }
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="text-xs text-zinc-500">サービス原価</span>
+                          <input
+                            type="number"
+                            className="mt-1 w-full min-w-[8rem] rounded-md border px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+                            value={line.cost}
+                            onChange={(e) =>
+                              setServiceLines((rows) =>
+                                rows.map((r, i) => (i === idx ? { ...r, cost: e.target.value } : r)),
+                              )
+                            }
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          className="text-xs text-red-600 underline sm:pb-2"
+                          onClick={() => setServiceLines((rows) => rows.filter((_, i) => i !== idx))}
+                        >
+                          削除
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               <label className="block">
                 <span className="text-xs text-zinc-500">支払い方法</span>
@@ -870,13 +1020,42 @@ export function DealsAdminClient() {
                 />
               </label>
               {previewComputed ? (
-                <div className="rounded-lg bg-zinc-100 p-3 text-xs dark:bg-zinc-900/80">
-                  <p className="font-medium">プレビュー</p>
-                  <p>純利益: {formatYen(previewComputed.net_profit)}</p>
-                  <p>
-                    アポ {formatYen(previewComputed.appo_incentive)} / クローザー{" "}
-                    {formatYen(previewComputed.closer_incentive)}
-                  </p>
+                <div className="rounded-lg border border-zinc-300 bg-zinc-50 p-4 text-sm tabular-nums dark:border-zinc-600 dark:bg-zinc-900/60">
+                  <div className="flex justify-between gap-4">
+                    <span className="text-zinc-600 dark:text-zinc-400">販売価格（税抜）</span>
+                    <span>{formatYen(Math.round(Number(form.sale_price) / 1.1))}</span>
+                  </div>
+                  <div className="mt-2 flex justify-between gap-4">
+                    <span className="text-zinc-600 dark:text-zinc-400">実質原価</span>
+                    <span>−{formatYen(Number(form.cost_price))}</span>
+                  </div>
+                  <div className="mt-2 flex justify-between gap-4">
+                    <span className="text-zinc-600 dark:text-zinc-400">サービス原価合計</span>
+                    <span>−{formatYen(serviceCostTotalLive)}</span>
+                  </div>
+                  <div className="my-3 border-t border-zinc-200 dark:border-zinc-700" />
+                  <div className="flex justify-between gap-4 font-medium">
+                    <span>純利益</span>
+                    <span>{formatYen(previewComputed.net_profit)}</span>
+                  </div>
+                  <p className="mt-4 text-xs font-medium text-zinc-500">インセンティブ</p>
+                  <div className="mt-1 flex justify-between gap-4">
+                    <span className="text-zinc-600 dark:text-zinc-400">アポ担当</span>
+                    <span>{formatYen(previewComputed.appo_incentive)}</span>
+                  </div>
+                  <div className="mt-1 flex justify-between gap-4">
+                    <span className="text-zinc-600 dark:text-zinc-400">クローザー</span>
+                    <span>{formatYen(previewComputed.closer_incentive)}</span>
+                  </div>
+                  <div className="my-3 border-t border-zinc-200 dark:border-zinc-700" />
+                  <div className="flex justify-between gap-4 font-medium">
+                    <span>合計</span>
+                    <span>
+                      {formatYen(
+                        previewComputed.appo_incentive + previewComputed.closer_incentive,
+                      )}
+                    </span>
+                  </div>
                 </div>
               ) : null}
             </div>

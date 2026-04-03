@@ -3,6 +3,7 @@ import {
   setProductActiveAction,
   updateProductCostAction,
 } from "@/app/actions/product-settings-actions";
+import { FreeeLinkPanel } from "@/components/settings/freee-link-panel";
 import { IncentiveRatesSettings } from "@/components/settings/incentive-rates-settings";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminRole } from "@/types/incentive";
@@ -55,6 +56,12 @@ export default async function SettingsPage() {
         </div>
         <div className="flex flex-wrap gap-4">
           <Link
+            href="/settings/export"
+            className="text-sm font-medium text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            データ出力
+          </Link>
+          <Link
             href="/settings/auto-approval"
             className="text-sm font-medium text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
           >
@@ -81,6 +88,18 @@ export default async function SettingsPage() {
           （第1承認）→ <span className="text-emerald-800 dark:text-emerald-300">三原孔明</span>
           （最終承認）→ 完了
         </p>
+      </section>
+
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
+          freee 人事労務連携
+        </h2>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          給与ポータル・みなし残業計算の元データを同期します。
+        </p>
+        <div className="mt-6">
+          <FreeeLinkPanel />
+        </div>
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">

@@ -30,12 +30,8 @@ alter table public.deal_incentive_rates
 -- ---------- deals: 列変更 ----------
 alter table public.deals drop constraint if exists deals_machine_type_check;
 
-alter table public.deals drop column if exists hito_employee_id;
-alter table public.deals drop column if exists hito_bottles;
-alter table public.deals drop column if exists hito_incentive;
+-- hito_* 列はデータ保全のため保持（アプリの UI ・計算からは除外）
 alter table public.deals drop column if exists created_by;
-
-drop index if exists idx_deals_company_hito;
 
 alter table public.deals add column if not exists submit_status text;
 alter table public.deals add column if not exists submitted_by uuid references public.profiles (id) on delete set null;

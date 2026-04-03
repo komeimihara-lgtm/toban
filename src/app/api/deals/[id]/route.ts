@@ -1,5 +1,10 @@
 import { getProfile, getSessionUser, isOwnerOrApprover } from "@/lib/api-auth";
-import { buildDealComputed, ratesFromDbRows } from "@/lib/deals-compute";
+import {
+  buildDealComputed,
+  normalizeDealServices,
+  ratesFromDbRows,
+  sumDealServiceCosts,
+} from "@/lib/deals-compute";
 import type { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -146,10 +151,22 @@ export async function PATCH(req: Request, ctx: Ctx) {
 
     const machineRates = await loadRates(supabase, profile.company_id, machine_type);
 
-    const computed = buildDealComputed(sale_price, cost_price, machineRates, {
-      appoEmployeeId: appo_employee_id,
-      closerEmployeeId: closer_employee_id,
-    });
+    const deal_services =
+      body.deal_services !== undefined
+        ? normalizeDealServices(body.deal_services)
+        : normalizeDealServices(e.deal_services);
+    const serviceTotal = sumDealServiceCosts(deal_services);
+
+    const computed = buildDealComputed(
+      sale_price,
+      cost_price,
+      machineRates,
+      {
+        appoEmployeeId: appo_employee_id,
+        closerEmployeeId: closer_employee_id,
+      },
+      serviceTotal,
+    );
 
     const updateRow = {
       year,
@@ -160,6 +177,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
       sale_price,
       payment_method,
       payment_date,
+      deal_services,
       net_profit: computed.net_profit,
       appo_employee_id,
       closer_employee_id,

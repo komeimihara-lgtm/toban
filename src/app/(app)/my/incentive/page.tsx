@@ -1,7 +1,7 @@
 import { MyDealsIncentiveWorkbench } from "@/components/incentive/my-deals-incentive-workbench";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import { isIncentiveEligible, type ProfileRow } from "@/types/incentive";
+import { isAdminRole, isIncentiveEligible, type ProfileRow } from "@/types/incentive";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -58,12 +58,16 @@ export default async function MyIncentivePage() {
           マイインセンティブ（案件）
         </h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          案件を入力し、下書き保存のあと提出してください。管理者が承認すると確定です。純利益は
-          販売価格（税込）÷1.1 − 実質原価です。
+          案件を入力し、下書き保存または「提出する」で承認待ちにできます。純利益は 販売価格（税込）÷1.1
+          − 実質原価 − サービス原価合計です。
         </p>
       </header>
 
-      <MyDealsIncentiveWorkbench userId={user.id} userName={p.full_name} />
+      <MyDealsIncentiveWorkbench
+        userId={user.id}
+        userName={p.full_name}
+        showSubmitFromForm={!isAdminRole(p.role)}
+      />
     </div>
   );
 }

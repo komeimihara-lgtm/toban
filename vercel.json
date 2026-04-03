@@ -9,6 +9,10 @@
       "schedule": "0 1 * * *"
     },
     {
+      "path": "/api/cron/sync-freee",
+      "schedule": "0 9 25 * *"
+    },
+    {
       "path": "/api/cron/sync-ot",
       "schedule": "0 9 28 * *"
     },

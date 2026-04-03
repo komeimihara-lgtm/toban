@@ -130,9 +130,31 @@ export default async function DashboardPage() {
 
   const expenseTotal =
     expApprovedMonth?.reduce(
-      (a, e) => a + Number((e as { amount: number }).amount),
+      (a, e) => {
+        const v = Number((e as { amount?: unknown }).amount);
+        return a + (Number.isFinite(v) ? v : 0);
+      },
       0,
     ) ?? 0;
+
+  const prevMonthStart = new Date(yDash, moDash - 1, 1).toISOString();
+  const prevMonthEnd = new Date(yDash, moDash, 0).toISOString();
+  const { data: expApprovedPrev } = await supabase
+    .from("expenses")
+    .select("amount")
+    .eq("status", "approved")
+    .gte("paid_date", prevMonthStart.slice(0, 10))
+    .lte("paid_date", prevMonthEnd.slice(0, 10));
+  const expensePrevTotal =
+    expApprovedPrev?.reduce(
+      (a, e) => {
+        const v = Number((e as { amount?: unknown }).amount);
+        return a + (Number.isFinite(v) ? v : 0);
+      },
+      0,
+    ) ?? 0;
+  const expenseMoM_pct =
+    expensePrevTotal > 0 ? ((expenseTotal - expensePrevTotal) / expensePrevTotal) * 100 : null;
 
   const dealYmY = yDash;
   const dealYmM = moDash + 1;
@@ -155,6 +177,18 @@ export default async function DashboardPage() {
     .eq("year", dealYmY)
     .eq("month", dealYmM)
     .eq("submit_status", "draft");
+
+  const { count: dealsSubmittedPending } = await supabase
+    .from("deals")
+    .select("*", { count: "exact", head: true })
+    .eq("year", dealYmY)
+    .eq("month", dealYmM)
+    .eq("submit_status", "submitted");
+
+  const { count: leavePendingCount } = await supabase
+    .from("leave_requests")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "step1_pending");
 
   const { data: receiptRows } = await supabase
     .from("expenses")
@@ -244,8 +278,25 @@ export default async function DashboardPage() {
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi title="今月の経費合計（承認済・支払月）" value={fmt(expenseTotal)} />
-        <Kpi title="承認待ち件数" value={`${pendingApproval} 件`} />
+        <div className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            今月の経費合計（承認済・支払月）
+          </p>
+          <p className="mt-2 text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+            {fmt(expenseTotal)}
+          </p>
+          {expenseMoM_pct != null ? (
+            <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+              先月比 {expenseMoM_pct >= 0 ? "▲" : "▼"} {Math.abs(expenseMoM_pct).toFixed(1)}%
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-zinc-500">先月比 —</p>
+          )}
+        </div>
+        <Kpi
+          title="承認待ち件数（経費）"
+          value={`${pendingApproval} 件`}
+        />
         <Kpi title="インセンティブ試算（案件・提出・承認分・今月）" value={fmt(incEst)} />
         <Kpi
           title="自動承認率（今月・最終承認済のうち）"
@@ -269,6 +320,20 @@ export default async function DashboardPage() {
             未提出インセンティブ（ドラフト）: {incentiveDraftCount ?? 0} 件 →{" "}
             <Link href="/incentives" className="text-blue-600 underline dark:text-blue-400">
               インセンティブ管理
+            </Link>
+          </li>
+          <li className="flex flex-wrap items-center gap-2">
+            <span>
+              インセンティブ承認待ち（案件・今月）: {dealsSubmittedPending ?? 0} 件
+            </span>
+            <Link href="/incentives" className="text-blue-600 underline dark:text-blue-400">
+              今すぐ確認
+            </Link>
+          </li>
+          <li className="flex flex-wrap items-center gap-2">
+            <span>有給申請承認待ち: {leavePendingCount ?? 0} 件</span>
+            <Link href="/approval?tab=leave" className="text-blue-600 underline dark:text-blue-400">
+              承認へ
             </Link>
           </li>
           <li>

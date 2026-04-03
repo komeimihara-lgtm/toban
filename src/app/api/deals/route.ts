@@ -1,12 +1,17 @@
 import { getProfile, getSessionUser, isOwnerOrApprover } from "@/lib/api-auth";
-import { buildDealComputed, ratesFromDbRows } from "@/lib/deals-compute";
+import {
+  buildDealComputed,
+  normalizeDealServices,
+  ratesFromDbRows,
+  sumDealServiceCosts,
+} from "@/lib/deals-compute";
 import type { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 type SupabaseServer = Awaited<ReturnType<typeof createClient>>;
 
 const DEAL_SELECT =
-  "id, company_id, year, month, salon_name, machine_type, cost_price, sale_price, payment_method, payment_date, net_profit, appo_employee_id, closer_employee_id, appo_incentive, closer_incentive, payment_status, submit_status, submitted_by, approved_by, reject_reason, notes, created_at, updated_at";
+  "id, company_id, year, month, salon_name, machine_type, cost_price, sale_price, payment_method, payment_date, net_profit, deal_services, appo_employee_id, closer_employee_id, appo_incentive, closer_incentive, payment_status, submit_status, submitted_by, approved_by, reject_reason, notes, created_at, updated_at";
 
 async function loadRates(supabase: SupabaseServer, companyId: string, machineType: string) {
   const { data: rateRows } = await supabase
@@ -137,6 +142,7 @@ export async function POST(req: Request) {
       payment_status?: string;
       submit_status?: string;
       notes?: string | null;
+      deal_services?: unknown;
     };
 
     const year = Number(body.year);
@@ -180,10 +186,19 @@ export async function POST(req: Request) {
 
     const machineRates = await loadRates(supabase, profile.company_id, machineType);
 
-    const computed = buildDealComputed(sale_price, cost_price, machineRates, {
-      appoEmployeeId: appo_employee_id,
-      closerEmployeeId: closer_employee_id,
-    });
+    const deal_services = normalizeDealServices(body.deal_services);
+    const serviceTotal = sumDealServiceCosts(deal_services);
+
+    const computed = buildDealComputed(
+      sale_price,
+      cost_price,
+      machineRates,
+      {
+        appoEmployeeId: appo_employee_id,
+        closerEmployeeId: closer_employee_id,
+      },
+      serviceTotal,
+    );
 
     const payment_status = (body.payment_status ?? "pending") as string;
     if (!["pending", "partial", "paid"].includes(payment_status)) {
@@ -208,6 +223,7 @@ export async function POST(req: Request) {
       payment_method: String(body.payment_method ?? "").trim(),
       payment_date: body.payment_date || null,
       net_profit: computed.net_profit,
+      deal_services,
       appo_employee_id,
       closer_employee_id,
       appo_incentive: computed.appo_incentive,
