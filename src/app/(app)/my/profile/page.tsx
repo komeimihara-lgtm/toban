@@ -22,13 +22,21 @@ export default async function MyProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: emp } = await supabase
+  // select("*") で存在しないカラム指定によるクエリ失敗を回避
+  const { data: emp, error: empError } = await supabase
     .from("employees")
-    .select(
-      "id, full_name, phone, address, emergency_contact, emergency_name, emergency_relation, birth_date, line_user_id, department, job_title, department_id",
-    )
+    .select("*")
     .eq("auth_user_id", user.id)
     .maybeSingle();
+
+  console.log("[profile] employee query:", {
+    userId: user.id,
+    hasData: !!emp,
+    error: empError?.message ?? null,
+    full_name: emp?.full_name ?? "(missing)",
+    phone: emp?.phone ?? "(missing)",
+    birth_date: emp?.birth_date ?? "(missing)",
+  });
 
   const p = emp as {
     id?: string;
@@ -73,21 +81,26 @@ export default async function MyProfilePage() {
     hireDateLabel = formatDateJa(c?.hire_date ?? c?.start_date ?? null);
   }
 
-  const bd = p?.birth_date?.trim();
+  const bdRaw = p?.birth_date;
+  const bd = typeof bdRaw === "string" ? bdRaw.trim() : null;
+
+  const profileProps = {
+    full_name: p?.full_name?.trim() ?? "",
+    phone: p?.phone?.trim() ?? "",
+    address: p?.address?.trim() ?? "",
+    birth_date: bd && bd.length >= 10 ? bd.slice(0, 10) : bd ?? "",
+    emergency_name: p?.emergency_name?.trim() ?? "",
+    emergency_relation: p?.emergency_relation?.trim() ?? "",
+    emergency_contact: p?.emergency_contact?.trim() ?? "",
+    line_user_id: p?.line_user_id?.trim() ?? "",
+  };
+
+  console.log("[profile] props to form:", profileProps);
 
   return (
     <ProfileForm
       email={user.email ?? ""}
-      profile={{
-        full_name: p?.full_name?.trim() ?? "",
-        phone: p?.phone?.trim() ?? "",
-        address: p?.address?.trim() ?? "",
-        birth_date: bd && bd.length >= 10 ? bd.slice(0, 10) : bd ?? "",
-        emergency_name: p?.emergency_name?.trim() ?? "",
-        emergency_relation: p?.emergency_relation?.trim() ?? "",
-        emergency_contact: p?.emergency_contact?.trim() ?? "",
-        line_user_id: p?.line_user_id?.trim() ?? "",
-      }}
+      profile={profileProps}
       hireDateLabel={hireDateLabel}
       departmentLabel={departmentLabel}
       jobTitleLabel={p?.job_title?.trim() || "—"}
