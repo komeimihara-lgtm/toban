@@ -135,7 +135,7 @@ export default async function ApprovalPage({
   }));
 
   // チェックシート承認待ち
-  let pendingSheets: { id: string; year: number; month: number; employee_id: string; self_check: { item: string; score: number }[]; status: string }[] = [];
+  let pendingSheets: { id: string; year: number; month: number; employee_id: string; self_check: { category: string; item: string; score: number }[]; status: string }[] = [];
   if (me) {
     const { data: sData } = await supabase
       .from("check_sheets")

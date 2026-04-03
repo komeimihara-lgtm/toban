@@ -7,10 +7,14 @@ export async function saveProfileSettingsAction(
   _prev: unknown,
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string }> {
+  const fullName = String(formData.get("full_name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
-  const emergencyContact = String(formData.get("emergency_contact") ?? "").trim();
   const lineUserId = String(formData.get("line_user_id") ?? "").trim();
+  const birthRaw = String(formData.get("birth_date") ?? "").trim();
+  const emergencyName = String(formData.get("emergency_name") ?? "").trim();
+  const emergencyRelation = String(formData.get("emergency_relation") ?? "").trim();
+  const emergencyContact = String(formData.get("emergency_contact") ?? "").trim();
 
   const supabase = await createClient();
   const {
@@ -18,13 +22,19 @@ export async function saveProfileSettingsAction(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, message: "ログインが必要です" };
 
+  const birth_date = birthRaw.length > 0 ? birthRaw : null;
+
   const { error } = await supabase
     .from("employees")
     .update({
+      full_name: fullName || null,
       phone: phone || null,
       address: address || null,
-      emergency_contact: emergencyContact || null,
       line_user_id: lineUserId || null,
+      birth_date,
+      emergency_name: emergencyName || null,
+      emergency_relation: emergencyRelation || null,
+      emergency_contact: emergencyContact || null,
     })
     .eq("auth_user_id", user.id);
 

@@ -1,20 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import {
+  getSheetType,
+  getItems,
+  getMultiplier,
+  getMaxScore,
+  SCORE_OPTIONS,
+  SHEET_LABEL,
+} from "@/app/(app)/my/check-sheet/sheet-definitions";
 
-const CHECK_ITEMS = [
-  "出勤率・遅刻なし",
-  "報連相の徹底",
-  "顧客満足度",
-  "チームワーク",
-  "目標達成への取り組み姿勢",
-  "スキルアップへの取り組み",
-  "会社理念の体現",
-];
-
+type CheckEntry = { category: string; item: string; score: number };
 type SheetRow = {
   id: string; year: number; month: number;
-  employee_id: string; self_check: { item: string; score: number }[];
+  employee_id: string; self_check: CheckEntry[];
   status: string;
 };
 
@@ -27,7 +26,7 @@ export function CheckSheetApprovalSection({
 }) {
   const [sheets, setSheets] = useState(initialSheets);
   const [loading, setLoading] = useState<string | null>(null);
-  const [managerScores, setManagerScores] = useState<Record<string, number[]>>({});
+  const [managerScores, setManagerScores] = useState<Record<string, Record<number, number>>>({});
   const [toast, setToast] = useState<string | null>(null);
 
   function showToast(msg: string) {
@@ -35,22 +34,35 @@ export function CheckSheetApprovalSection({
     setTimeout(() => setToast(null), 3000);
   }
 
-  function getScores(id: string): number[] {
-    return managerScores[id] ?? CHECK_ITEMS.map(() => 3);
+  function getScore(sheetId: string, idx: number, defaultVal: number): number {
+    return managerScores[sheetId]?.[idx] ?? defaultVal;
   }
 
-  async function submitManagerCheck(id: string) {
-    setLoading(id);
+  function setScore(sheetId: string, idx: number, val: number) {
+    setManagerScores((prev) => ({
+      ...prev,
+      [sheetId]: { ...(prev[sheetId] ?? {}), [idx]: val },
+    }));
+  }
+
+  async function submitManagerCheck(sheetId: string, empName: string) {
+    setLoading(sheetId);
     try {
-      const scores = getScores(id);
-      const manager_check = CHECK_ITEMS.map((item, i) => ({ item, score: scores[i] }));
+      const sheetType = getSheetType(empName);
+      const items = getItems(sheetType);
+      const s = sheets.find((x) => x.id === sheetId);
+      const manager_check = items.map((ci, i) => ({
+        category: ci.category,
+        item: ci.item,
+        score: getScore(sheetId, i, s?.self_check?.find((c) => c.item === ci.item)?.score ?? 0),
+      }));
       const res = await fetch("/api/check-sheets", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, manager_check }),
+        body: JSON.stringify({ id: sheetId, manager_check }),
       });
       if (!res.ok) { showToast("評価に失敗しました"); return; }
-      setSheets((prev) => prev.filter((s) => s.id !== id));
+      setSheets((prev) => prev.filter((x) => x.id !== sheetId));
       showToast("評価を保存しました");
     } catch { showToast("評価に失敗しました"); }
     finally { setLoading(null); }
@@ -64,46 +76,81 @@ export function CheckSheetApprovalSection({
       ) : (
         <ul className="space-y-6">
           {sheets.map((s) => {
-            const scores = getScores(s.id);
+            const empName = nameMap[s.employee_id] ?? "";
+            const sheetType = getSheetType(empName);
+            const items = getItems(sheetType);
+            const maxScore = getMaxScore(sheetType);
+
+            // カテゴリグルーピング
+            const categories: { name: string; indices: number[] }[] = [];
+            items.forEach((ci, i) => {
+              const last = categories[categories.length - 1];
+              if (last && last.name === ci.category) {
+                last.indices.push(i);
+              } else {
+                categories.push({ name: ci.category, indices: [i] });
+              }
+            });
+
+            const selfTotal = s.self_check?.reduce((sum, c) => sum + c.score, 0) ?? 0;
+            const mgrTotal = items.reduce((sum, ci, i) => {
+              return sum + getScore(s.id, i, s.self_check?.find((c) => c.item === ci.item)?.score ?? 0);
+            }, 0);
+
             return (
               <li key={s.id} className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">{nameMap[s.employee_id] ?? "—"}</p>
-                  <p className="text-xs text-zinc-500">{s.year}年{s.month}月</p>
+                  <div>
+                    <p className="text-sm font-medium">{empName || "—"}</p>
+                    <p className="text-xs text-zinc-500">{s.year}年{s.month}月 · {SHEET_LABEL[sheetType]}</p>
+                  </div>
+                  <div className="text-right text-xs">
+                    <p>自己: <span className="font-bold">{selfTotal}</span>/{maxScore} (×{getMultiplier(sheetType, selfTotal).toFixed(1)})</p>
+                    <p>上司: <span className="font-bold">{mgrTotal}</span>/{maxScore} (×{getMultiplier(sheetType, mgrTotal).toFixed(1)})</p>
+                  </div>
                 </div>
-                <div className="mt-3 space-y-2">
-                  {CHECK_ITEMS.map((item, i) => {
-                    const selfEntry = s.self_check?.find((c) => c.item === item);
-                    return (
-                      <div key={item} className="flex items-center justify-between gap-3">
-                        <span className="flex-1 text-xs">{item}</span>
-                        <span className="text-xs text-zinc-500">自己: {selfEntry?.score ?? "—"}</span>
-                        <div className="flex gap-0.5">
-                          {[1, 2, 3, 4, 5].map((sc) => (
-                            <button
-                              key={sc}
-                              onClick={() => {
-                                const next = [...scores];
-                                next[i] = sc;
-                                setManagerScores({ ...managerScores, [s.id]: next });
-                              }}
-                              className={`flex h-7 w-7 items-center justify-center rounded text-xs font-medium ${
-                                scores[i] === sc
-                                  ? "bg-accent text-white"
-                                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400"
-                              }`}
-                            >
-                              {sc}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
+
+                <div className="mt-3 space-y-3">
+                  {categories.map((cat) => (
+                    <div key={cat.name}>
+                      <p className="text-xs font-bold text-accent">{cat.name}</p>
+                      {cat.indices.map((idx) => {
+                        const ci = items[idx];
+                        const selfEntry = s.self_check?.find((c) => c.item === ci.item);
+                        const selfVal = selfEntry?.score ?? 0;
+                        const mgrVal = getScore(s.id, idx, selfVal);
+                        return (
+                          <div key={idx} className="mt-1.5 space-y-1">
+                            <p className="text-xs leading-snug text-zinc-700 dark:text-zinc-300">{ci.item}</p>
+                            <div className="flex items-center gap-2">
+                              <span className="w-16 text-[10px] text-zinc-500">自己: {selfVal > 0 ? "+" : ""}{selfVal}</span>
+                              <span className="text-[10px] text-zinc-500">上司:</span>
+                              <div className="flex gap-0.5">
+                                {SCORE_OPTIONS.map((o) => (
+                                  <button
+                                    key={o.value}
+                                    onClick={() => setScore(s.id, idx, o.value)}
+                                    className={`flex h-6 w-8 items-center justify-center rounded text-[10px] font-bold ${
+                                      mgrVal === o.value
+                                        ? o.value > 0 ? "bg-accent text-white" : "bg-red-500 text-white"
+                                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400"
+                                    }`}
+                                  >
+                                    {o.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
+
                 <div className="mt-3 flex justify-end">
                   <button
-                    onClick={() => submitManagerCheck(s.id)}
+                    onClick={() => submitManagerCheck(s.id, empName)}
                     disabled={loading === s.id}
                     className="rounded-lg bg-accent px-4 py-2 text-sm text-white hover:bg-accent/90 disabled:opacity-50"
                   >

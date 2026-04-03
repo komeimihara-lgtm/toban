@@ -24,7 +24,10 @@ export default function MyProfilePage() {
   const [initialName, setInitialName] = useState("");
   const [initialPhone, setInitialPhone] = useState("");
   const [initialAddress, setInitialAddress] = useState("");
-  const [initialEmergency, setInitialEmergency] = useState("");
+  const [initialBirthDate, setInitialBirthDate] = useState("");
+  const [initialEmergencyName, setInitialEmergencyName] = useState("");
+  const [initialEmergencyRelation, setInitialEmergencyRelation] = useState("");
+  const [initialEmergencyPhone, setInitialEmergencyPhone] = useState("");
   const [initialLine, setInitialLine] = useState("");
   const [hireDateLabel, setHireDateLabel] = useState("—");
   const [departmentLabel, setDepartmentLabel] = useState("—");
@@ -61,7 +64,7 @@ export default function MyProfilePage() {
       const { data: emp } = await supabase
         .from("employees")
         .select(
-          "full_name, phone, address, emergency_contact, line_user_id, department, job_title, department_id",
+          "full_name, phone, address, emergency_contact, emergency_name, emergency_relation, birth_date, line_user_id, department, job_title, department_id",
         )
         .eq("auth_user_id", user.id)
         .maybeSingle();
@@ -71,6 +74,9 @@ export default function MyProfilePage() {
         phone?: string | null;
         address?: string | null;
         emergency_contact?: string | null;
+        emergency_name?: string | null;
+        emergency_relation?: string | null;
+        birth_date?: string | null;
         line_user_id?: string | null;
         department?: string | null;
         job_title?: string | null;
@@ -80,7 +86,15 @@ export default function MyProfilePage() {
       setInitialName(p?.full_name?.trim() ?? "");
       setInitialPhone(p?.phone?.trim() ?? "");
       setInitialAddress(p?.address?.trim() ?? "");
-      setInitialEmergency(p?.emergency_contact?.trim() ?? "");
+      const bd = p?.birth_date?.trim();
+      if (bd) {
+        setInitialBirthDate(bd.length >= 10 ? bd.slice(0, 10) : bd);
+      } else {
+        setInitialBirthDate("");
+      }
+      setInitialEmergencyName(p?.emergency_name?.trim() ?? "");
+      setInitialEmergencyRelation(p?.emergency_relation?.trim() ?? "");
+      setInitialEmergencyPhone(p?.emergency_contact?.trim() ?? "");
       setInitialLine(p?.line_user_id?.trim() ?? "");
 
       let deptFromMaster: string | null = null;
@@ -200,21 +214,64 @@ export default function MyProfilePage() {
           />
         </label>
         <label className={labelClass}>
-          緊急連絡先（氏名・続柄・電話番号など）
-          <textarea
-            name="emergency_contact"
-            rows={2}
-            defaultValue={initialEmergency}
-            className={fieldClass}
-          />
-        </label>
-        <label className={labelClass}>
           LINE ID（通知用）
           <input name="line_user_id" defaultValue={initialLine} className={fieldClass} />
         </label>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
           LINE 通知を受け取る場合は、LINE のユーザーIDを登録してください。
         </p>
+
+        <div className="border-t border-zinc-200 pt-6 dark:border-zinc-700">
+          <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            緊急連絡先・個人情報
+          </h3>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            生年月日・緊急連絡先は人事安否確認などに利用します。
+          </p>
+          <div className="mt-4 space-y-4">
+            <label className={labelClass}>
+              生年月日
+              <input
+                name="birth_date"
+                type="date"
+                defaultValue={initialBirthDate}
+                className={fieldClass}
+              />
+            </label>
+            <label className={labelClass}>
+              緊急連絡先・氏名
+              <input
+                name="emergency_name"
+                type="text"
+                autoComplete="name"
+                placeholder="山田 花子"
+                defaultValue={initialEmergencyName}
+                className={fieldClass}
+              />
+            </label>
+            <label className={labelClass}>
+              緊急連絡先・続柄
+              <input
+                name="emergency_relation"
+                type="text"
+                placeholder="例: 配偶者、父、母"
+                defaultValue={initialEmergencyRelation}
+                className={fieldClass}
+              />
+            </label>
+            <label className={labelClass}>
+              緊急連絡先・電話番号
+              <input
+                name="emergency_contact"
+                type="tel"
+                autoComplete="tel"
+                placeholder="090-0000-0000"
+                defaultValue={initialEmergencyPhone}
+                className={fieldClass}
+              />
+            </label>
+          </div>
+        </div>
 
         <button
           type="submit"
