@@ -78,12 +78,12 @@ function NavLink({
       href={href}
       className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-bold leading-snug transition-colors ${
         active
-          ? "border border-accent/50 bg-accent/15 text-accent shadow-sm dark:border-transparent dark:bg-[var(--sidebar-active-bg)] dark:text-zinc-50 dark:shadow-none"
-          : "border border-transparent text-zinc-800 hover:bg-slate-200/80 hover:text-zinc-950 dark:text-white dark:hover:bg-white/12"
+          ? "border border-accent/50 bg-accent/15 text-accent shadow-sm dark:border-transparent dark:bg-[var(--sidebar-active-bg)] dark:text-[var(--foreground)] dark:shadow-none"
+          : "border border-transparent text-zinc-800 hover:bg-slate-200/80 hover:text-zinc-950 dark:text-[var(--sidebar-muted)] dark:hover:bg-white/10"
       }`}
     >
       <Icon
-        className={`size-4 shrink-0 ${active ? "text-accent opacity-100 dark:text-zinc-50" : "text-zinc-600 dark:text-zinc-100"}`}
+        className={`size-4 shrink-0 ${active ? "text-accent opacity-100 dark:text-[var(--foreground)]" : "text-zinc-600 dark:text-[var(--sidebar-muted)]"}`}
         aria-hidden
       />
       <span className="flex-1">{label}</span>
@@ -130,7 +130,7 @@ export function AppSidebar({
     <aside className="no-print flex w-56 shrink-0 flex-col border-r border-[var(--sidebar-border)] bg-[var(--background-sidebar)]">
       <div className="border-b border-[var(--sidebar-border)] px-4 py-4">
         <p className="text-xs font-medium uppercase tracking-wide text-accent">LENARD HR</p>
-        <p className="mt-1 truncate text-sm text-zinc-900 dark:text-zinc-100">{userLabel}</p>
+        <p className="mt-1 truncate text-sm text-zinc-900 dark:text-[var(--foreground)]">{userLabel}</p>
         {tenantName ? (
           <p className="mt-1 truncate text-xs text-zinc-600 dark:text-[var(--sidebar-muted)]">{tenantName}</p>
         ) : null}
