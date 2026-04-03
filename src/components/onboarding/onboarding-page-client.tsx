@@ -170,7 +170,7 @@ export function OnboardingPageClient() {
                       type="button"
                       disabled={busyTask === t.id}
                       onClick={() => void completeTask(t.id)}
-                      className="shrink-0 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+                      className="shrink-0 rounded-xl bg-blue-600 px-4 py-1.5 text-sm font-medium text-white shadow-md hover:bg-blue-500 disabled:opacity-50"
                     >
                       {busyTask === t.id ? "処理中…" : "完了にする"}
                     </button>
@@ -232,7 +232,7 @@ export function OnboardingPageClient() {
           <button
             type="submit"
             disabled={uploading}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+            className="rounded-xl bg-blue-600 px-6 py-2.5 font-medium text-white shadow-md hover:bg-blue-500 disabled:opacity-50"
           >
             {uploading ? "アップロード中…" : "アップロード"}
           </button>

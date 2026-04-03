@@ -147,7 +147,7 @@ export function AutoApprovalRulesForm({
         type="button"
         disabled={pending}
         onClick={save}
-        className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        className="rounded-xl bg-blue-600 px-6 py-2.5 font-medium text-white shadow-md hover:bg-blue-500 disabled:opacity-50"
       >
         {pending ? "保存中…" : "変更を保存"}
       </button>

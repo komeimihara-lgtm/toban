@@ -22,21 +22,22 @@
  * html に class="dark" が必要（root layout で付与）
  */
 html.dark {
-  --background: #161412;
+  --background: #0f1117;
   --background-sidebar: #1a1f2e;
-  --card: #1e1b17;
-  --border: #2d2a26;
+  --card: #1e2336;
+  --border: #2d3348;
   --foreground: #ffffff;
-  --muted-foreground: #e8eaed;
+  --muted-foreground: #d1d5db;
   --accent: #3b82f6;
-  --sidebar-active-bg: #243352;
+  --sidebar-active-bg: #2d4a8a;
   --success: #22c55e;
   --warning: #f59e0b;
   --error: #ef4444;
   --surface-sidebar: #1a1f2e;
-  --sidebar-border: #2d2a26;
+  --sidebar-border: #2d3348;
   --sidebar-muted: #e8eaed;
   --sidebar-text: #ffffff;
+  --radius: 12px;
   color-scheme: dark;
 }
 
@@ -84,6 +85,15 @@ select option {
 html.dark select option {
   color: #18181b;
   background-color: #fff;
+}
+
+/* カード・セクションの角丸を柔らかく */
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl,
+section,
+[class*="card"] {
+  border-radius: var(--radius, 12px);
 }
 
 @media print {

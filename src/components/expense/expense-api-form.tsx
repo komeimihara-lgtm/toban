@@ -687,7 +687,7 @@ export function ExpenseApiForm() {
                     <button
                       type="button"
                       onClick={() => setProceedDespiteAudit(true)}
-                      className="rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+                      className="rounded-xl bg-blue-600 px-4 py-1.5 text-xs font-medium text-white shadow-md hover:bg-blue-500"
                     >
                       このまま申請する
                     </button>
@@ -712,7 +712,7 @@ export function ExpenseApiForm() {
             type="button"
             disabled={loading}
             onClick={() => void doSubmit(true)}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+            className="rounded-xl bg-blue-600 px-6 py-2.5 font-medium text-white shadow-md hover:bg-blue-500 disabled:opacity-50"
           >
             提出（第1承認へ）
           </button>
