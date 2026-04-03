@@ -1,6 +1,11 @@
 # LENARD HR — Claude Code 実装プロンプト集
 # Cursorのターミナルで `claude` を起動後、以下を順番に貼り付けてください
 
+## メンテナンス用の正（2026年以降）
+- **画面一覧・権限・配色・DBの要点**: リポジトリ直下の **`PROMPTS.md`**（ここより優先して参照）
+- **ダークテーマ CSS 変数・body グラデーション**: `src/app/globals.css`（ログイン画面と同系: slate-950 → `#0c1222` → slate-900）
+- **会社固有情報・承認フロー**: `CLAUDE.md`
+
 # ============================================================
 # STEP 0: CLAUDE.md（プロジェクト仕様書）を作成
 # ターミナルで実行:
@@ -57,7 +62,7 @@ LENARD HR — プロジェクト仕様書
 5. freee人事労務APIに送信 → 翌月給与に反映
 
 ## 技術スタック
-- Next.js 14 App Router + TypeScript
+- Next.js App Router + TypeScript（実装は 16 系ビルド想定。詳細は `package.json` / `PROMPTS.md`）
 - Supabase（PostgreSQL + Row Level Security）
 - freee 人事労務 API v1
 - Tailwind CSS + shadcn/ui
