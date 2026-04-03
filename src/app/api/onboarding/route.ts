@@ -118,10 +118,14 @@ export async function POST(req: Request) {
 
   const { data: tp } = await admin
     .from("profiles")
-    .select("company_id")
+    .select("company_id, is_sales_target, is_service_target")
     .eq("id", targetUserId)
     .maybeSingle();
-  const tRow = tp as { company_id: string } | null;
+  const tRow = tp as {
+    company_id: string;
+    is_sales_target: boolean;
+    is_service_target: boolean;
+  } | null;
   if (!tRow || tRow.company_id !== profile.company_id) {
     return NextResponse.json(
       { error: "対象ユーザーが見つかりません" },
@@ -142,6 +146,8 @@ export async function POST(req: Request) {
       .insert({
         user_id: targetUserId,
         company_id: profile.company_id,
+        is_sales_target: tRow.is_sales_target,
+        is_service_target: tRow.is_service_target,
       })
       .select("id")
       .single();

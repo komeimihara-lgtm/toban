@@ -3,20 +3,22 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --accent: #9a7b2d;
+}
+
+/* 社内ツールはダーク基調（#1a1814・ゴールドアクセント） */
+html.dark {
+  --background: #1a1814;
+  --foreground: #ece8e1;
+  --accent: #c9a962;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

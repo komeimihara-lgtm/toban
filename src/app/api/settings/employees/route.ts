@@ -88,6 +88,23 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    const empPatch: Record<string, unknown> = {};
+    if (typeof body.is_sales_target === "boolean") {
+      empPatch.is_sales_target = body.is_sales_target;
+    }
+    if (typeof body.is_service_target === "boolean") {
+      empPatch.is_service_target = body.is_service_target;
+    }
+    if (Object.keys(empPatch).length > 0) {
+      const { error: empErr } = await admin
+        .from("employees")
+        .update(empPatch)
+        .eq("user_id", targetId);
+      if (empErr) {
+        return NextResponse.json({ error: empErr.message }, { status: 500 });
+      }
+    }
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "error";

@@ -119,7 +119,20 @@ export default async function AppGroupLayout({
         showAdminSection = isAdminRole(role);
 
         const p = profile as ProfileRow | null;
-        showMyIncentiveNav = Boolean(p && isIncentiveEligible(p));
+        const { data: empIncentive } = await supabase
+          .from("employees")
+          .select("is_sales_target, is_service_target")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (empIncentive) {
+          const er = empIncentive as {
+            is_sales_target: boolean;
+            is_service_target: boolean;
+          };
+          showMyIncentiveNav = er.is_sales_target || er.is_service_target;
+        } else {
+          showMyIncentiveNav = Boolean(p && isIncentiveEligible(p));
+        }
 
         showEmployeeOnboardingNav = await shouldShowEmployeeOnboarding(supabase, user.id);
 
@@ -150,7 +163,7 @@ export default async function AppGroupLayout({
   }
 
   return (
-    <div className="flex min-h-0 min-h-screen flex-1">
+    <div className="flex min-h-0 min-h-screen flex-1 bg-[var(--background)] text-[var(--foreground)]">
       <AppSidebar
         userLabel={userLabel}
         tenantName={tenantName}

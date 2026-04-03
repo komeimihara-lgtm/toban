@@ -72,8 +72,8 @@ function NavLink({
       href={href}
       className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
         active
-          ? "bg-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-          : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800/60"
+          ? "border border-accent/35 bg-accent/15 text-accent"
+          : "text-zinc-400 hover:bg-white/5"
       }`}
     >
       <Icon className="size-4 shrink-0 opacity-80" aria-hidden />
@@ -95,7 +95,7 @@ function SectionLabel({
   badgeCount?: number;
 }) {
   return (
-    <p className="mb-1 mt-4 flex items-center gap-2 px-3 text-xs font-semibold tracking-wide text-zinc-400 first:mt-0 dark:text-zinc-500">
+    <p className="mb-1 mt-4 flex items-center gap-2 px-3 text-xs font-semibold tracking-wide text-zinc-500 first:mt-0">
       <span>{children}</span>
       {badgeCount != null && badgeCount > 0 ? (
         <span className="rounded-full bg-amber-600/90 px-1.5 py-0.5 text-[10px] font-bold text-white tabular-nums dark:bg-amber-500">
@@ -116,12 +116,12 @@ export function AppSidebar({
   incentiveDraftBadgeCount = 0,
 }: AppSidebarProps) {
   return (
-    <aside className="no-print flex w-56 shrink-0 flex-col border-r border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-950/40">
-      <div className="border-b border-zinc-200 px-4 py-4 dark:border-zinc-800">
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">LENARD HR</p>
-        <p className="mt-1 truncate text-sm text-zinc-800 dark:text-zinc-200">{userLabel}</p>
+    <aside className="no-print flex w-56 shrink-0 flex-col border-r border-zinc-800/60 bg-[#141210] dark:border-zinc-800/60">
+      <div className="border-b border-zinc-700/50 px-4 py-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-accent/90">LENARD HR</p>
+        <p className="mt-1 truncate text-sm text-zinc-200">{userLabel}</p>
         {tenantName ? (
-          <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">{tenantName}</p>
+          <p className="mt-1 truncate text-xs text-zinc-500">{tenantName}</p>
         ) : null}
       </div>
       <nav
@@ -245,7 +245,7 @@ export function AppSidebar({
             />
           </>
         ) : (
-          <p className="px-3 pt-6 text-[10px] leading-tight text-zinc-400 dark:text-zinc-500">
+          <p className="px-3 pt-6 text-[10px] leading-tight text-zinc-500">
             管理メニューは承認権限のアカウントでログインすると表示されます。
           </p>
         )}
