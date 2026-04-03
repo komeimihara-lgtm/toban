@@ -1,6 +1,14 @@
 "use client";
 
+import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
+
+function pickPdfFiles(list: FileList | File[]) {
+  return Array.from(list).filter(
+    (f) =>
+      f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
+  );
+}
 
 type Doc = {
   id: string;
@@ -25,6 +33,8 @@ export function RulesClient({
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [uploadName, setUploadName] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function showToast(msg: string) {
@@ -54,31 +64,68 @@ export function RulesClient({
     }
   }
 
-  async function handleUpload() {
-    const file = fileRef.current?.files?.[0];
-    if (!file || !uploadName.trim()) {
-      showToast("ファイルと名前を入力してください");
+  function applyPickedFiles(fileList: FileList | null) {
+    if (!fileList?.length) return;
+    const pdfs = pickPdfFiles(fileList);
+    if (pdfs.length === 0) {
+      showToast("PDFファイルを選択してください");
       return;
     }
+    setSelectedFiles(pdfs);
+  }
+
+  async function handleUpload() {
+    const fromInput = fileRef.current?.files;
+    const files =
+      selectedFiles.length > 0
+        ? selectedFiles
+        : fromInput
+          ? pickPdfFiles(fromInput)
+          : [];
+    if (files.length === 0) {
+      showToast("PDFファイルをドロップまたは選択してください");
+      return;
+    }
+    const nameOne = uploadName.trim();
+    if (files.length === 1 && !nameOne) {
+      showToast("ドキュメント名を入力してください");
+      return;
+    }
+
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("name", uploadName.trim());
-      const res = await fetch("/api/company-documents", {
-        method: "POST",
-        body: fd,
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        showToast(err.error ?? "アップロードに失敗しました");
-        return;
+      const uploaded: Doc[] = [];
+      for (const file of files) {
+        const name =
+          files.length === 1 && nameOne
+            ? nameOne
+            : file.name.replace(/\.pdf$/i, "") || file.name;
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("name", name);
+        const res = await fetch("/api/company-documents", {
+          method: "POST",
+          body: fd,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          showToast(
+            (err as { error?: string }).error ?? "アップロードに失敗しました",
+          );
+          return;
+        }
+        const { document: newDoc } = await res.json();
+        uploaded.push({ ...newDoc, ai_summary: null } as Doc);
       }
-      const { document: newDoc } = await res.json();
-      setDocs((prev) => [{ ...newDoc, ai_summary: null }, ...prev]);
+      setDocs((prev) => [...uploaded, ...prev]);
       setUploadName("");
+      setSelectedFiles([]);
       if (fileRef.current) fileRef.current.value = "";
-      showToast("アップロードしました");
+      showToast(
+        uploaded.length > 1
+          ? `アップロードしました（${uploaded.length}件）`
+          : "アップロードしました",
+      );
     } catch {
       showToast("アップロードに失敗しました");
     } finally {
@@ -115,8 +162,8 @@ export function RulesClient({
       {canUpload && (
         <div className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
           <h2 className="text-sm font-medium text-zinc-500">ドキュメントをアップロード</h2>
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="flex-1">
+          <div className="mt-3 flex flex-col gap-4">
+            <div>
               <label className="block text-xs text-zinc-500">ドキュメント名</label>
               <input
                 type="text"
@@ -125,20 +172,76 @@ export function RulesClient({
                 placeholder="例: 就業規則（2026年4月版）"
                 className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
               />
+              {selectedFiles.length > 1 ? (
+                <p className="mt-1 text-xs text-zinc-400">
+                  複数ファイル時は各PDFのファイル名がドキュメント名として使われます（上記は無視されます）。
+                </p>
+              ) : null}
             </div>
             <div>
-              <label className="block text-xs text-zinc-500">PDF ファイル</label>
+              <label className="mb-1 block text-xs text-zinc-500">PDF ファイル</label>
               <input
                 ref={fileRef}
                 type="file"
-                accept=".pdf"
-                className="mt-1 text-sm"
+                accept=".pdf,application/pdf"
+                multiple
+                className="sr-only"
+                onChange={(e) => applyPickedFiles(e.target.files)}
               />
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ")
+                    fileRef.current?.click();
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDragging(true);
+                }}
+                onDragLeave={(e) => {
+                  if (e.currentTarget === e.target) setIsDragging(false);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDragging(false);
+                  applyPickedFiles(e.dataTransfer.files);
+                }}
+                className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950 ${
+                  isDragging
+                    ? "border-blue-500 bg-blue-500/10"
+                    : "border-zinc-600 bg-transparent"
+                }`}
+              >
+                <Upload
+                  className="mb-3 size-10 text-zinc-400 dark:text-zinc-500"
+                  aria-hidden
+                />
+                <p className="text-center text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                  PDFをここにドラッグ＆ドロップ
+                </p>
+                <p className="mt-1 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                  またはクリックして選択
+                </p>
+                {selectedFiles.length > 0 ? (
+                  <ul className="mt-4 max-h-32 w-full max-w-md list-inside list-disc overflow-y-auto text-left text-xs text-zinc-600 dark:text-zinc-300">
+                    {selectedFiles.map((f) => (
+                      <li key={`${f.name}-${f.size}-${f.lastModified}`} className="truncate">
+                        {f.name}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
             </div>
             <button
+              type="button"
               onClick={handleUpload}
               disabled={uploading}
-              className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50"
+              className="w-full shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50 sm:w-auto"
             >
               {uploading ? "アップロード中..." : "アップロード"}
             </button>
