@@ -270,8 +270,11 @@ export function ExpenseApiForm() {
       ? `申請者 → ${approvalSteps.map((s) => s.label).join(" → ")} → 完了`
       : "申請者 → 承認 → 完了";
 
+  const fieldClass =
+    "mt-1 w-full rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-400";
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-zinc-900 dark:text-zinc-100">
       {ctxError ? (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
           {ctxError}
@@ -300,7 +303,7 @@ export function ExpenseApiForm() {
             <span aria-hidden className="self-center">
               →
             </span>
-            <span className="rounded-full bg-zinc-200 px-2 py-1 font-medium dark:bg-zinc-700">
+            <span className="rounded-full bg-zinc-200 px-2 py-1 font-medium text-zinc-900 dark:bg-zinc-600 dark:text-zinc-50">
               完了
             </span>
           </>
@@ -311,7 +314,7 @@ export function ExpenseApiForm() {
         <p className="text-center text-sm font-medium text-zinc-800 dark:text-zinc-200">
           領収書（任意・アップロード）
         </p>
-        <p className="mt-1 text-center text-xs text-zinc-500">
+        <p className="mt-1 text-center text-xs text-zinc-600 dark:text-zinc-300">
           クラウド保存は未接続です。選択したファイル名のみ保持します（OCR は今後接続予定）。
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-3">
@@ -361,17 +364,17 @@ export function ExpenseApiForm() {
 
       <form ref={formRef} className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <div>
-          <p className="text-xs font-medium text-zinc-600">申請種別</p>
+          <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">申請種別</p>
           <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {EXPENSE_CLAIM_KINDS.map((k) => (
               <button
                 key={k.id}
                 type="button"
                 onClick={() => setKind(k.id)}
-                className={`rounded-lg border px-2 py-2 text-left text-xs ${
+                className={`rounded-lg border px-2 py-2 text-left text-xs font-medium ${
                   kind === k.id
-                    ? "border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50"
-                    : "border-zinc-200 dark:border-zinc-700"
+                    ? "border-emerald-600 bg-emerald-100 text-emerald-950 dark:border-emerald-500 dark:bg-emerald-950/60 dark:text-emerald-50"
+                    : "border-zinc-300 bg-zinc-100 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
                 }`}
               >
                 {k.emoji} {k.label}
@@ -382,16 +385,11 @@ export function ExpenseApiForm() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">
-            <span className="font-medium">支払日 *</span>
-            <input
-              name="paid_date"
-              type="date"
-              required
-              className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-            />
+            <span className="font-medium text-zinc-800 dark:text-zinc-200">支払日 *</span>
+            <input name="paid_date" type="date" required className={`${fieldClass} tabular-nums`} />
           </label>
           <label className="block text-sm">
-            <span className="font-medium">金額（税込）*</span>
+            <span className="font-medium text-zinc-800 dark:text-zinc-200">金額（税込）*</span>
             <input
               name="amount"
               type="number"
@@ -399,10 +397,10 @@ export function ExpenseApiForm() {
               required
               value={amountStr}
               onChange={(e) => setAmountStr(e.target.value)}
-              className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 tabular-nums dark:border-zinc-700 dark:bg-zinc-900"
+              className={`${fieldClass} tabular-nums`}
             />
             {tax ? (
-              <span className="mt-1 block text-xs text-zinc-500">
+              <span className="mt-1 block text-xs text-zinc-600 dark:text-zinc-300">
                 消費税（10%・税込から逆算）: 税抜目安 {tax.net.toLocaleString("ja-JP")}{" "}
                 円 / 税額 {tax.t.toLocaleString("ja-JP")} 円
               </span>
@@ -411,13 +409,13 @@ export function ExpenseApiForm() {
         </div>
 
         <label className="block text-sm">
-          <span className="font-medium">カテゴリ *</span>
+          <span className="font-medium text-zinc-800 dark:text-zinc-200">カテゴリ *</span>
           <select
             name="category"
             required
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+            className={fieldClass}
           >
             <option value="" disabled>
               {ctxLoading ? "読込中…" : categoryLabels.length ? "選択" : "カテゴリ未設定"}
@@ -431,33 +429,25 @@ export function ExpenseApiForm() {
         </label>
 
         <label className="block text-sm">
-          <span className="font-medium">支払先 *</span>
-          <input
-            name="vendor"
-            required
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
+          <span className="font-medium text-zinc-800 dark:text-zinc-200">支払先 *</span>
+          <input name="vendor" required className={fieldClass} />
         </label>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">
-            <span className="font-medium">区間（出発）</span>
-            <input
-              name="from_location"
-              className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-            />
+            <span className="font-medium text-zinc-800 dark:text-zinc-200">区間（出発）</span>
+            <input name="from_location" className={fieldClass} />
           </label>
           <label className="block text-sm">
-            <span className="font-medium">区間（到着）</span>
-            <input
-              name="to_location"
-              className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-            />
+            <span className="font-medium text-zinc-800 dark:text-zinc-200">区間（到着）</span>
+            <input name="to_location" className={fieldClass} />
           </label>
         </div>
 
         <label className="block text-sm">
-          <span className="font-medium">タクシー等の利用時刻（任意・0〜23）</span>
+          <span className="font-medium text-zinc-800 dark:text-zinc-200">
+            タクシー等の利用時刻（任意・0〜23）
+          </span>
           <input
             name="ride_hour_local"
             type="number"
@@ -466,19 +456,16 @@ export function ExpenseApiForm() {
             max={23}
             step={1}
             placeholder="例: 14（未入力だと時刻に基づくタクシー審査は限定的）"
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 tabular-nums dark:border-zinc-700 dark:bg-zinc-900"
+            className={`${fieldClass} tabular-nums`}
           />
-          <span className="mt-1 block text-xs text-zinc-500">
+          <span className="mt-1 block text-xs text-zinc-600 dark:text-zinc-300">
             22時以降は深夜帯としてタクシーを寛容判定します。日中の高額タクシーは注意事項になります。
           </span>
         </label>
 
         <label className="block text-sm">
-          <span className="font-medium">参加者</span>
-          <input
-            name="attendees"
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
+          <span className="font-medium text-zinc-800 dark:text-zinc-200">参加者</span>
+          <input name="attendees" className={fieldClass} />
         </label>
 
         {isSalesTarget && isTravelishCategory(category) ? (
@@ -495,7 +482,7 @@ export function ExpenseApiForm() {
                   inputMode="numeric"
                   min={0}
                   step={1}
-                  className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 tabular-nums dark:border-zinc-700 dark:bg-zinc-900"
+                  className={`${fieldClass} tabular-nums`}
                 />
               </label>
               <label className="block text-sm">
@@ -506,7 +493,7 @@ export function ExpenseApiForm() {
                   inputMode="numeric"
                   min={0}
                   step={1}
-                  className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 tabular-nums dark:border-zinc-700 dark:bg-zinc-900"
+                  className={`${fieldClass} tabular-nums`}
                 />
               </label>
               <label className="block text-sm sm:col-span-2">
@@ -514,7 +501,7 @@ export function ExpenseApiForm() {
                 <input
                   name="activity_client_names"
                   autoComplete="off"
-                  className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                  className={fieldClass}
                 />
               </label>
               <label className="block text-sm sm:col-span-2">
@@ -523,7 +510,7 @@ export function ExpenseApiForm() {
                   name="activity_area"
                   placeholder="例: 福岡市内"
                   autoComplete="off"
-                  className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                  className={fieldClass}
                 />
               </label>
             </div>
@@ -531,13 +518,8 @@ export function ExpenseApiForm() {
         ) : null}
 
         <label className="block text-sm">
-          <span className="font-medium">用途 *</span>
-          <textarea
-            name="purpose"
-            required
-            rows={3}
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
+          <span className="font-medium text-zinc-800 dark:text-zinc-200">用途 *</span>
+          <textarea name="purpose" required rows={3} className={fieldClass} />
         </label>
 
         {(audit || auditLoading) && (
@@ -639,7 +621,7 @@ export function ExpenseApiForm() {
                       onClick={() => {
                         formRef.current?.querySelector<HTMLElement>("[name=purpose]")?.focus();
                       }}
-                      className="rounded-lg border border-zinc-400 px-3 py-1.5 text-xs dark:border-zinc-500"
+                      className="rounded-lg border border-zinc-400 bg-white px-3 py-1.5 text-xs text-zinc-900 dark:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-100"
                     >
                       修正する
                     </button>
@@ -663,7 +645,7 @@ export function ExpenseApiForm() {
             type="button"
             disabled={loading}
             onClick={() => void doSubmit(false)}
-            className="rounded-lg border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-600"
+            className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
           >
             下書き保存
           </button>
@@ -671,8 +653,8 @@ export function ExpenseApiForm() {
       </form>
 
       {msg ? <p className="text-sm text-emerald-700 dark:text-emerald-300">{msg}</p> : null}
-      <p className="text-xs text-zinc-500">
-        <Link href="/my/expenses" className="underline">
+      <p className="text-xs text-zinc-600 dark:text-zinc-300">
+        <Link href="/my/expenses" className="font-medium text-blue-600 underline dark:text-blue-400">
           一覧へ
         </Link>
       </p>

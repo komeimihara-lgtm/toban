@@ -273,28 +273,26 @@ export async function AdminDashboard() {
     .sort((a, b) => a.name.localeCompare(b.name, "ja"));
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-        ダッシュボード
-      </h1>
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+    <div className="space-y-8 text-zinc-900 dark:text-zinc-100">
+      <h1 className="text-2xl font-semibold text-foreground">ダッシュボード</h1>
+      <p className="text-sm text-zinc-600 dark:text-zinc-300">
         経費精算・承認・インセンティブの月次サマリーです。
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/60">
+          <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
             今月の経費合計（承認済・支払月）
           </p>
-          <p className="mt-2 text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+          <p className="mt-2 text-lg font-semibold tabular-nums text-zinc-950 dark:text-zinc-50">
             {fmt(expenseTotal)}
           </p>
           {expenseMoM_pct != null ? (
-            <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+            <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
               先月比 {expenseMoM_pct >= 0 ? "▲" : "▼"} {Math.abs(expenseMoM_pct).toFixed(1)}%
             </p>
           ) : (
-            <p className="mt-1 text-xs text-zinc-500">先月比 —</p>
+            <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">先月比 —</p>
           )}
         </div>
         <Kpi
@@ -308,9 +306,9 @@ export async function AdminDashboard() {
         />
       </div>
 
-      <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
-        <h2 className="font-medium text-zinc-900 dark:text-zinc-100">今月の経費（カテゴリ別）</h2>
-        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">今月の経費（カテゴリ別）</h2>
+        <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
           承認済・支払日が当月の合計
         </p>
         <div className="mt-4 space-y-3">
@@ -339,8 +337,8 @@ export async function AdminDashboard() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
-        <h2 className="font-medium text-zinc-900 dark:text-zinc-100">要対応</h2>
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">要対応</h2>
         <ul className="mt-3 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
           <li className="flex flex-wrap items-center gap-2">
             <span>
@@ -380,8 +378,8 @@ export async function AdminDashboard() {
         </ul>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
-        <h2 className="font-medium text-zinc-900 dark:text-zinc-100">
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">
           退職リスクアラート（離職防止）
         </h2>
         <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
@@ -470,14 +468,14 @@ export async function AdminDashboard() {
         </ul>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
-        <h2 className="font-medium text-zinc-900 dark:text-zinc-100">全スタッフの出勤状況（本日）</h2>
-        <p className="mt-1 text-xs text-zinc-500">
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">全スタッフの出勤状況（本日）</h2>
+        <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">
           Asia/Tokyo · {staffAttendance.length} 名 · 出勤打刻から状態を表示しています
         </p>
         <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-100 dark:border-zinc-800">
           <table className="w-full min-w-[480px] text-left text-sm">
-            <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900/50">
+            <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-200">
               <tr>
                 <th className="px-3 py-2">氏名</th>
                 <th className="px-3 py-2">権限</th>
@@ -531,8 +529,8 @@ export async function AdminDashboard() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
-        <h2 className="font-medium text-zinc-900 dark:text-zinc-100">最近の申請（5件）</h2>
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">最近の申請（5件）</h2>
         <p className="mt-1 text-xs text-zinc-500">経費（下書き除く・更新日の新しい順）</p>
         <ul className="mt-3 space-y-2 text-sm">
           {(recentExpenses ?? []).length === 0 && (
@@ -613,9 +611,11 @@ function fmt(n: number) {
 
 function Kpi({ title, value }: { title: string; value: string }) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-      <p className="text-xs font-medium text-zinc-500">{title}</p>
-      <p className="mt-2 text-lg font-semibold">{value}</p>
+    <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/60">
+      <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">{title}</p>
+      <p className="mt-2 text-lg font-semibold tabular-nums text-zinc-950 dark:text-zinc-50">
+        {value}
+      </p>
     </div>
   );
 }

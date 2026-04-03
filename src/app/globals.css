@@ -44,13 +44,13 @@ body {
 }
 
 /*
- * ライト既定 UI: class 未指定の input / textarea / select が
- * 白背景上でシステムの薄色文字になるのを防ぐ
+ * フォーム: 親の text 色を継承。ダークで一律に薄字を当てると
+ * bg-white / ライト面のフィールドが白地に白字になるため禁止。
  */
 input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
 textarea,
 select {
-  color: #18181b;
+  color: inherit;
 }
 
 select option {
@@ -58,15 +58,13 @@ select option {
   background-color: #fff;
 }
 
-html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
-html.dark textarea,
-html.dark select {
-  color: #f4f4f5;
-}
-
 html.dark select option {
   color: #18181b;
   background-color: #fff;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 @media print {
