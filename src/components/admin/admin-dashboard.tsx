@@ -69,13 +69,109 @@ export async function AdminDashboard() {
   const moDash = nowD.getMonth();
   const monthStartIso = new Date(yDash, moDash, 1).toISOString();
   const monthEndIso = new Date(yDash, moDash + 1, 1).toISOString();
+  const prevMonthStart = new Date(yDash, moDash - 1, 1).toISOString();
+  const prevMonthEnd = new Date(yDash, moDash, 0).toISOString();
+  const dealYmY = yDash;
+  const dealYmM = moDash + 1;
+  const paidStart = monthStartIso.slice(0, 10);
+  const paidEnd = monthEndIso.slice(0, 10);
+  const paidPrevStart = prevMonthStart.slice(0, 10);
+  const paidPrevEnd = prevMonthEnd.slice(0, 10);
 
-  const { data: monthApprovedRows } = await supabase
-    .from("expenses")
-    .select("amount, auto_approved, step2_approved_at")
-    .eq("status", "approved")
-    .gte("step2_approved_at", monthStartIso)
-    .lt("step2_approved_at", monthEndIso);
+  const [
+    { data: monthApprovedRows },
+    { count: pendingStep1 },
+    { count: pendingStep2 },
+    { data: expApprovedMonth },
+    { data: expenseByCategoryRows },
+    { data: expApprovedPrev },
+    { data: dealRowsEst },
+    { count: incentiveDraftCount },
+    { count: dealsSubmittedPending },
+    { count: leavePendingCount },
+    { data: receiptRows },
+    { data: team },
+    { data: recentExpenses },
+    { data: retentionRows },
+  ] = await Promise.all([
+    supabase
+      .from("expenses")
+      .select("amount, auto_approved, step2_approved_at")
+      .eq("status", "approved")
+      .gte("step2_approved_at", monthStartIso)
+      .lt("step2_approved_at", monthEndIso),
+    supabase
+      .from("expenses")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "step1_pending"),
+    supabase
+      .from("expenses")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "step2_pending"),
+    supabase
+      .from("expenses")
+      .select("amount")
+      .eq("status", "approved")
+      .gte("paid_date", paidStart)
+      .lt("paid_date", paidEnd),
+    supabase
+      .from("expenses")
+      .select("category, amount")
+      .eq("status", "approved")
+      .gte("paid_date", paidStart)
+      .lt("paid_date", paidEnd),
+    supabase
+      .from("expenses")
+      .select("amount")
+      .eq("status", "approved")
+      .gte("paid_date", paidPrevStart)
+      .lte("paid_date", paidPrevEnd),
+    supabase
+      .from("deals")
+      .select("appo_incentive, closer_incentive, submit_status")
+      .eq("year", dealYmY)
+      .eq("month", dealYmM)
+      .in("submit_status", ["submitted", "approved"]),
+    supabase
+      .from("deals")
+      .select("*", { count: "exact", head: true })
+      .eq("year", dealYmY)
+      .eq("month", dealYmM)
+      .eq("submit_status", "draft"),
+    supabase
+      .from("deals")
+      .select("*", { count: "exact", head: true })
+      .eq("year", dealYmY)
+      .eq("month", dealYmM)
+      .eq("submit_status", "submitted"),
+    supabase
+      .from("leave_requests")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "step1_pending"),
+    supabase
+      .from("expenses")
+      .select("id, receipt_url")
+      .in("status", ["step1_pending", "step2_pending", "approved"])
+      .limit(800),
+    supabase
+      .from("employees")
+      .select("id, name, role")
+      .order("name", { ascending: true }),
+    supabase
+      .from("expenses")
+      .select(
+        "id, category, amount, status, submitter_name, created_at, updated_at",
+      )
+      .not("status", "eq", "draft")
+      .order("updated_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("retention_alerts")
+      .select("id, employee_id, company_id, severity, message, detected_at, alert_type")
+      .eq("is_resolved", false)
+      .order("detected_at", { ascending: false })
+      .limit(100),
+  ]);
 
   let autoCount = 0;
   let autoSum = 0;
@@ -96,22 +192,7 @@ export async function AdminDashboard() {
   const autoApprovalRatePct =
     approvedTotalCount > 0 ? (autoCount / approvedTotalCount) * 100 : 0;
 
-  const { count: pendingStep1 } = await supabase
-    .from("expenses")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "step1_pending");
-  const { count: pendingStep2 } = await supabase
-    .from("expenses")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "step2_pending");
   const pendingApproval = (pendingStep1 ?? 0) + (pendingStep2 ?? 0);
-
-  const { data: expApprovedMonth } = await supabase
-    .from("expenses")
-    .select("amount")
-    .eq("status", "approved")
-    .gte("paid_date", monthStartIso.slice(0, 10))
-    .lt("paid_date", monthEndIso.slice(0, 10));
 
   const expenseTotal =
     expApprovedMonth?.reduce(
@@ -121,13 +202,6 @@ export async function AdminDashboard() {
       },
       0,
     ) ?? 0;
-
-  const { data: expenseByCategoryRows } = await supabase
-    .from("expenses")
-    .select("category, amount")
-    .eq("status", "approved")
-    .gte("paid_date", monthStartIso.slice(0, 10))
-    .lt("paid_date", monthEndIso.slice(0, 10));
 
   const categoryTotals: { category: string; amount: number }[] = [];
   const catMap = new Map<string, number>();
@@ -141,14 +215,6 @@ export async function AdminDashboard() {
   }
   const categoryMax = Math.max(...categoryTotals.map((x) => x.amount), 1);
 
-  const prevMonthStart = new Date(yDash, moDash - 1, 1).toISOString();
-  const prevMonthEnd = new Date(yDash, moDash, 0).toISOString();
-  const { data: expApprovedPrev } = await supabase
-    .from("expenses")
-    .select("amount")
-    .eq("status", "approved")
-    .gte("paid_date", prevMonthStart.slice(0, 10))
-    .lte("paid_date", prevMonthEnd.slice(0, 10));
   const expensePrevTotal =
     expApprovedPrev?.reduce(
       (a, e) => {
@@ -160,54 +226,16 @@ export async function AdminDashboard() {
   const expenseMoM_pct =
     expensePrevTotal > 0 ? ((expenseTotal - expensePrevTotal) / expensePrevTotal) * 100 : null;
 
-  const dealYmY = yDash;
-  const dealYmM = moDash + 1;
-  const { data: dealRowsEst } = await supabase
-    .from("deals")
-    .select("appo_incentive, closer_incentive, submit_status")
-    .eq("year", dealYmY)
-    .eq("month", dealYmM)
-    .in("submit_status", ["submitted", "approved"]);
-
   let incEst = 0;
   for (const raw of dealRowsEst ?? []) {
     const r = raw as { appo_incentive: number; closer_incentive: number };
     incEst += Math.floor(Number(r.appo_incentive) || 0) + Math.floor(Number(r.closer_incentive) || 0);
   }
 
-  const { count: incentiveDraftCount } = await supabase
-    .from("deals")
-    .select("*", { count: "exact", head: true })
-    .eq("year", dealYmY)
-    .eq("month", dealYmM)
-    .eq("submit_status", "draft");
-
-  const { count: dealsSubmittedPending } = await supabase
-    .from("deals")
-    .select("*", { count: "exact", head: true })
-    .eq("year", dealYmY)
-    .eq("month", dealYmM)
-    .eq("submit_status", "submitted");
-
-  const { count: leavePendingCount } = await supabase
-    .from("leave_requests")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "step1_pending");
-
-  const { data: receiptRows } = await supabase
-    .from("expenses")
-    .select("id, receipt_url")
-    .in("status", ["step1_pending", "step2_pending", "approved"])
-    .limit(2000);
   const receiptMissing =
     (receiptRows ?? []).filter(
       (r) => !String((r as { receipt_url: string | null }).receipt_url ?? "").trim(),
     ).length;
-
-  const { data: team } = await supabase
-    .from("employees")
-    .select("id, name, role")
-    .order("name", { ascending: true });
 
   const { start: dayStart, end: dayEnd } = jstTodayBounds();
   const memberIds = (team ?? []).map((m) => (m as { id: string }).id);
@@ -229,22 +257,6 @@ export async function AdminDashboard() {
     list.push(punch);
     punchesByUser.set(uid, list);
   }
-
-  const { data: recentExpenses } = await supabase
-    .from("expenses")
-    .select(
-      "id, category, amount, status, submitter_name, created_at, updated_at",
-    )
-    .not("status", "eq", "draft")
-    .order("updated_at", { ascending: false })
-    .limit(5);
-
-  const { data: retentionRows } = await supabase
-    .from("retention_alerts")
-    .select("id, employee_id, company_id, severity, message, detected_at, alert_type")
-    .eq("is_resolved", false)
-    .order("detected_at", { ascending: false })
-    .limit(100);
 
   const nameById = new Map<string, string>();
   for (const m of team ?? []) {

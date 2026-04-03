@@ -6,7 +6,6 @@ import {
   ymdJst,
 } from "@/lib/paid-leave";
 import { isAdminRole } from "@/types/incentive";
-import { resolveUserRole } from "@/lib/require-admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -24,37 +23,45 @@ export default async function EmployeesPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const { data: me } = await supabase
+  let { data: me } = await supabase
     .from("employees")
-    .select("company_id")
+    .select("company_id, role")
     .eq("auth_user_id", user.id)
     .maybeSingle();
+  if (!me) {
+    const alt = await supabase
+      .from("employees")
+      .select("company_id, role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    me = alt.data;
+  }
   const companyId = (me as { company_id?: string })?.company_id;
-  const role = await resolveUserRole(supabase, user.id);
+  const role = (me as { role?: string })?.role ?? "staff";
   if (!isAdminRole(role) || !companyId) {
     redirect("/my");
   }
 
-  const { data: departments } = await supabase
-    .from("departments")
-    .select("id, name")
-    .eq("company_id", companyId);
-  const deptName = new Map(
-    (departments ?? []).map((d) => [(d as { id: string }).id, (d as { name: string }).name]),
-  );
-
-  let qy = supabase
+  let employeesQy = supabase
     .from("employees")
     .select("id, name, department_id, is_sales_target, is_service_target")
     .eq("company_id", companyId)
     .order("name");
   if (sp.q?.trim()) {
-    qy = qy.ilike("name", `%${sp.q.trim()}%`);
+    employeesQy = employeesQy.ilike("name", `%${sp.q.trim()}%`);
   }
   if (sp.dept?.trim()) {
-    qy = qy.eq("department_id", sp.dept.trim());
+    employeesQy = employeesQy.eq("department_id", sp.dept.trim());
   }
-  const { data: employees } = await qy;
+
+  const [{ data: departments }, { data: employees }] = await Promise.all([
+    supabase.from("departments").select("id, name").eq("company_id", companyId),
+    employeesQy,
+  ]);
+
+  const deptName = new Map(
+    (departments ?? []).map((d) => [(d as { id: string }).id, (d as { name: string }).name]),
+  );
 
   const [{ data: contracts }, { data: grants }, { data: commutes }] =
     await Promise.all([

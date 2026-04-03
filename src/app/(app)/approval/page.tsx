@@ -8,7 +8,6 @@ import { ExpenseV2Approval } from "@/components/expense/expense-v2-approval";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { canAccessApproval } from "@/types/incentive";
-import { resolveUserRole } from "@/lib/require-admin";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -28,21 +27,7 @@ export default async function ApprovalPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const role = await resolveUserRole(supabase, user.id);
-
-  // 自分のemployee情報
-  const { data: meRow } = await supabase
-    .from("employees")
-    .select("id, company_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-  const me = meRow as { id: string; company_id: string } | null;
-  if (!canAccessApproval(role)) {
-    redirect("/my");
-  }
-  const isLeaderOnly = role === "leader";
-  const tab = isLeaderOnly ? "check" : requestedTab;
-  let v2ExpenseRows: {
+  type ExpenseRow = {
     id: string;
     status: string;
     category: string;
@@ -53,27 +38,101 @@ export default async function ApprovalPage({
     audit_score: number | null;
     audit_result: unknown | null;
     audit_at: string | null;
-  }[] = [];
+  };
 
-  if (role === "approver") {
-    const { data, error } = await supabase
-      .from("expenses")
-      .select(
-        "id, status, category, amount, purpose, submitter_name, paid_date, audit_score, audit_result, audit_at",
-      )
-      .eq("status", "step1_pending")
-      .order("created_at", { ascending: true });
-    if (!error) v2ExpenseRows = (data ?? []) as typeof v2ExpenseRows;
-  } else if (role === "owner" || role === "director") {
-    const { data, error } = await supabase
-      .from("expenses")
-      .select(
-        "id, status, category, amount, purpose, submitter_name, paid_date, audit_score, audit_result, audit_at",
-      )
-      .in("status", ["step1_pending", "step2_pending"])
-      .order("created_at", { ascending: true });
-    if (!error) {
-      v2ExpenseRows = (data ?? []) as typeof v2ExpenseRows;
+  const { data: meByAuth } = await supabase
+    .from("employees")
+    .select("id, company_id, role")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  let meRow = meByAuth;
+  let role = (meByAuth as { role?: string } | null)?.role ?? "staff";
+  if (!meByAuth) {
+    const { data: meByUser } = await supabase
+      .from("employees")
+      .select("id, company_id, role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    meRow = meByUser;
+    role = (meByUser as { role?: string } | null)?.role ?? "staff";
+  }
+
+  const me = meRow as { id: string; company_id: string } | null;
+  if (!canAccessApproval(role)) {
+    redirect("/my");
+  }
+  const isLeaderOnly = role === "leader";
+  const tab = isLeaderOnly ? "check" : requestedTab;
+
+  const expenseSelect =
+    "id, status, category, amount, purpose, submitter_name, paid_date, audit_score, audit_result, audit_at";
+  const expensePendingPromise =
+    role === "approver"
+      ? supabase
+          .from("expenses")
+          .select(expenseSelect)
+          .eq("status", "step1_pending")
+          .order("created_at", { ascending: true })
+      : role === "owner" || role === "director"
+        ? supabase
+            .from("expenses")
+            .select(expenseSelect)
+            .in("status", ["step1_pending", "step2_pending"])
+            .order("created_at", { ascending: true })
+        : Promise.resolve({ data: [] as ExpenseRow[], error: null });
+
+  const leavePendingPromise = supabase
+    .from("leave_requests")
+    .select("*")
+    .eq("status", "step1_pending")
+    .order("created_at", { ascending: true });
+
+  const goalStatus =
+    role === "owner" || role === "director"
+      ? (["submitted", "step2_pending"] as const)
+      : (["submitted"] as const);
+  const goalsPendingPromise = me
+    ? supabase
+        .from("monthly_goals")
+        .select("id, year, month, theme, employee_id, status")
+        .eq("company_id", me.company_id)
+        .in("status", [...goalStatus])
+        .order("created_at", { ascending: true })
+    : Promise.resolve({ data: [] as unknown[] });
+
+  const ownerSheetsPromise =
+    me && role === "owner"
+      ? supabase
+          .from("check_sheets")
+          .select("id, year, month, employee_id, self_check, status")
+          .eq("company_id", me.company_id)
+          .eq("status", "submitted")
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] as unknown[] });
+
+  const subsPromise =
+    me && role !== "owner"
+      ? supabase.from("employees").select("id").eq("manager_id", me.id)
+      : Promise.resolve({ data: [] as { id: string }[] });
+
+  const [
+    expenseRes,
+    { data: pendingLeave },
+    { data: gData },
+    { data: ownerSheetsData },
+    { data: subs },
+  ] = await Promise.all([
+    expensePendingPromise,
+    leavePendingPromise,
+    goalsPendingPromise,
+    ownerSheetsPromise,
+    subsPromise,
+  ]);
+
+  let v2ExpenseRows: ExpenseRow[] = [];
+  if (!expenseRes.error && expenseRes.data) {
+    v2ExpenseRows = (expenseRes.data ?? []) as ExpenseRow[];
+    if (role === "owner" || role === "director") {
       v2ExpenseRows.sort((a, b) => {
         if (a.status === b.status) return 0;
         if (a.status === "step2_pending") return -1;
@@ -83,24 +142,64 @@ export default async function ApprovalPage({
     }
   }
 
-  const { data: pendingLeave } = await supabase
-    .from("leave_requests")
-    .select("*")
-    .eq("status", "step1_pending")
-    .order("created_at", { ascending: true });
+  let pendingGoals = (gData ?? []) as {
+    id: string;
+    year: number;
+    month: number;
+    theme: string;
+    employee_id: string;
+    status: string;
+  }[];
+
+  let pendingSheets: {
+    id: string;
+    year: number;
+    month: number;
+    employee_id: string;
+    self_check: { category: string; item: string; score: number }[];
+    status: string;
+  }[] = [];
+
+  if (me && role === "owner") {
+    pendingSheets = (ownerSheetsData ?? []) as typeof pendingSheets;
+  } else if (me) {
+    const subIds = (subs ?? []).map((s) => (s as { id: string }).id);
+    if (subIds.length > 0) {
+      const { data: sData } = await supabase
+        .from("check_sheets")
+        .select("id, year, month, employee_id, self_check, status")
+        .eq("company_id", me.company_id)
+        .eq("status", "submitted")
+        .in("employee_id", subIds)
+        .order("created_at", { ascending: true });
+      pendingSheets = (sData ?? []) as typeof pendingSheets;
+    }
+  }
 
   const leaveUids = [
     ...new Set(
       (pendingLeave ?? []).map((x) => (x as { user_id: string }).user_id),
     ),
   ];
-  const { data: leaveEmps } =
-    leaveUids.length > 0
-      ? await supabase
-          .from("employees")
-          .select("auth_user_id, name")
-          .in("auth_user_id", leaveUids)
-      : { data: [] as { auth_user_id: string; name: string | null }[] };
+  const goalEmpIds = [...new Set(pendingGoals.map((g) => g.employee_id))];
+  const sheetEmpIds = [...new Set(pendingSheets.map((s) => s.employee_id))];
+
+  const [{ data: leaveEmps }, { data: goalEmps }, { data: sheetEmps }] =
+    await Promise.all([
+      leaveUids.length > 0
+        ? supabase
+            .from("employees")
+            .select("auth_user_id, name")
+            .in("auth_user_id", leaveUids)
+        : Promise.resolve({ data: [] as { auth_user_id: string; name: string | null }[] }),
+      goalEmpIds.length > 0
+        ? supabase.from("employees").select("id, name").in("id", goalEmpIds)
+        : Promise.resolve({ data: [] as { id: string; name: string | null }[] }),
+      sheetEmpIds.length > 0
+        ? supabase.from("employees").select("id, name").in("id", sheetEmpIds)
+        : Promise.resolve({ data: [] as { id: string; name: string | null }[] }),
+    ]);
+
   const leaveNameBy = new Map(
     (leaveEmps ?? []).map((p) => {
       const r = p as { auth_user_id: string; name: string | null };
@@ -114,62 +213,11 @@ export default async function ApprovalPage({
     hour: "時間単位",
   };
 
-  // 月間目標の承認待ち
-  let pendingGoals: { id: string; year: number; month: number; theme: string; employee_id: string; status: string }[] = [];
-  if (me) {
-    const goalStatus = (role === "owner" || role === "director") ? ["submitted", "step2_pending"] : ["submitted"];
-    const { data: gData } = await supabase
-      .from("monthly_goals")
-      .select("id, year, month, theme, employee_id, status")
-      .eq("company_id", me.company_id)
-      .in("status", goalStatus)
-      .order("created_at", { ascending: true });
-    pendingGoals = (gData ?? []) as typeof pendingGoals;
-  }
-  // 目標提出者の名前解決
-  const goalEmpIds = [...new Set(pendingGoals.map((g) => g.employee_id))];
-  const { data: goalEmps } = goalEmpIds.length > 0
-    ? await supabase.from("employees").select("id, name").in("id", goalEmpIds)
-    : { data: [] as { id: string; name: string | null }[] };
   const goalNameBy = new Map((goalEmps ?? []).map((e) => {
     const r = e as { id: string; name: string | null };
     return [r.id, r.name?.trim() || "（無名）"] as const;
   }));
 
-  // チェックシート承認待ち（manager_id で担当部下のみ表示、ownerは全員）
-  let pendingSheets: { id: string; year: number; month: number; employee_id: string; self_check: { category: string; item: string; score: number }[]; status: string }[] = [];
-  if (me) {
-    if (role === "owner") {
-      const { data: sData } = await supabase
-        .from("check_sheets")
-        .select("id, year, month, employee_id, self_check, status")
-        .eq("company_id", me.company_id)
-        .eq("status", "submitted")
-        .order("created_at", { ascending: true });
-      pendingSheets = (sData ?? []) as typeof pendingSheets;
-    } else {
-      // leader / approver / director: 自分の部下（manager_id = me.id）のみ
-      const { data: subs } = await supabase
-        .from("employees")
-        .select("id")
-        .eq("manager_id", me.id);
-      const subIds = (subs ?? []).map((s) => (s as { id: string }).id);
-      if (subIds.length > 0) {
-        const { data: sData } = await supabase
-          .from("check_sheets")
-          .select("id, year, month, employee_id, self_check, status")
-          .eq("company_id", me.company_id)
-          .eq("status", "submitted")
-          .in("employee_id", subIds)
-          .order("created_at", { ascending: true });
-        pendingSheets = (sData ?? []) as typeof pendingSheets;
-      }
-    }
-  }
-  const sheetEmpIds = [...new Set(pendingSheets.map((s) => s.employee_id))];
-  const { data: sheetEmps } = sheetEmpIds.length > 0
-    ? await supabase.from("employees").select("id, name").in("id", sheetEmpIds)
-    : { data: [] as { id: string; name: string | null }[] };
   const sheetNameBy = new Map((sheetEmps ?? []).map((e) => {
     const r = e as { id: string; name: string | null };
     return [r.id, r.name?.trim() || "（無名）"] as const;
