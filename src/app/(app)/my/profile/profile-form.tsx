@@ -40,31 +40,31 @@ export function ProfileForm({
   );
 
   const fieldClass =
-    "mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-card dark:text-zinc-50";
-  const labelClass = "block text-xs font-medium text-zinc-600 dark:text-zinc-400";
+    "mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900";
+  const labelClass = "block text-xs font-medium text-[#6B7280]";
 
   return (
     <div className="space-y-10">
-      <section className="rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-card/40">
-        <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+      <section className="rounded-xl border border-zinc-200 bg-white/50 p-5">
+        <h2 className="text-sm font-semibold text-zinc-800">
           社員情報（参照のみ）
         </h2>
         <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-1">
           <div>
-            <dt className="text-xs text-zinc-500 dark:text-zinc-400">入社日</dt>
-            <dd className="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
+            <dt className="text-xs text-[#6B7280]">入社日</dt>
+            <dd className="mt-1 font-medium text-[#1A1A1A]">
               {hireDateLabel}
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-zinc-500 dark:text-zinc-400">部署</dt>
-            <dd className="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
+            <dt className="text-xs text-[#6B7280]">部署</dt>
+            <dd className="mt-1 font-medium text-[#1A1A1A]">
               {departmentLabel}
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-zinc-500 dark:text-zinc-400">役職</dt>
-            <dd className="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
+            <dt className="text-xs text-[#6B7280]">役職</dt>
+            <dd className="mt-1 font-medium text-[#1A1A1A]">
               {jobTitleLabel}
             </dd>
           </div>
@@ -73,12 +73,12 @@ export function ProfileForm({
 
       <form
         action={profileAction}
-        className="space-y-4 rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-card/40"
+        className="space-y-4 rounded-xl border border-zinc-200 bg-white/50 p-5"
       >
-        <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+        <h2 className="text-sm font-semibold text-zinc-800">
           連絡先・LINE（編集可）
         </h2>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">ログインメール: {email}</p>
+        <p className="text-xs text-[#6B7280]">ログインメール: {email}</p>
 
         <label className={labelClass}>
           氏名
@@ -108,12 +108,12 @@ export function ProfileForm({
           LINE ID（通知用）
           <input name="line_user_id" defaultValue={profile.line_user_id} className={fieldClass} />
         </label>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="text-xs text-[#6B7280]">
           LINE 通知を受け取る場合は、LINE のユーザーIDを登録してください。
         </p>
 
-        <div className="border-t border-zinc-200 pt-6 dark:border-zinc-700">
-          <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+        <div className="border-t border-zinc-200 pt-6">
+          <h3 className="text-sm font-semibold text-zinc-800">
             本人情報
           </h3>
           <div className="mt-4 space-y-4">
@@ -129,11 +129,11 @@ export function ProfileForm({
           </div>
         </div>
 
-        <div className="border-t border-zinc-200 pt-6 dark:border-zinc-700">
-          <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+        <div className="border-t border-zinc-200 pt-6">
+          <h3 className="text-sm font-semibold text-zinc-800">
             緊急連絡先
           </h3>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 text-xs text-[#6B7280]">
             人事安否確認などに利用します。
           </p>
           <div className="mt-4 space-y-4">
@@ -175,23 +175,23 @@ export function ProfileForm({
         <button
           type="submit"
           disabled={profilePending}
-          className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+          className="rounded-lg bg-[#FF6B2B] px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-[#FF8C00]"
         >
           {profilePending ? "保存中…" : "プロフィールを保存"}
         </button>
         {profileState?.ok ? (
-          <p className="text-sm text-emerald-600 dark:text-emerald-400">保存しました。</p>
+          <p className="text-sm text-emerald-600">保存しました。</p>
         ) : null}
         {profileState && !profileState.ok && profileState.message ? (
-          <p className="text-sm text-red-600 dark:text-red-400">{profileState.message}</p>
+          <p className="text-sm text-red-600">{profileState.message}</p>
         ) : null}
       </form>
 
       <form
         action={pwAction}
-        className="space-y-4 rounded-xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-card/40"
+        className="space-y-4 rounded-xl border border-zinc-200 bg-white/50 p-5"
       >
-        <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+        <h2 className="text-sm font-semibold text-zinc-800">
           パスワード変更
         </h2>
         <label className={labelClass}>
@@ -229,17 +229,17 @@ export function ProfileForm({
         <button
           type="submit"
           disabled={pwPending}
-          className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+          className="rounded-lg bg-[#FF6B2B] px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-[#FF8C00]"
         >
           {pwPending ? "更新中…" : "パスワードを更新"}
         </button>
         {pwState?.ok ? (
-          <p className="text-sm text-emerald-600 dark:text-emerald-400">
+          <p className="text-sm text-emerald-600">
             パスワードを更新しました。
           </p>
         ) : null}
         {pwState && !pwState.ok && pwState.message ? (
-          <p className="text-sm text-red-600 dark:text-red-400">{pwState.message}</p>
+          <p className="text-sm text-red-600">{pwState.message}</p>
         ) : null}
       </form>
     </div>

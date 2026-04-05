@@ -53,16 +53,16 @@ export function AttendanceQrPanel() {
   }
 
   return (
-    <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-card">
-      <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+    <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+      <h2 className="text-sm font-medium text-[#6B7280]">
         QR 打刻（約5分で更新）
       </h2>
-      <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+      <p className="mt-2 text-xs text-[#6B7280]">
         本端末でログインした状態で QR を読み取ると打刻できます。QR
         の署名トークンには従業員ID（eid）・発行時刻（ts）・有効期限が含まれ、タブレット設置型の将来拡張に利用できます。
       </p>
       {err && (
-        <p className="mt-3 text-sm text-red-600 dark:text-red-400">{err}</p>
+        <p className="mt-3 text-sm text-red-600">{err}</p>
       )}
       {expiresAt && (
         <p className="mt-2 text-xs text-zinc-500">
@@ -71,7 +71,7 @@ export function AttendanceQrPanel() {
       )}
       <div className="mt-6 flex flex-wrap gap-8">
         <div>
-          <p className="mb-2 text-center text-xs font-medium text-emerald-700 dark:text-emerald-400">
+          <p className="mb-2 text-center text-xs font-medium text-emerald-700">
             出勤
           </p>
           {inToken ? (
@@ -79,7 +79,7 @@ export function AttendanceQrPanel() {
               value={buildPunchUrl(origin, "clock_in", inToken)}
               size={160}
               level="M"
-              className="rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700"
+              className="rounded-lg border border-zinc-200 bg-white p-2"
             />
           ) : (
             <div className="flex size-[160px] items-center justify-center rounded-lg border border-dashed border-zinc-300 text-xs text-zinc-500">
@@ -88,7 +88,7 @@ export function AttendanceQrPanel() {
           )}
         </div>
         <div>
-          <p className="mb-2 text-center text-xs font-medium text-zinc-700 dark:text-zinc-300">
+          <p className="mb-2 text-center text-xs font-medium text-zinc-700">
             退勤
           </p>
           {outToken ? (
@@ -96,7 +96,7 @@ export function AttendanceQrPanel() {
               value={buildPunchUrl(origin, "clock_out", outToken)}
               size={160}
               level="M"
-              className="rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700"
+              className="rounded-lg border border-zinc-200 bg-white p-2"
             />
           ) : (
             <div className="flex size-[160px] items-center justify-center rounded-lg border border-dashed border-zinc-300 text-xs text-zinc-500">
@@ -108,7 +108,7 @@ export function AttendanceQrPanel() {
       <button
         type="button"
         onClick={() => void refresh()}
-        className="mt-4 text-xs font-medium text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        className="mt-4 text-xs font-medium text-[#6B7280] underline hover:text-zinc-900"
       >
         QR を今すぐ更新
       </button>

@@ -27,7 +27,7 @@ export function LargePunchActionTiles({
         disabled={pending}
         onClick={onClockIn}
         aria-label="出勤を打刻"
-        className={`${tileBase} bg-gray-100 text-zinc-900 hover:bg-gray-50 dark:bg-zinc-300 dark:text-zinc-950 dark:hover:bg-zinc-200`}
+        className={`${tileBase} bg-gray-100 text-zinc-900 hover:bg-gray-50`}
       >
         <Sun
           className="h-16 w-16 shrink-0"
@@ -35,7 +35,7 @@ export function LargePunchActionTiles({
           aria-hidden
         />
         <span className="text-2xl font-bold tracking-tight">出勤</span>
-        <span className="text-sm font-normal text-zinc-700 dark:text-zinc-800">
+        <span className="text-sm font-normal text-zinc-700">
           今日もよろしくお願いします
         </span>
       </button>
@@ -44,7 +44,7 @@ export function LargePunchActionTiles({
         disabled={pending}
         onClick={onClockOut}
         aria-label="退勤を打刻"
-        className={`${tileBase} bg-yellow-400 text-amber-950 hover:bg-yellow-300 dark:bg-yellow-400 dark:text-amber-950 dark:hover:bg-yellow-300`}
+        className={`${tileBase} bg-yellow-400 text-amber-950 hover:bg-yellow-300`}
       >
         <MoonStar
           className="h-16 w-16 shrink-0"

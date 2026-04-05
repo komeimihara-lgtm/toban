@@ -3,15 +3,16 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-  --accent: #9a7b2d;
-  --surface-sidebar: #f1f5f9;
-  --background-sidebar: #f1f5f9;
-  --border: #e2e8f0;
-  --sidebar-border: #e2e8f0;
-  --sidebar-muted: #64748b;
-  --sidebar-text: #0f172a;
-  --card: #f1f5f9;
+  --foreground: #1A1A1A;
+  --accent: #FF6B2B;
+  --accent-soft: rgba(255,107,43,0.08);
+  --surface-sidebar: #ffffff;
+  --background-sidebar: #ffffff;
+  --border: #E5E7EB;
+  --sidebar-border: #E5E7EB;
+  --sidebar-muted: #6B7280;
+  --sidebar-text: #1A1A1A;
+  --card: #ffffff;
   --success: #22c55e;
   --warning: #f59e0b;
   --error: #ef4444;
@@ -22,23 +23,24 @@
  * html に class="dark" が必要（root layout で付与）
  */
 html.dark {
-  --background: #0c1222;
-  --background-sidebar: #0f172a;
-  --card: #162033;
-  --border: #1e2d45;
-  --foreground: #f0f4ff;
-  --muted-foreground: #94a3b8;
-  --accent: #2563eb;
-  --sidebar-active-bg: #1d4ed8;
+  --background: #ffffff;
+  --background-sidebar: #ffffff;
+  --card: #ffffff;
+  --border: #E5E7EB;
+  --foreground: #1A1A1A;
+  --muted-foreground: #6B7280;
+  --accent: #FF6B2B;
+  --accent-soft: rgba(255,107,43,0.08);
+  --sidebar-active-bg: #FF6B2B;
   --success: #22c55e;
   --warning: #f59e0b;
   --error: #ef4444;
-  --surface-sidebar: #0f172a;
-  --sidebar-border: #1e2d45;
-  --sidebar-muted: #cbd5e1;
-  --sidebar-text: #ffffff;
-  --radius: 14px;
-  color-scheme: dark;
+  --surface-sidebar: #ffffff;
+  --sidebar-border: #E5E7EB;
+  --sidebar-muted: #6B7280;
+  --sidebar-text: #1A1A1A;
+  --radius: 12px;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -69,13 +71,7 @@ body {
 }
 
 html.dark body {
-  background: linear-gradient(to bottom, #020617, #0c1222, #0f172a);
-}
-
-/* ダークモードのカードに光沢感 */
-.dark [class*="rounded-xl"],
-.dark [class*="rounded-2xl"] {
-  backdrop-filter: blur(4px);
+  background: #ffffff;
 }
 
 /*

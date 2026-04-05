@@ -8,11 +8,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const KIND_CLASS: Record<CalendarCell["kind"], string> = {
   empty: "bg-transparent",
-  weekend: "bg-zinc-100 text-zinc-500 dark:bg-card/80/50 dark:text-zinc-400",
-  work: "bg-emerald-100 text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100",
-  leave_full: "bg-sky-200 text-sky-950 dark:bg-sky-900/50 dark:text-sky-100",
-  leave_half: "bg-sky-100 text-sky-900 dark:bg-sky-950/35 dark:text-sky-100",
-  neutral: "bg-white text-zinc-800 dark:bg-card dark:text-zinc-200",
+  weekend: "bg-zinc-100 text-zinc-500",
+  work: "bg-emerald-100 text-emerald-950",
+  leave_full: "bg-sky-200 text-sky-950",
+  leave_half: "bg-sky-100 text-sky-900",
+  neutral: "bg-white text-zinc-800",
 };
 
 export function AttendanceCalendarClient({
@@ -50,10 +50,10 @@ export function AttendanceCalendarClient({
     <div className="mx-auto max-w-4xl space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+          <h1 className="text-2xl font-semibold text-[#1A1A1A]">
             勤怠カレンダー
           </h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-[#6B7280]">
             出勤・有給（承認済）・休日を色分けしています。
           </p>
         </div>
@@ -61,7 +61,7 @@ export function AttendanceCalendarClient({
           <button
             type="button"
             onClick={() => go(-1)}
-            className="rounded-lg border border-zinc-300 p-2 dark:border-zinc-600"
+            className="rounded-lg border border-zinc-300 p-2"
             aria-label="前月"
           >
             <ChevronLeft className="size-4" />
@@ -72,7 +72,7 @@ export function AttendanceCalendarClient({
           <button
             type="button"
             onClick={() => go(1)}
-            className="rounded-lg border border-zinc-300 p-2 dark:border-zinc-600"
+            className="rounded-lg border border-zinc-300 p-2"
             aria-label="次月"
           >
             <ChevronRight className="size-4" />
@@ -82,19 +82,19 @@ export function AttendanceCalendarClient({
 
       <section className="flex flex-wrap gap-4 text-xs">
         <span className="inline-flex items-center gap-2">
-          <span className="size-3 rounded bg-emerald-200 dark:bg-emerald-900/50" />
+          <span className="size-3 rounded bg-emerald-200" />
           出勤（打刻あり）
         </span>
         <span className="inline-flex items-center gap-2">
-          <span className="size-3 rounded bg-sky-200 dark:bg-sky-900/50" />
+          <span className="size-3 rounded bg-sky-200" />
           有給（全日）
         </span>
         <span className="inline-flex items-center gap-2">
-          <span className="size-3 rounded bg-sky-100 dark:bg-sky-950/35" />
+          <span className="size-3 rounded bg-sky-100" />
           有給（半休・時間）
         </span>
         <span className="inline-flex items-center gap-2">
-          <span className="size-3 rounded bg-zinc-200 dark:bg-zinc-700" />
+          <span className="size-3 rounded bg-zinc-200" />
           土日
         </span>
       </section>
@@ -109,7 +109,7 @@ export function AttendanceCalendarClient({
           <div
             key={i}
             className={`min-h-[3.25rem]
-              rounded-lg border border-zinc-100 p-2 dark:border-zinc-800/80 ${KIND_CLASS[c.kind]}`}
+              rounded-lg border border-zinc-100 p-2 ${KIND_CLASS[c.kind]}`}
           >
             {c.dayNum != null ? (
               <span className="tabular-nums font-semibold">{c.dayNum}</span>
@@ -118,22 +118,22 @@ export function AttendanceCalendarClient({
         ))}
       </div>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-card">
+      <section className="rounded-xl border border-zinc-200 bg-white p-5">
         <h2 className="text-sm font-semibold">月間サマリー</h2>
         <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-card">
+          <div className="rounded-lg bg-zinc-50 p-3">
             <dt className="text-xs text-zinc-500">出勤日数</dt>
             <dd className="mt-1 text-lg font-semibold tabular-nums">{workDays} 日</dd>
           </div>
-          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-card">
+          <div className="rounded-lg bg-zinc-50 p-3">
             <dt className="text-xs text-zinc-500">総労働時間（自動休憩控除後）</dt>
             <dd className="mt-1 text-lg font-semibold tabular-nums">
               {formatHoursMinutes(totalWorkMinutes)}
             </dd>
           </div>
-          <div className="rounded-lg bg-zinc-50 p-3 dark:bg-card">
+          <div className="rounded-lg bg-zinc-50 p-3">
             <dt className="text-xs text-zinc-500">有給取得日数（換算）</dt>
-            <dd className="mt-1 text-lg font-semibold tabular-nums text-sky-800 dark:text-sky-300">
+            <dd className="mt-1 text-lg font-semibold tabular-nums text-sky-800">
               {paidLeaveDays} 日
             </dd>
           </div>

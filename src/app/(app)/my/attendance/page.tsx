@@ -107,14 +107,14 @@ export default async function MyAttendancePage({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/my/attendance/correction"
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-600 dark:bg-card dark:text-zinc-100 dark:hover:bg-zinc-800"
+            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50"
           >
             <FileEdit className="size-4 shrink-0" aria-hidden />
             修正申請
           </Link>
           <Link
             href={`/my/attendance/calendar?y=${y}&m=${m}`}
-            className="inline-flex rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-200 dark:bg-card/80 dark:text-zinc-100 dark:hover:bg-zinc-700"
+            className="inline-flex rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-200"
           >
             月次カレンダー
           </Link>
@@ -122,13 +122,13 @@ export default async function MyAttendancePage({
       </header>
 
       {flashOk && (
-        <p className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+        <p className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           {sp.punched === "clock_in" ? "出勤" : "退勤"}
           を記録しました。
         </p>
       )}
       {flashErr && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
           {flashErr}
         </p>
       )}

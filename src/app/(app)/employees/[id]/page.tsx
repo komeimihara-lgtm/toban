@@ -60,33 +60,33 @@ export default async function EmployeeDetailPage({
       <Link href="/employees" className="text-sm text-zinc-500 underline">
         ← スタッフ一覧
       </Link>
-      <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+      <h1 className="text-2xl font-semibold text-[#1A1A1A]">
         {row.name ?? "（無名）"}
       </h1>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-card">
+      <section className="rounded-xl border border-zinc-200 bg-white p-6">
         <dl className="grid gap-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-xs text-zinc-500">ロール</dt>
-            <dd className="font-medium text-zinc-900 dark:text-zinc-100">{row.role}</dd>
+            <dd className="font-medium text-[#1A1A1A]">{row.role}</dd>
           </div>
           <div>
             <dt className="text-xs text-zinc-500">部署</dt>
-            <dd className="font-medium text-zinc-900 dark:text-zinc-100">{deptName}</dd>
+            <dd className="font-medium text-[#1A1A1A]">{deptName}</dd>
           </div>
           <div>
             <dt className="text-xs text-zinc-500">メール</dt>
-            <dd className="font-medium text-zinc-900 dark:text-zinc-100">{row.email ?? "—"}</dd>
+            <dd className="font-medium text-[#1A1A1A]">{row.email ?? "—"}</dd>
           </div>
           <div>
             <dt className="text-xs text-zinc-500">LINE</dt>
-            <dd className="font-medium text-zinc-900 dark:text-zinc-100">
+            <dd className="font-medium text-[#1A1A1A]">
               {row.line_user_id ? "連携済み" : "未連携"}
             </dd>
           </div>
           <div>
             <dt className="text-xs text-zinc-500">ステータス</dt>
-            <dd className="font-medium text-zinc-900 dark:text-zinc-100">
+            <dd className="font-medium text-[#1A1A1A]">
               {row.is_active ? "有効" : "無効"}
             </dd>
           </div>

@@ -94,54 +94,54 @@ export default async function MyHomePage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+        <h1 className="text-2xl font-semibold text-[#1A1A1A]">
           マイページ
         </h1>
       </div>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-card">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg">
         <div>
-          <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+          <h2 className="text-sm font-medium text-[#6B7280]">
             今日の打刻
           </h2>
-          <p className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+          <p className="mt-2 text-lg font-semibold text-[#1A1A1A]">
             {punchStatus.label}
           </p>
-          <p className="text-sm text-zinc-600 dark:text-zinc-300">{punchStatus.detail}</p>
+          <p className="text-sm text-[#6B7280]">{punchStatus.detail}</p>
         </div>
         <div className="mt-4">
           <PunchButtons />
         </div>
       </section>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg dark:border-zinc-800 dark:bg-card">
-        <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-lg">
+        <h2 className="text-sm font-medium text-[#6B7280]">
           今月の勤務時間サマリー
         </h2>
         <p className="mt-2 text-xs text-zinc-500">※ 休憩控除済み</p>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
           <div>
-            <dt className="text-xs text-zinc-600 dark:text-zinc-400">出勤日数</dt>
-            <dd className="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+            <dt className="text-xs text-[#6B7280]">出勤日数</dt>
+            <dd className="text-lg font-semibold tabular-nums text-[#1A1A1A]">
               {monthSummary.workDays} 日
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-zinc-600 dark:text-zinc-400">総労働時間</dt>
-            <dd className="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+            <dt className="text-xs text-[#6B7280]">総労働時間</dt>
+            <dd className="text-lg font-semibold tabular-nums text-[#1A1A1A]">
               {fmtHM(monthSummary.totalWorkMinutes)}
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-zinc-600 dark:text-zinc-400">超過（8h/日基準）</dt>
-            <dd className="text-lg font-semibold tabular-nums text-amber-800 dark:text-amber-300">
+            <dt className="text-xs text-[#6B7280]">超過（8h/日基準）</dt>
+            <dd className="text-lg font-semibold tabular-nums text-amber-800">
               {fmtHM(monthSummary.overtimeMinutes)}
             </dd>
           </div>
         </dl>
         <Link
           href="/my/attendance"
-          className="mt-3 inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/20 px-4 py-2 text-sm font-medium text-blue-600 transition-all hover:bg-blue-600/30 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
+          className="mt-3 inline-flex items-center gap-2 rounded-xl border border-[#FF6B2B]/30 bg-[#FF6B2B]/20 px-4 py-2 text-sm font-medium text-[#FF6B2B] transition-all hover:bg-[#FF6B2B]/30 hover:text-[#FF8C00]"
         >
           勤怠の詳細へ →
         </Link>

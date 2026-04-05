@@ -63,18 +63,18 @@ export default async function EmployeesPage({
           name="q"
           placeholder="名前検索"
           defaultValue={sp.q}
-          className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-600 dark:bg-card"
+          className="rounded border border-zinc-300 px-2 py-1"
         />
         <button
           type="submit"
-          className="rounded bg-zinc-900 px-3 py-1 text-white dark:bg-zinc-100 dark:text-zinc-900"
+          className="rounded bg-[#FF6B2B] px-3 py-1 text-white hover:bg-[#FF8C00]"
         >
           検索
         </button>
       </form>
-      <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+      <div className="overflow-x-auto rounded-xl border border-zinc-200">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500 dark:border-zinc-800 dark:bg-card">
+          <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium text-zinc-500">
             <tr>
               <th className="px-3 py-2">名前</th>
               <th className="px-3 py-2">部署</th>
@@ -92,12 +92,12 @@ export default async function EmployeesPage({
               return (
                 <tr
                   key={row.id}
-                  className="border-b border-zinc-100 dark:border-zinc-800"
+                  className="border-b border-zinc-100"
                 >
                   <td className="px-3 py-2">
                     <Link
                       href={`/employees/${row.id}`}
-                      className="font-medium text-emerald-700 underline dark:text-emerald-400"
+                      className="font-medium text-emerald-700 underline"
                     >
                       {row.name ?? "（無名）"}
                     </Link>

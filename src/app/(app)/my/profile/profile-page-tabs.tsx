@@ -25,10 +25,10 @@ export function ProfilePageTabs({
   return (
     <div className="mx-auto max-w-2xl space-y-6 pb-12">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+        <h1 className="text-2xl font-semibold text-[#1A1A1A]">
           プロフィール
         </h1>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-sm text-[#6B7280]">
           基本情報を管理します。
         </p>
       </div>

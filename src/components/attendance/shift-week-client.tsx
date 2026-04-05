@@ -15,10 +15,10 @@ const SHIFT_LABEL: Record<ShiftCellType, string> = {
 };
 
 const SHIFT_CLASS: Record<ShiftCellType, string> = {
-  day: "bg-sky-100 text-sky-950 dark:bg-sky-950/50 dark:text-sky-100",
-  night: "bg-indigo-100 text-indigo-950 dark:bg-indigo-950/50 dark:text-indigo-100",
-  half: "bg-amber-100 text-amber-950 dark:bg-amber-950/40 dark:text-amber-100",
-  off: "bg-zinc-100 text-zinc-500 dark:bg-card/80/60 dark:text-zinc-400",
+  day: "bg-sky-100 text-sky-950",
+  night: "bg-indigo-100 text-indigo-950",
+  half: "bg-amber-100 text-amber-950",
+  off: "bg-zinc-100 text-zinc-500",
 };
 
 const HOURS: Record<ShiftCellType, number> = {
@@ -140,10 +140,10 @@ export function ShiftWeekClient() {
     <div className="mx-auto max-w-[1100px] space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+          <h1 className="text-2xl font-semibold text-[#1A1A1A]">
             シフト管理
           </h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-[#6B7280]">
             週次グリッド（ブラウザにドラフト保存）。本番では DB 連携を想定しています。
           </p>
         </div>
@@ -151,38 +151,38 @@ export function ShiftWeekClient() {
           <button
             type="button"
             onClick={() => setWeekStart((w) => addDays(w, -7))}
-            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm"
           >
             前週
           </button>
           <button
             type="button"
             onClick={() => setWeekStart(mondayOfWeek(new Date()))}
-            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm"
           >
             今週
           </button>
           <button
             type="button"
             onClick={() => setWeekStart((w) => addDays(w, 7))}
-            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm"
           >
             次週
           </button>
         </div>
       </header>
 
-      <section className="overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-card">
+      <section className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
         <table className="w-full min-w-[720px] border-collapse text-sm">
           <thead>
-            <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-card">
-              <th className="sticky left-0 z-10 min-w-[5.5rem] border-r border-zinc-200 bg-zinc-50 px-2 py-3 text-left text-xs font-semibold dark:border-zinc-800 dark:bg-card">
+            <tr className="border-b border-zinc-200 bg-zinc-50">
+              <th className="sticky left-0 z-10 min-w-[5.5rem] border-r border-zinc-200 bg-zinc-50 px-2 py-3 text-left text-xs font-semibold">
                 スタッフ
               </th>
               {days.map((d, i) => (
                 <th
                   key={i}
-                  className="px-1 py-3 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-400"
+                  className="px-1 py-3 text-center text-xs font-semibold text-[#6B7280]"
                 >
                   <div>
                     {d.toLocaleDateString("ja-JP", {
@@ -202,9 +202,9 @@ export function ShiftWeekClient() {
             {MOCK_STAFF.map((s) => (
               <tr
                 key={s.id}
-                className="border-b border-zinc-100 dark:border-zinc-800/80"
+                className="border-b border-zinc-100"
               >
-                <td className="sticky left-0 z-10 border-r border-zinc-100 bg-white px-2 py-2 font-medium dark:border-zinc-800 dark:bg-card">
+                <td className="sticky left-0 z-10 border-r border-zinc-100 bg-white px-2 py-2 font-medium">
                   {s.name}
                 </td>
                 {days.map((_, di) => {
@@ -233,7 +233,7 @@ export function ShiftWeekClient() {
         </table>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-800 dark:bg-card">
+      <section className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-5">
         <h2 className="text-sm font-semibold">今週の集計</h2>
         <dl className="mt-3 flex flex-wrap gap-6">
           <div>
@@ -278,7 +278,7 @@ export function ShiftWeekClient() {
           aria-modal
           aria-labelledby="shift-modal-title"
         >
-          <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 shadow-xl dark:border-zinc-700 dark:bg-card">
+          <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 shadow-xl">
             <h2 id="shift-modal-title" className="text-base font-semibold">
               シフトを選択
             </h2>
@@ -307,7 +307,7 @@ export function ShiftWeekClient() {
             </div>
             <button
               type="button"
-              className="mt-4 w-full rounded-lg border border-zinc-300 py-2 text-sm dark:border-zinc-600"
+              className="mt-4 w-full rounded-lg border border-zinc-300 py-2 text-sm"
               onClick={() => setModal(null)}
             >
               キャンセル

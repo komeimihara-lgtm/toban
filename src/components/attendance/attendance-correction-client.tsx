@@ -186,20 +186,20 @@ export function AttendanceCorrectionClient() {
           role={message.type === "ok" ? "status" : "alert"}
           className={
             message.type === "ok"
-              ? "rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-200"
-              : "rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200"
+              ? "rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+              : "rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
           }
         >
           {message.text}
         </p>
       )}
 
-      <form onSubmit={onSubmit} className="space-y-5 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-card">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+      <form onSubmit={onSubmit} className="space-y-5 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-[#1A1A1A]">
           新規申請
         </h2>
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <label className="block text-sm font-medium text-zinc-700">
             対象日
           </label>
           <input
@@ -208,20 +208,20 @@ export function AttendanceCorrectionClient() {
             onChange={(e) => setTargetDate(e.target.value)}
             required
             disabled={submitting}
-            className="mt-1 w-full max-w-xs rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-card dark:text-zinc-100"
+            className="mt-1 w-full max-w-xs rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900"
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50/80 p-4 dark:border-zinc-600 dark:bg-card/50">
+          <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50/80 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
               元の打刻（読み取り専用）
             </p>
-            <p className="mt-2 text-sm text-zinc-800 dark:text-zinc-200">
+            <p className="mt-2 text-sm text-zinc-800">
               出勤:{" "}
               {loadingDay ? "…" : formatTs(origIn)}
             </p>
-            <p className="mt-1 text-sm text-zinc-800 dark:text-zinc-200">
+            <p className="mt-1 text-sm text-zinc-800">
               退勤:{" "}
               {loadingDay ? "…" : formatTs(origOut)}
             </p>
@@ -231,7 +231,7 @@ export function AttendanceCorrectionClient() {
               修正後の打刻
             </p>
             <div>
-              <label className="text-xs text-zinc-600 dark:text-zinc-400">
+              <label className="text-xs text-[#6B7280]">
                 出勤
               </label>
               <input
@@ -239,11 +239,11 @@ export function AttendanceCorrectionClient() {
                 value={reqIn}
                 onChange={(e) => setReqIn(e.target.value)}
                 disabled={submitting}
-                className="mt-0.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-card dark:text-zinc-100"
+                className="mt-0.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
               />
             </div>
             <div>
-              <label className="text-xs text-zinc-600 dark:text-zinc-400">
+              <label className="text-xs text-[#6B7280]">
                 退勤
               </label>
               <input
@@ -251,14 +251,14 @@ export function AttendanceCorrectionClient() {
                 value={reqOut}
                 onChange={(e) => setReqOut(e.target.value)}
                 disabled={submitting}
-                className="mt-0.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-card dark:text-zinc-100"
+                className="mt-0.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
               />
             </div>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <label className="block text-sm font-medium text-zinc-700">
             修正理由（必須）
           </label>
           <textarea
@@ -267,7 +267,7 @@ export function AttendanceCorrectionClient() {
             required
             rows={4}
             disabled={submitting}
-            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-card dark:text-zinc-100"
+            className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900"
             placeholder="例: 電車遅延のため出勤打刻が遅れた"
           />
         </div>
@@ -275,7 +275,7 @@ export function AttendanceCorrectionClient() {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-xl bg-blue-600 px-6 py-2.5 font-medium text-white shadow-md hover:bg-blue-500 disabled:opacity-50"
+          className="rounded-xl bg-[#FF6B2B] px-6 py-2.5 font-medium text-white shadow-md hover:bg-[#FF8C00] disabled:opacity-50"
         >
           {submitting ? "送信中…" : "申請する"}
         </button>
@@ -283,18 +283,18 @@ export function AttendanceCorrectionClient() {
 
       {isAdmin && pending.length > 0 && (
         <section>
-          <h2 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+          <h2 className="mb-3 text-lg font-semibold text-[#1A1A1A]">
             承認待ち（管理者）
           </h2>
           <ul className="space-y-3">
             {pending.map((p) => (
               <li
                 key={p.id}
-                className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-900/40 dark:bg-amber-950/20 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div className="text-sm text-zinc-800 dark:text-zinc-200">
+                <div className="text-sm text-zinc-800">
                   <p className="font-medium">{p.target_date}</p>
-                  <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+                  <p className="mt-1 text-xs text-[#6B7280]">
                     理由: {p.reason}
                   </p>
                   <p className="mt-1 text-xs">
@@ -317,7 +317,7 @@ export function AttendanceCorrectionClient() {
                     type="button"
                     disabled={actionId === p.id}
                     onClick={() => void decide(p.id, "reject")}
-                    className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm dark:border-zinc-600 dark:bg-card"
+                    className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm"
                   >
                     差戻し
                   </button>
@@ -329,7 +329,7 @@ export function AttendanceCorrectionClient() {
       )}
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+        <h2 className="mb-3 text-lg font-semibold text-[#1A1A1A]">
           自分の申請履歴
         </h2>
         {items.length === 0 ? (
@@ -339,7 +339,7 @@ export function AttendanceCorrectionClient() {
             {items.map((row) => (
               <li
                 key={row.id}
-                className="rounded-lg border border-zinc-200 px-4 py-3 text-sm dark:border-zinc-800"
+                className="rounded-lg border border-zinc-200 px-4 py-3 text-sm"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{row.target_date}</span>

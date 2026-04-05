@@ -56,12 +56,12 @@ function NavLink({
       href={href}
       className={`group flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-bold leading-snug transition-colors ${
         active
-          ? "border border-accent/50 bg-accent/15 text-accent shadow-sm dark:border-transparent dark:bg-[#243352] dark:text-white dark:shadow-none"
-          : "border border-transparent text-zinc-800 hover:bg-slate-200/80 hover:text-zinc-950 dark:text-white dark:hover:bg-white/10 dark:hover:text-white"
+          ? "border-l-[3px] border-l-[#FF6B2B] border-y border-r border-y-transparent border-r-transparent bg-[rgba(255,107,43,0.08)] text-[#FF6B2B]"
+          : "border-l-[3px] border-transparent text-[#6B7280] hover:bg-gray-100 hover:text-[#1A1A1A]"
       }`}
     >
       <Icon
-        className={`size-4 shrink-0 ${active ? "text-accent opacity-100 dark:text-white" : "text-zinc-600 dark:text-white dark:group-hover:text-white"}`}
+        className={`size-4 shrink-0 ${active ? "text-[#FF6B2B]" : "text-[#6B7280] group-hover:text-[#1A1A1A]"}`}
         aria-hidden
       />
       <span className="flex-1">{label}</span>
@@ -78,8 +78,8 @@ function SectionLabel({
 }) {
   const colors =
     variant === "emerald"
-      ? "bg-emerald-600/20 border-emerald-500/30 text-emerald-300"
-      : "bg-blue-600/20 border-blue-500/30 text-blue-300";
+      ? "bg-[rgba(255,107,43,0.08)] border-[#FF6B2B]/20 text-[#FF6B2B]"
+      : "bg-[rgba(255,107,43,0.08)] border-[#FF6B2B]/20 text-[#FF6B2B]";
   return (
     <p className="mb-2 mt-6 flex items-center gap-2 px-2 first:mt-0">
       <span
@@ -148,30 +148,30 @@ export function AppSidebar({
         <div className="flex items-start justify-between border-b border-[var(--sidebar-border)] px-4 py-4">
           <div className="min-w-0 flex-1 space-y-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 shadow-lg shadow-blue-900/40">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FF6B2B] shadow-md shadow-orange-200">
                 <span className="text-lg font-black text-white">T</span>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-bold tracking-widest text-zinc-900 dark:text-white">
+                <p className="text-sm font-bold tracking-widest text-[#FF6B2B]">
                   TOBAN
                 </p>
-                <p className="text-[10px] text-zinc-500 dark:text-zinc-500">
+                <p className="text-[10px] text-[#6B7280]">
                   お店とバイトをつなぐ、当番管理アプリ
                 </p>
               </div>
             </div>
-            <p className="truncate text-sm font-medium text-zinc-900 dark:text-white">
+            <p className="truncate text-sm font-medium text-[#1A1A1A]">
               {userLabel}
             </p>
             {tenantName ? (
-              <p className="truncate text-xs text-zinc-600 dark:text-zinc-400">
+              <p className="truncate text-xs text-[#6B7280]">
                 {tenantName}
               </p>
             ) : null}
           </div>
           <button
             onClick={() => setMobileOpen(false)}
-            className="shrink-0 rounded-lg p-1 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700 md:hidden"
+            className="shrink-0 rounded-lg p-1 text-[#6B7280] hover:bg-gray-100 md:hidden"
             aria-label="メニューを閉じる"
           >
             <X className="size-5" />

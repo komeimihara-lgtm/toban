@@ -62,27 +62,27 @@ export function CompanyTenantSettings({
         <p className="text-sm text-zinc-500">
           テナント ID <code className="text-xs">{initialCompany.id}</code>
         </p>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+        <h1 className="mt-1 text-2xl font-semibold text-[#1A1A1A]">
           店舗設定
         </h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-2 text-sm text-[#6B7280]">
           通知チャネルなどの基本設定を管理します。
         </p>
       </div>
 
       {msg ? (
-        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
           {msg}
         </p>
       ) : null}
       {err ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-100">
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
           {err}
         </p>
       ) : null}
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-card">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
+      <section className="rounded-xl border border-zinc-200 bg-white p-6">
+        <h2 className="text-base font-semibold text-[#1A1A1A]">
           通知チャネル
         </h2>
         <label className="mt-3 flex items-center gap-2 text-sm">
