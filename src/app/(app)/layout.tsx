@@ -1,54 +1,19 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { BottomNav } from "@/components/bottom-nav";
-import { countExpenseApprovalBadges } from "@/lib/overview-stats";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
-import { isIncentiveEligible, type ProfileRow } from "@/types/incentive";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "LENARD HR",
-  description: "レナード株式会社 人事・勤怠",
+  title: "TOBAN",
+  description: "お店とバイトをつなぐ、当番管理アプリ",
 };
-
-async function countDealDraftBadges(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  opts: { userId: string; companyId: string; isAdmin: boolean },
-) {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth() + 1;
-
-  try {
-    if (opts.isAdmin) {
-      const { count } = await supabase
-        .from("deals")
-        .select("*", { count: "exact", head: true })
-        .eq("company_id", opts.companyId)
-        .eq("year", y)
-        .eq("month", m)
-        .eq("submit_status", "draft");
-      return count ?? 0;
-    }
-    const { count } = await supabase
-      .from("deals")
-      .select("*", { count: "exact", head: true })
-      .or(`appo_employee_id.eq.${opts.userId},closer_employee_id.eq.${opts.userId}`)
-      .in("submit_status", ["draft", "rejected"])
-      .eq("year", y)
-      .eq("month", m);
-    return count ?? 0;
-  } catch {
-    return 0;
-  }
-}
 
 async function fetchEmployeeRowForAuthUser(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
 ) {
-  const empCols =
-    "id, role, is_sales_target, is_service_target, created_at, name, company_id";
+  const empCols = "id, role, name, company_id";
   const { data: byAuth } = await supabase
     .from("employees")
     .select(empCols)
@@ -63,55 +28,12 @@ async function fetchEmployeeRowForAuthUser(
   return byUser ?? null;
 }
 
-type EmpOnboardingSlice = { id: string; created_at: string };
-
-/** layout で既に取った employees 行を渡せば二重クエリを省略。`false` = 行なし。 */
-async function shouldShowEmployeeOnboarding(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-  preloaded: EmpOnboardingSlice | false | undefined = undefined,
-) {
-  try {
-    let empId: string;
-    let createdAt: Date;
-    if (preloaded === false) {
-      return false;
-    }
-    if (preloaded) {
-      empId = preloaded.id;
-      createdAt = new Date(preloaded.created_at);
-    } else {
-      const emp = await fetchEmployeeRowForAuthUser(supabase, userId);
-      if (!emp) return false;
-      empId = (emp as { id: string }).id;
-      createdAt = new Date((emp as { created_at: string }).created_at);
-    }
-    const daysSince = (Date.now() - createdAt.getTime()) / 86400000;
-    if (daysSince <= 30) return true;
-    const { count } = await supabase
-      .from("onboarding_tasks")
-      .select("*", { count: "exact", head: true })
-      .eq("employee_id", empId)
-      .eq("completed", false);
-    return (count ?? 0) > 0;
-  } catch {
-    return false;
-  }
-}
-
 export default async function AppGroupLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   let userLabel = "未ログイン";
   let showAdminSection = false;
-  let approvalBadgeCount = 0;
-  let incentiveDraftBadgeCount = 0;
-  let showMyIncentiveNav = false;
-  let showEmployeeOnboardingNav = false;
   let tenantName: string | null = null;
-  let showCheckSheetApproval = false;
-  let expensesListHref = "/my/expenses";
-  let showCompanyDocumentsAdminNav = false;
 
   if (isSupabaseConfigured()) {
     try {
@@ -123,81 +45,25 @@ export default async function AppGroupLayout({
       if (user) {
         const emp = await fetchEmployeeRowForAuthUser(supabase, user.id);
 
-        const profile = emp as { name?: string; role?: string; company_id?: string; is_sales_target?: boolean; is_service_target?: boolean } | null;
-
         const cid = (emp as { company_id?: string } | null)?.company_id;
 
         const name =
-          (profile as { name?: string | null } | null)?.name?.trim() ?? "";
+          (emp as { name?: string | null } | null)?.name?.trim() ?? "";
         userLabel = name || "氏名未登録";
 
         const role =
-          (emp as { role?: string | null } | null)?.role ??
-          (profile as { role?: string } | null)?.role ??
-          "staff";
-        showAdminSection = role === "owner" || role === "director" || role === "approver" || role === "sr";
-        showCompanyDocumentsAdminNav = role === "owner" || role === "director";
-        const isLeaderRole = role === "leader";
-        showCheckSheetApproval = isLeaderRole;
-        if (showAdminSection) {
-          expensesListHref = "/expenses";
+          (emp as { role?: string | null } | null)?.role ?? "staff";
+        showAdminSection = role === "owner";
+
+        if (cid) {
+          const { data: co } = await supabase
+            .from("companies")
+            .select("name")
+            .eq("id", cid)
+            .maybeSingle();
+          tenantName =
+            (co as { name?: string } | null)?.name ?? null;
         }
-
-        const p = profile as ProfileRow | null;
-        if (emp) {
-          const er = emp as {
-            is_sales_target?: boolean;
-            is_service_target?: boolean;
-          };
-          showMyIncentiveNav = Boolean(
-            er.is_sales_target || er.is_service_target,
-          );
-        } else {
-          showMyIncentiveNav = Boolean(p && isIncentiveEligible(p));
-        }
-
-        const onboardingPreload: EmpOnboardingSlice | false | undefined = emp
-          ? {
-              id: (emp as { id: string }).id,
-              created_at: (emp as { created_at: string }).created_at,
-            }
-          : false;
-
-        const [coRes, onboardingNav, approvalBadges, dealDraft] =
-          await Promise.all([
-            cid
-              ? supabase
-                  .from("companies")
-                  .select("name")
-                  .eq("id", cid)
-                  .maybeSingle()
-                  .then(
-                    (r) => r,
-                    () => ({ data: null }),
-                  )
-              : Promise.resolve({ data: null }),
-            shouldShowEmployeeOnboarding(
-              supabase,
-              user.id,
-              onboardingPreload,
-            ).catch(() => false),
-            showAdminSection
-              ? countExpenseApprovalBadges(supabase, role).catch(() => 0)
-              : Promise.resolve(0),
-            cid
-              ? countDealDraftBadges(supabase, {
-                  userId: user.id,
-                  companyId: cid,
-                  isAdmin: showAdminSection,
-                }).catch(() => 0)
-              : Promise.resolve(0),
-          ]);
-
-        tenantName =
-          (coRes.data as { name?: string } | null)?.name ?? null;
-        showEmployeeOnboardingNav = onboardingNav;
-        approvalBadgeCount = approvalBadges;
-        incentiveDraftBadgeCount = dealDraft;
       }
     } catch {
       userLabel = "接続エラー";
@@ -209,14 +75,7 @@ export default async function AppGroupLayout({
       <AppSidebar
         userLabel={userLabel}
         tenantName={tenantName}
-        showMyIncentiveNav={showMyIncentiveNav}
         showAdminSection={showAdminSection}
-        showCheckSheetApproval={showCheckSheetApproval}
-        showEmployeeOnboardingNav={showEmployeeOnboardingNav}
-        approvalBadgeCount={approvalBadgeCount}
-        incentiveDraftBadgeCount={incentiveDraftBadgeCount}
-        expensesListHref={expensesListHref}
-        showCompanyDocumentsAdminNav={showCompanyDocumentsAdminNav}
       />
       <main className="print-full text-foreground min-w-0 flex-1 overflow-y-auto px-4 pb-20 pt-6 md:p-10 md:pb-10">
         {children}

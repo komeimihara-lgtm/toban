@@ -21,8 +21,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "LENARD HR",
-  description: "レナード株式会社 人事・勤怠",
+  title: "TOBAN",
+  description: "お店とバイトをつなぐ、当番管理アプリ",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/favicon.svg",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "LENARD HR",
+    title: "TOBAN",
   },
 };
 

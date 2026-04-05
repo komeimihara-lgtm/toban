@@ -1,4 +1,4 @@
-import { getProfile, getSessionUser, isOwnerOrApprover } from "@/lib/api-auth";
+import { getProfile, getSessionUser, isOwner } from "@/lib/api-auth";
 import { jstDayRangeIso } from "@/lib/jst-day-range";
 import { NextResponse } from "next/server";
 
@@ -22,7 +22,7 @@ export async function GET() {
     return NextResponse.json({ error: "プロフィールがありません" }, { status: 403 });
   }
 
-  const adminView = isOwnerOrApprover(profile.role);
+  const adminView = isOwner(profile.role);
 
   const { data: mine, error: e1 } = await supabase
     .from("attendance_corrections")

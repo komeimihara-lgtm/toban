@@ -8,7 +8,6 @@ export type AuthProfile = {
   name: string | null;
   line_user_id: string | null;
   department_id: string | null;
-  is_sales_target: boolean;
 };
 
 export async function getSessionUser() {
@@ -38,17 +37,11 @@ export async function getProfile(
 ): Promise<AuthProfile | null> {
   const { data, error } = await supabase
     .from("employees")
-    .select(
-      "id, company_id, role, name, line_user_id, department_id, is_sales_target",
-    )
+    .select("id, company_id, role, name, line_user_id, department_id")
     .eq("auth_user_id", userId)
     .maybeSingle();
   if (error || !data) return null;
-  const row = data as AuthProfile;
-  return {
-    ...row,
-    is_sales_target: Boolean(row.is_sales_target),
-  };
+  return data as AuthProfile;
 }
 
 export async function requireProfile() {
@@ -66,12 +59,4 @@ export async function requireProfile() {
 
 export function isOwner(role: string) {
   return role === "owner";
-}
-
-export function isApprover(role: string) {
-  return role === "approver";
-}
-
-export function isOwnerOrApprover(role: string) {
-  return role === "owner" || role === "director" || role === "approver";
 }

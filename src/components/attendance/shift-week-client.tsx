@@ -3,7 +3,7 @@
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-const STORAGE_KEY = "lenard-hr-shift-week-v1";
+const STORAGE_KEY = "toban-shift-week-v1";
 
 export type ShiftCellType = "day" | "night" | "half" | "off";
 

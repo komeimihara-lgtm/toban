@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 const MAX_BATCH = 50;
 
 function resendFrom() {
-  return process.env.RESEND_FROM?.trim() || "LENARD HR <onboarding@resend.dev>";
+  return process.env.RESEND_FROM?.trim() || "TOBAN <onboarding@resend.dev>";
 }
 
 export async function GET(req: Request) {
@@ -119,7 +119,7 @@ export async function GET(req: Request) {
         }
         const subj =
           r.subject?.trim() ||
-          `【LENARD HR】お知らせ（${r.id.slice(0, 8)}）`;
+          `【TOBAN】お知らせ（${r.id.slice(0, 8)}）`;
         const { error: sendErr } = await resend.emails.send({
           from: resendFrom(),
           to: [to],

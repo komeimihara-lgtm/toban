@@ -14,13 +14,13 @@ export default function LoginPage() {
         </div>
         <header className="mb-10 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-            LENARD HR
+            TOBAN
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
-            レナード株式会社
+            TOBAN
           </h1>
           <p className="mt-2 text-sm text-slate-400">
-            人事・勤怠・経費・給与ポータル
+            お店とバイトをつなぐ、当番管理アプリ
           </p>
         </header>
 

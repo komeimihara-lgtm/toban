@@ -1,5 +1,4 @@
 import { createServerClient } from "@supabase/ssr";
-import { isAdminRole } from "@/types/incentive";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
@@ -57,7 +56,7 @@ export async function middleware(request: NextRequest) {
 
   const isLogin = pathname === "/login";
 
-  /** 未ログインは常に /login へ。ログイン後は owner/approver は `/`、それ以外は /my へ。 */
+  /** 未ログインは /login へ。ログイン後は owner は `/`、staff は /my へ。 */
   if (!user && !isLogin) {
     const u = request.nextUrl.clone();
     u.pathname = "/login";
@@ -82,11 +81,9 @@ export async function middleware(request: NextRequest) {
         .maybeSingle();
       if (empByUser) {
         role = (empByUser as { role?: string }).role ?? "staff";
-      } else {
-        role = "staff";
       }
     }
-    const dest = isAdminRole(role) ? "/" : "/my";
+    const dest = role === "owner" ? "/" : "/my";
     const u = request.nextUrl.clone();
     u.pathname = dest;
     u.search = "";

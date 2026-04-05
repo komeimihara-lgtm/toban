@@ -1,7 +1,6 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
-import { isAdminRole } from "@/types/incentive";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -63,23 +62,16 @@ export function LoginForm() {
       .maybeSingle();
     const role = (empRow as { role?: string } | null)?.role ?? "staff";
 
-    let dest = isAdminRole(role) ? "/dashboard" : "/my";
+    const isAdmin = role === "owner";
+    let dest = isAdmin ? "/dashboard" : "/my";
     if (nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//")) {
-      const admin = isAdminRole(role);
       if (nextPath === "/login") {
         /* keep default dest */
-      } else if (admin) {
+      } else if (isAdmin) {
         dest = nextPath;
       } else {
         const staffOk =
-          nextPath === "/my" ||
-          nextPath.startsWith("/my/") ||
-          nextPath === "/onboarding" ||
-          (nextPath.startsWith("/onboarding/") && !nextPath.startsWith("/onboarding/admin")) ||
-          nextPath === "/hr-ai" ||
-          nextPath.startsWith("/hr-ai/") ||
-          nextPath === "/my/hr-ai" ||
-          nextPath.startsWith("/my/hr-ai/");
+          nextPath === "/my" || nextPath.startsWith("/my/");
         if (staffOk) dest = nextPath;
       }
     }

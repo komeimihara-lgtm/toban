@@ -1,6 +1,8 @@
-import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-/** 旧 URL 互換：管理ダッシュボードはトップ `/` に統一済み */
-export default AdminDashboard;
+/** /dashboard → / にリダイレクト */
+export default function DashboardPage() {
+  redirect("/");
+}

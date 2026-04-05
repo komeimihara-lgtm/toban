@@ -1,16 +1,7 @@
-import {
-  getProfile,
-  getSessionUser,
-  isOwnerOrApprover,
-} from "@/lib/api-auth";
-import {
-  normalizeCompanySettings,
-  usesEmailChannel,
-  usesLineChannel,
-} from "@/lib/company-settings";
-import { buildAttendanceCorrectionMail } from "@/lib/email";
-import { getAuthUserEmail } from "@/lib/auth-user-email";
-import { enqueueNotification } from "@/lib/notification-queue";
+import { getProfile, getSessionUser, isOwner } from "@/lib/api-auth";
+import { normalizeCompanySettings } from "@/lib/company-settings";
+import { buildAttendanceCorrectionMail, sendHtml } from "@/lib/email";
+import { pushLineMessage } from "@/lib/line";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
@@ -29,7 +20,7 @@ export async function POST(
     return NextResponse.json({ error: "プロフィールがありません" }, { status: 403 });
   }
 
-  if (!isOwnerOrApprover(profile.role)) {
+  if (!isOwner(profile.role)) {
     return NextResponse.json({ error: "承認権限がありません" }, { status: 403 });
   }
 
@@ -104,7 +95,6 @@ export async function POST(
     return NextResponse.json({ error: upErr.message }, { status: 500 });
   }
 
-  let applicantName: string | null = null;
   const { data: ap } = await supabase
     .from("employees")
     .select("name, line_user_id")
@@ -114,16 +104,14 @@ export async function POST(
     name: string | null;
     line_user_id: string | null;
   } | null;
-  applicantName = applicant?.name ?? null;
 
-  let companyName: string | null = null;
   const admin = createAdminClient();
   const { data: co } = await admin
     .from("companies")
     .select("name, settings")
     .eq("id", corr.company_id)
     .maybeSingle();
-  companyName = (co as { name?: string } | null)?.name ?? null;
+  const companyName = (co as { name?: string } | null)?.name ?? null;
   const settings = normalizeCompanySettings(
     (co as { settings?: unknown } | null)?.settings,
   );
@@ -134,38 +122,24 @@ export async function POST(
       ? `差戻し理由: ${rejectionReason}`
       : "ご申請の打刻修正が承認されました。";
 
-  const mailCtx = {
-    companyName: companyName ?? undefined,
-    applicantName,
-    targetDate: corr.target_date,
-    statusLabel,
-    detail,
-  };
-  const { subject, html } = buildAttendanceCorrectionMail(mailCtx);
-  const lineText = `【打刻修正】${statusLabel}（${corr.target_date}）\n${detail}`;
-
   try {
-    const emailTo = await getAuthUserEmail(admin, corr.employee_id);
-
-    if (usesLineChannel(settings) && applicant?.line_user_id) {
-      await enqueueNotification({
-        company_id: corr.company_id,
-        type: "attendance_correction_result",
-        recipient_line_id: applicant.line_user_id,
-        message: lineText,
-        channel: "line",
-      });
+    if (settings.notification.channels.includes("line") && applicant?.line_user_id) {
+      const lineText = `【打刻修正】${statusLabel}（${corr.target_date}）\n${detail}`;
+      await pushLineMessage(applicant.line_user_id, lineText);
     }
-    if (usesEmailChannel(settings) && emailTo) {
-      await enqueueNotification({
-        company_id: corr.company_id,
-        type: "attendance_correction_result",
-        recipient_line_id: null,
-        recipient_email: emailTo,
-        message: html,
-        subject,
-        channel: "email",
-      });
+    if (settings.notification.channels.includes("email")) {
+      const { data: authUser } = await admin.auth.admin.getUserById(corr.employee_id);
+      const emailTo = authUser?.user?.email;
+      if (emailTo) {
+        const { subject, html } = buildAttendanceCorrectionMail({
+          companyName: companyName ?? undefined,
+          applicantName: applicant?.name,
+          targetDate: corr.target_date,
+          statusLabel,
+          detail,
+        });
+        await sendHtml(emailTo, subject, html);
+      }
     }
   } catch (e) {
     console.error("attendance correction notify:", e);

@@ -16,7 +16,7 @@ function getSecret(): string {
   if (process.env.NODE_ENV === "production") {
     throw new Error("ATTENDANCE_QR_SECRET が設定されていません。");
   }
-  return "dev-lenard-attendance-qr-insecure";
+  return "dev-toban-attendance-qr-insecure";
 }
 
 export function signAttendanceQrToken(payload: AttendanceQrPayload): string {

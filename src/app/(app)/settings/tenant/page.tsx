@@ -1,13 +1,8 @@
 import { CompanyTenantSettings } from "@/components/settings/company-tenant-settings";
-import { DepartmentIncentiveToggle } from "@/components/settings/department-incentive-toggle";
 import { normalizeCompanySettings } from "@/lib/company-settings";
 import { createClient } from "@/lib/supabase/server";
-import type { Company, CompanyPlan } from "@/types/index";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-
-type DeptRow = { id: string; name: string; incentive_enabled: boolean };
-type EmpRow = { id: string; name: string | null; role: string; department_id: string | null; is_sales_target: boolean; is_service_target: boolean };
 
 export const dynamic = "force-dynamic";
 
@@ -30,13 +25,13 @@ export default async function SettingsTenantPage() {
 
   const { data: row, error } = await supabase
     .from("companies")
-    .select("id, name, plan, settings, created_at")
+    .select("id, name, settings")
     .eq("id", pr.company_id)
     .single();
   if (error || !row) {
     return (
       <p className="text-sm text-red-600">
-        会社情報を読み込めませんでした。
+        店舗情報を読み込めませんでした。
       </p>
     );
   }
@@ -44,34 +39,14 @@ export default async function SettingsTenantPage() {
   const r = row as {
     id: string;
     name: string;
-    plan: string;
     settings: unknown;
-    created_at: string;
   };
-  const plan: CompanyPlan =
-    r.plan === "starter" || r.plan === "pro" ? r.plan : "free";
-  const company: Company = {
+
+  const company = {
     id: r.id,
     name: r.name,
-    plan,
     settings: normalizeCompanySettings(r.settings),
-    created_at: r.created_at,
   };
-
-  const { data: departments } = await supabase
-    .from("departments")
-    .select("id, name, incentive_enabled")
-    .eq("company_id", pr.company_id)
-    .order("name");
-  const { data: empRows } = await supabase
-    .from("employees")
-    .select("id, name, role, department_id, is_sales_target, is_service_target")
-    .eq("company_id", pr.company_id)
-    .order("name");
-
-  const deptList = (departments ?? []) as DeptRow[];
-  const empList = (empRows ?? []) as EmpRow[];
-  const deptName = new Map(deptList.map((d) => [d.id, d.name]));
 
   return (
     <div className="space-y-8">
@@ -79,39 +54,6 @@ export default async function SettingsTenantPage() {
         ← 設定
       </Link>
       <CompanyTenantSettings initialCompany={company} />
-
-      <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
-        <h2 className="text-sm font-medium text-zinc-500">部門・インセンティブ対象</h2>
-        <DepartmentIncentiveToggle departments={deptList} />
-      </section>
-
-      <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
-        <h2 className="text-sm font-medium text-zinc-500">従業員一覧（確認）</h2>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-700">
-                <th className="py-2 pr-2">氏名</th>
-                <th className="py-2 pr-2">role</th>
-                <th className="py-2 pr-2">部門</th>
-                <th className="py-2 pr-2">営業対象</th>
-                <th className="py-2 pr-2">ｻｰﾋﾞｽ対象</th>
-              </tr>
-            </thead>
-            <tbody>
-              {empList.map((row) => (
-                <tr key={row.id} className="border-b border-zinc-100 dark:border-zinc-800/80">
-                  <td className="py-2 pr-2">{row.name ?? "—"}</td>
-                  <td className="py-2 pr-2">{row.role}</td>
-                  <td className="py-2 pr-2">{row.department_id ? (deptName.get(row.department_id) ?? "—") : "—"}</td>
-                  <td className="py-2 pr-2">{row.is_sales_target ? "○" : "—"}</td>
-                  <td className="py-2 pr-2">{row.is_service_target ? "○" : "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
     </div>
   );
 }

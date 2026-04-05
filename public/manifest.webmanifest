@@ -1,7 +1,7 @@
 {
-  "name": "LENARD HR",
-  "short_name": "LENARD HR",
-  "description": "レナード株式会社 人事管理システム",
+  "name": "TOBAN",
+  "short_name": "TOBAN",
+  "description": "お店とバイトをつなぐ、当番管理アプリ",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

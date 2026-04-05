@@ -1,4 +1,4 @@
-import { getProfile, getSessionUser, isOwnerOrApprover } from "@/lib/api-auth";
+import { getProfile, getSessionUser, isOwner } from "@/lib/api-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     const profile = await getProfile(supabase, user.id);
-    if (!profile || !isOwnerOrApprover(profile.role)) {
+    if (!profile || !isOwner(profile.role)) {
       return NextResponse.json({ error: "権限がありません" }, { status: 403 });
     }
 
@@ -52,7 +52,7 @@ export async function PATCH(req: Request) {
     }
 
     const me = await getProfile(supabase, user.id);
-    if (!me || !isOwnerOrApprover(me.role)) {
+    if (!me || !isOwner(me.role)) {
       return NextResponse.json({ error: "権限がありません" }, { status: 403 });
     }
 
